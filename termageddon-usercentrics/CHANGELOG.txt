@@ -1,0 +1,11 @@
+== Changelog ==
+
+= 1.1.0 =
+
+-   Added Geo-location options. Added support for contingently showing the consent banner if the user is located in a location that REQUIRES the banner to be shown. If not, cookie consent is bypassed.
+-   Added geo-location options for toggleability based on user location. If disabled, geoIP is disabled.
+
+= 1.0 =
+
+-   Initial Integration
+-   Added options for embed script compatibility and toggleability for if a user is logged in.

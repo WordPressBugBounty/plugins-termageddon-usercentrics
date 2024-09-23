@@ -1,0 +1,89 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Termageddon + Usercentrics\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-06-15 18:32+0000\n"
+"PO-Revision-Date: 2022-06-20 16:31+0000\n"
+"Last-Translator: Hans Skillrud\n"
+"Language-Team: English (United States)\n"
+"Language: en_US\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.6.2; wp-6.0\n"
+"X-Domain: termageddon-usercentrics"
+
+#. section ID.
+#: admin/class-termageddon-usercentrics-admin.php:157
+msgid "Advanced Settings"
+msgstr ""
+
+#: admin/class-termageddon-usercentrics-admin.php:96
+msgid "Cookie Policy and Consent Solution"
+msgstr ""
+
+#: admin/class-termageddon-usercentrics-admin.php:201
+msgid "Disable Usercentrics for Admin Users only"
+msgstr ""
+
+#: admin/class-termageddon-usercentrics-admin.php:165
+msgid "Disable Usercentrics for all Logged-in Users"
+msgstr ""
+
+#: admin/class-termageddon-usercentrics-admin.php:183
+msgid "Disable Usercentrics for Editor Users"
+msgstr ""
+
+#. Description of the plugin
+msgid ""
+"Easily integrate the Usercentrics consent solution into your website while "
+"controlling visibility for logged in users and admins."
+msgstr ""
+
+#: admin/class-termageddon-usercentrics-admin.php:129
+msgid "Embed Code"
+msgstr ""
+
+#. URI of the plugin
+#. Author URI of the plugin
+msgid "https://termageddon.com"
+msgstr ""
+
+#: admin/class-termageddon-usercentrics-admin.php:282
+msgid "If you are using the Divi theme"
+msgstr ""
+
+#: admin/class-termageddon-usercentrics-admin.php:281
+msgid ""
+"If you would like to remove Usercentrics for logged in users such as admins, "
+"you can do so below."
+msgstr ""
+
+#. Author of the plugin
+msgid "Termageddon"
+msgstr ""
+
+#. Name of the plugin
+#: admin/class-termageddon-usercentrics-admin.php:93
+msgid "Termageddon + Usercentrics"
+msgstr ""
+
+#: admin/class-termageddon-usercentrics-admin.php:95
+msgid "Upon generating your "
+msgstr ""
+
+#: admin/class-termageddon-usercentrics-admin.php:97
+msgid ""
+"within your Termageddon account, you will be brought to the \"View embed "
+"code\" page.  Copy the embed code listed under \"Usercentrics cookie consent "
+"tool embedding instructions\" and paste it below:"
+msgstr ""
+
+#: admin/class-termageddon-usercentrics-admin.php:283
+msgid ""
+"you will need to enable at least one of the settings below to ensure logged "
+"in users/admins can properly use the “Enable Visual Builder” feature "
+"provided by Divi when editing the design of a webpage."
+msgstr ""

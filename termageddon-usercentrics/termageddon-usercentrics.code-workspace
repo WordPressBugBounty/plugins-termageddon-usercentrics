@@ -1,0 +1,25 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../uploads"
+		},
+		{
+			"path": "../../../../svn/termageddon-usercentrics/",
+			"ignore": [
+				"../../../../svn/termageddon-usercentrics/trunk/",
+				"../../../../svn/termageddon-usercentrics/tags/"
+			],
+		}
+	],
+	"settings": {
+		"es6-css-minify.minifyOnSave": "yes",
+		"search.exclude": {
+			"**/trunk/*": true,
+			"**/tags/**": true,
+			"*tags*": true
+		}
+	}
+}

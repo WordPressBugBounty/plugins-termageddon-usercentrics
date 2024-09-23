@@ -1,0 +1,13 @@
+{
+    "name": "termageddon/termageddon-usercentrics",
+    "description": "Easily integrate the Usercentrics consent solution into your website while controlling visibility for logged in users and admins.",
+    "require": {
+        "geoip2/geoip2": "2.10.0"
+    },
+    "authors": [
+        {
+            "name": "Dakotah Intriglia",
+            "email": "dakotah@estusdigital.com"
+        }
+    ]
+}
