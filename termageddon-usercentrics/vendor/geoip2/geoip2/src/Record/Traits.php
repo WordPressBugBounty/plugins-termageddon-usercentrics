@@ -102,39 +102,38 @@ use GeoIp2\Util;
  *   GeoIP2 Enterprise database.
  * </p>
  */
-class Traits extends AbstractRecord
-{
-    /**
-     * @ignore
-     */
-    protected $validAttributes = [
-        'autonomousSystemNumber',
-        'autonomousSystemOrganization',
-        'connectionType',
-        'domain',
-        'ipAddress',
-        'isAnonymous',
-        'isAnonymousProxy',
-        'isAnonymousVpn',
-        'isHostingProvider',
-        'isLegitimateProxy',
-        'isp',
-        'isPublicProxy',
-        'isSatelliteProvider',
-        'isTorExitNode',
-        'network',
-        'organization',
-        'staticIpScore',
-        'userCount',
-        'userType',
-    ];
+class Traits extends AbstractRecord {
 
-    public function __construct($record)
-    {
-        if (!isset($record['network']) && isset($record['ip_address']) && isset($record['prefix_len'])) {
-            $record['network'] = Util::cidr($record['ip_address'], $record['prefix_len']);
-        }
+	/**
+	 * @ignore
+	 */
+	protected $validAttributes = array(
+		'autonomousSystemNumber',
+		'autonomousSystemOrganization',
+		'connectionType',
+		'domain',
+		'ipAddress',
+		'isAnonymous',
+		'isAnonymousProxy',
+		'isAnonymousVpn',
+		'isHostingProvider',
+		'isLegitimateProxy',
+		'isp',
+		'isPublicProxy',
+		'isSatelliteProvider',
+		'isTorExitNode',
+		'network',
+		'organization',
+		'staticIpScore',
+		'userCount',
+		'userType',
+	);
 
-        parent::__construct($record);
-    }
+	public function __construct( $record ) {
+		if ( ! isset( $record['network'] ) && isset( $record['ip_address'] ) && isset( $record['prefix_len'] ) ) {
+			$record['network'] = Util::cidr( $record['ip_address'], $record['prefix_len'] );
+		}
+
+		parent::__construct( $record );
+	}
 }

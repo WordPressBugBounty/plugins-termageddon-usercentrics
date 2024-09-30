@@ -25,32 +25,31 @@ use GeoIp2\Util;
  *      the record. In particular, this is the largest network where all of the
  *      fields besides $ipAddress have the same value.
  */
-class AnonymousIp extends AbstractModel
-{
-    protected $isAnonymous;
-    protected $isAnonymousVpn;
-    protected $isHostingProvider;
-    protected $isPublicProxy;
-    protected $isTorExitNode;
-    protected $ipAddress;
-    protected $network;
+class AnonymousIp extends AbstractModel {
 
-    /**
-     * @ignore
-     *
-     * @param mixed $raw
-     */
-    public function __construct($raw)
-    {
-        parent::__construct($raw);
+	protected $isAnonymous;
+	protected $isAnonymousVpn;
+	protected $isHostingProvider;
+	protected $isPublicProxy;
+	protected $isTorExitNode;
+	protected $ipAddress;
+	protected $network;
 
-        $this->isAnonymous = $this->get('is_anonymous');
-        $this->isAnonymousVpn = $this->get('is_anonymous_vpn');
-        $this->isHostingProvider = $this->get('is_hosting_provider');
-        $this->isPublicProxy = $this->get('is_public_proxy');
-        $this->isTorExitNode = $this->get('is_tor_exit_node');
-        $ipAddress = $this->get('ip_address');
-        $this->ipAddress = $ipAddress;
-        $this->network = Util::cidr($ipAddress, $this->get('prefix_len'));
-    }
+	/**
+	 * @ignore
+	 *
+	 * @param mixed $raw
+	 */
+	public function __construct( $raw ) {
+		parent::__construct( $raw );
+
+		$this->isAnonymous       = $this->get( 'is_anonymous' );
+		$this->isAnonymousVpn    = $this->get( 'is_anonymous_vpn' );
+		$this->isHostingProvider = $this->get( 'is_hosting_provider' );
+		$this->isPublicProxy     = $this->get( 'is_public_proxy' );
+		$this->isTorExitNode     = $this->get( 'is_tor_exit_node' );
+		$ipAddress               = $this->get( 'ip_address' );
+		$this->ipAddress         = $ipAddress;
+		$this->network           = Util::cidr( $ipAddress, $this->get( 'prefix_len' ) );
+	}
 }

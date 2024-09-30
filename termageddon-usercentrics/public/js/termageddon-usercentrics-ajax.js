@@ -125,22 +125,8 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 							"Country: " +
 							(data.country || "Unknown") +
 							"\n" +
-							"--" +
-							"\n" +
-							"Located in EU?: " +
-							(data.inEU ? "Yes" : "No") +
-							"\n" +
-							"Located in UK?: " +
-							(data.inUK ? "Yes" : "No") +
-							"\n" +
-							"Located in Canada?: " +
-							(data.inCanada ? "Yes" : "No") +
-							"\n" +
-							"Located in California?: " +
-							(data.inCalifornia ? "Yes" : "No") +
-							"\n" +
-							"Located in Virginia?: " +
-							(data.inVirginia ? "Yes" : "No")
+							"Locations: ",
+						data.locations
 					);
 				}
 

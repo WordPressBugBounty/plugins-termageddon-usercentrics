@@ -109,6 +109,88 @@ class Termageddon_Usercentrics {
 	);
 
 	/**
+	 *  Returns a key value pair of geolocations to iterate over.
+	 *  To add support for a new state, add a new key to the array and add the state to the $GEOLOCATION_KEY_TO_STATE array.
+	 *
+	 *  @param boolean $include_sections Whether or not to include the section keys. Defaults to false.
+	 *  @return array
+	 */
+	public static function get_geolocation_locations( $include_sections = false ): array {
+		$list = array(
+			'eu'          => array(
+				'title'   => __( 'European Union & European Economic Area (GDPR)', 'termageddon-usercentrics' ),
+				'popular' => true,
+			),
+			'uk'          => array(
+				'title'   => __( 'United Kingdom (UK DPA)', 'termageddon-usercentrics' ),
+				'popular' => true,
+			),
+			'canada'      => array(
+				'title'   => __( 'Canada (PIPEDA, Quebec 25)', 'termageddon-usercentrics' ),
+				'popular' => true,
+			),
+			'section_usa' => array(
+				'title'   => __( 'United States of America', 'termageddon-usercentrics' ),
+				'popular' => false,
+			),
+			'california'  => array(
+				'title'   => __( 'California (CPRA, CIPA)', 'termageddon-usercentrics' ),
+				'popular' => true,
+			),
+			'colorado'    => array(
+				'title'   => __( 'Colorado (CPA)', 'termageddon-usercentrics' ),
+				'popular' => false,
+			),
+			'connecticut' => array(
+				'title'   => __( 'Connecticut (CTDPA)', 'termageddon-usercentrics' ),
+				'popular' => false,
+			),
+			'oregon'      => array(
+				'title'   => __( 'Oregon (OCPA)', 'termageddon-usercentrics' ),
+				'popular' => false,
+			),
+			'texas'       => array(
+				'title'   => __( 'Texas (TDPSA)', 'termageddon-usercentrics' ),
+				'popular' => false,
+			),
+			'utah'        => array(
+				'title'   => __( 'Utah (UCPA)', 'termageddon-usercentrics' ),
+				'popular' => false,
+			),
+			'virginia'    => array(
+				'title'   => __( 'Virginia (VCDPA)', 'termageddon-usercentrics' ),
+				'popular' => false,
+			),
+		);
+
+		if ( $include_sections ) {
+			return $list;
+		}
+		return array_filter(
+			$list,
+			function( $key ) {
+				return strpos( $key, 'section_' ) !== 0;
+			},
+			ARRAY_FILTER_USE_KEY
+		);
+	}
+
+	/**
+	 *  Maps the geolocation key to the state returned by the geolocation lookup.
+	 *
+	 *  @return array of key value matchups
+	 */
+	public const GEOLOCATION_KEY_TO_STATE = array(
+		'california'  => 'California',
+		'colorado'    => 'Colorado',
+		'connecticut' => 'Connecticut',
+		'oregon'      => 'Oregon',
+		'texas'       => 'Texas',
+		'utah'        => 'Utah',
+		'virginia'    => 'Virginia',
+	);
+
+	/**
 	 * Load the required dependencies for this plugin.
 	 *
 	 * Include the following files that make up the plugin:
@@ -972,12 +1054,25 @@ class Termageddon_Usercentrics {
 	 * @return bool
 	 */
 	public static function is_geoip_location_enabled(): bool {
-		$show_in_eu         = get_option( 'termageddon_usercentrics_show_in_eu', false ) ? true : false;
-		$show_in_uk         = get_option( 'termageddon_usercentrics_show_in_uk', false ) ? true : false;
-		$show_in_canada     = get_option( 'termageddon_usercentrics_show_in_canada', false ) ? true : false;
-		$show_in_california = get_option( 'termageddon_usercentrics_show_in_california', false ) ? true : false;
-		$show_in_virginia   = get_option( 'termageddon_usercentrics_show_in_virginia', false ) ? true : false;
-		return ( $show_in_eu || $show_in_uk || $show_in_canada || $show_in_california || $show_in_virginia );
+		$enabled = false;
+
+		foreach ( self::get_geolocation_locations() as $loc_key => $loc ) {
+			if ( self::is_geoip_location_enabled_in( $loc_key ) ) {
+				$enabled = true;
+				break;
+			}
+		}
+		return $enabled;
+	}
+
+	/**
+	 * Identifies if geoip location is required for a specific location.
+	 *
+	 * @param string $loc_key The location key to check.
+	 * @return bool
+	 */
+	public static function is_geoip_location_enabled_in( string $loc_key ): bool {
+		return get_option( 'termageddon_usercentrics_show_in_' . $loc_key, false ) ? true : false;
 	}
 
 	/** Identifies if user has enabled geoip location toggle.
@@ -1010,30 +1105,23 @@ class Termageddon_Usercentrics {
 	/**
 	 * Helper method to identify if the user is located in Colorado.
 	 *
-	 * @return bool  */
-	public static function is_located_in_colorado(): bool {
+	 * @param string $loc_key The location key to check.
+	 * @return bool
+	 * @throws Exception If unable to locate location key.
+	 */
+	public static function is_located_in( string $loc_key ): bool {
+		$function_name = 'is_located_in_' . $loc_key;
+		if ( is_callable( array( self::class, $function_name ) ) ) {
+			return call_user_func( array( self::class, $function_name ) );
+		}
+		// Default to state. Check if state mapping exists.
+		if ( ! array_key_exists( $loc_key, self::GEOLOCATION_KEY_TO_STATE ) ) {
+			throw new Exception( 'Unable to locate location key for ' . $loc_key );
+		}
+
+		$loc_key                  = self::GEOLOCATION_KEY_TO_STATE[ $loc_key ];
 		list( 'state' => $state ) = self::lookup_ip_address();
-		return ( null === $state || 'Colorado' === $state );
-
-	}
-
-	/**
-	 * Helper method to identify if the user is located in California.
-	 *
-	 * @return bool  */
-	public static function is_located_in_california(): bool {
-		list( 'state' => $state ) = self::lookup_ip_address();
-		return ( null === $state || 'California' === $state );
-
-	}
-
-	/**
-	 * Helper method to identify if the user is located in Virginia.
-	 *
-	 * @return bool  */
-	public static function is_located_in_virginia(): bool {
-		list( 'state' => $state ) = self::lookup_ip_address();
-		return ( null === $state || 'Virginia' === $state );
+		return ( null === $state || $loc_key === $state );
 
 	}
 
@@ -1107,39 +1195,22 @@ class Termageddon_Usercentrics {
 	 *
 	 * @return bool  */
 	public static function should_hide_due_to_location(): bool {
-		$show_in_eu         = get_option( 'termageddon_usercentrics_show_in_eu', false ) ? true : false;
-		$show_in_uk         = get_option( 'termageddon_usercentrics_show_in_uk', false ) ? true : false;
-		$show_in_canada     = get_option( 'termageddon_usercentrics_show_in_canada', false ) ? true : false;
-		$show_in_california = get_option( 'termageddon_usercentrics_show_in_california', false ) ? true : false;
-		$show_in_virginia   = get_option( 'termageddon_usercentrics_show_in_virginia', false ) ? true : false;
 
-		// Hide if all of the rules come back negative for specific locations.
-		$located_in_eu         = self::is_located_in_eu();
-		$located_in_uk         = self::is_located_in_uk();
-		$located_in_canada     = self::is_located_in_canada();
-		$located_in_california = self::is_located_in_california();
-		$located_in_virginia   = self::is_located_in_virginia();
+		// Iterate through locations and identify if user is located in any of them, and site has it enabled. If so, hide consent.
+		$located_in_location_that_needs_consent = false;
+		foreach ( self::get_geolocation_locations() as $loc_key => $loc ) {
+			$is_located_in = self::is_located_in( $loc_key );
+			if ( $is_located_in ) {
+				$located_in_location_that_needs_consent = true;
+			}
+			if ( $is_located_in && ! self::is_geoip_location_enabled_in( $loc_key ) ) {
+				return true; // User is located in a location that needs it, but it is disabled, so hide.
+			}
+		}
 
 		// If not in any applicable zones, hide cookie consent.
-		if ( ! $located_in_eu && ! $located_in_uk && ! $located_in_canada && ! $located_in_california && ! $located_in_virginia ) {
-			return true;
-		}
-
-		// Based on where you are located, check the location.
-		if ( $located_in_eu && ! $show_in_eu ) {
-			return true;
-		}
-		if ( $located_in_uk && ! $show_in_uk ) {
-			return true;
-		}
-		if ( $located_in_canada && ! $show_in_canada ) {
-			return true;
-		}
-		if ( $located_in_california && ! $show_in_california ) {
-			return true;
-		}
-		if ( $located_in_virginia && ! $show_in_virginia ) {
-			return true;
+		if ( ! $located_in_location_that_needs_consent ) {
+			return true; // Not in a location that needs it, so continue.
 		}
 
 		return false;
@@ -1182,15 +1253,17 @@ class Termageddon_Usercentrics {
 			// Lookup IP Address or pull from Cookie.
 			list('city' => $city, 'state' => $state, 'country' => $country) = self::lookup_ip_address( $ip_address );
 
-			$result['ipAddress']    = $ip_address;
-			$result['city']         = ( $city ?? 'Unknown' );
-			$result['state']        = ( $state ?? 'Unknown' );
-			$result['country']      = ( $country ?? 'Unknown' );
-			$result['inEU']         = self::is_located_in_eu();
-			$result['inUK']         = self::is_located_in_uk();
-			$result['inCanada']     = self::is_located_in_canada();
-			$result['inCalifornia'] = self::is_located_in_california();
-			$result['inVirginia']   = self::is_located_in_virginia();
+			$result['ipAddress'] = $ip_address;
+			$result['city']      = ( $city ?? 'Unknown' );
+			$result['state']     = ( $state ?? 'Unknown' );
+			$result['country']   = ( $country ?? 'Unknown' );
+
+			// Iterate through locations.
+			$locations = array();
+			foreach ( self::get_geolocation_locations() as $loc_key => $loc ) {
+				$locations[ $loc_key ] = self::is_located_in( $loc_key );
+			}
+			$result['locations'] = $locations;
 		}
 
 		return $result;

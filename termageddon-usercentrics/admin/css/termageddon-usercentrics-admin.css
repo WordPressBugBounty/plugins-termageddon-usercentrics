@@ -37,6 +37,9 @@ textarea.termageddon-embed-code {
 .tu-toggle-section .form-table td {
 	padding: 0.5rem 0;
 }
+.tu-toggle-section .form-table th {
+	width: 300px;
+}
 .tu-toggle-section.slim-section .form-table th {
 	width: 125px;
 }
@@ -48,6 +51,20 @@ textarea.termageddon-embed-code {
 
 .tu-section-hidden {
 	display: none;
+}
+.tu-label-success {
+	background-color: #3db44c;
+	color: white;
+	padding: 3px 5px;
+	border-radius: 5px;
+	font-size: 60%;
+}
+.tu-label-info {
+	background-color: #019ed5;
+	color: white;
+	padding: 3px 5px;
+	border-radius: 5px;
+	font-size: 60%;
 }
 .tu-label-warning {
 	background-color: orange;

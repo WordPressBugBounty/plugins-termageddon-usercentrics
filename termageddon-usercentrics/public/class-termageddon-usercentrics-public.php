@@ -134,6 +134,15 @@ class Termageddon_Usercentrics_Public {
 			) {
 				list('city' => $city, 'state' => $state, 'country' => $country) = Termageddon_Usercentrics::lookup_ip_address();
 
+				// Iterate through locations.
+				$locations = array_map(
+					function( $loc_key, $loc ) {
+						list ( 'title' => $loc_name ) = $loc;
+						return 'Located in ' . $loc_name . ': ' . ( Termageddon_Usercentrics::is_located_in( $loc_key ) ? 'Yes' : 'No' );
+					},
+					Termageddon_Usercentrics::get_geolocation_locations()
+				);
+
 				// Output debug message to console.
 				Termageddon_Usercentrics::debug(
 					'IP Address: ' . Termageddon_Usercentrics::get_processed_ip_address(),
@@ -141,11 +150,7 @@ class Termageddon_Usercentrics_Public {
 					'State: ' . ( $state ?? 'Unknown' ),
 					'Country: ' . ( $country ?? 'Unknown' ),
 					'--',
-					'Located in EU?: ' . ( Termageddon_Usercentrics::is_located_in_eu() ? 'Yes' : 'No' ),
-					'Located in UK?: ' . ( Termageddon_Usercentrics::is_located_in_uk() ? 'Yes' : 'No' ),
-					'Located in Canada?: ' . ( Termageddon_Usercentrics::is_located_in_canada() ? 'Yes' : 'No' ),
-					'Located in California?: ' . ( Termageddon_Usercentrics::is_located_in_california() ? 'Yes' : 'No' ),
-					'Located in Virginia?: ' . ( Termageddon_Usercentrics::is_located_in_virginia() ? 'Yes' : 'No' ),
+					$locations,
 					'--',
 					'Geo-Location Mode?: ' . ( Termageddon_Usercentrics::is_geoip_enabled() ? 'Yes' : 'No' ),
 					'AJAX Mode?: ' . ( Termageddon_Usercentrics::is_ajax_mode_enabled() ? 'Yes' : 'No' ),

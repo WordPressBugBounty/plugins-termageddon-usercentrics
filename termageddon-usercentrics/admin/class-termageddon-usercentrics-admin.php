@@ -239,18 +239,30 @@ class Termageddon_Usercentrics_Admin {
 
 		$name        = ( isset( $options['name'] ) ? $options['name'] : false );
 		$description = ( isset( $options['description'] ) ? $options['description'] : false );
-		$indent      = ( isset( $options['indent'] ) ? true === $options['indent'] : false );
-		$slim        = ( isset( $options['slim'] ) ? true === $options['slim'] : false );
+		// Indent specifies whether or not the subsection should be indented.
+		$indent = ( isset( $options['indent'] ) ? true === $options['indent'] : false );
+
+		// Slim slims down the column width for the initial options.
+		$slim = ( isset( $options['slim'] ) ? true === $options['slim'] : false );
+
+		// Helper slims down the divider and displays a helper text by itself.
+		$helper = ( isset( $options['helper'] ) ? true === $options['helper'] : false );
+
+		$section_contents = $helper ?
+		'
+					<span class="tu-section-title-helper">' . esc_html( $name ) . ':</span>
+					' . ( empty( $description ) ? '' : '<p>' . wp_kses_post( $description ) . '</p>' )
+		: ' </div>
+				<div class="tu-toggle-section">
+					<span class="tu-section-title">' . esc_html( $name ) . ':</span>
+					' . ( empty( $description ) ? '' : '<p>' . wp_kses_post( $description ) . '</p>' ) . '
+				</div>
+			<div class="' . ( $indent ? 'tu-toggle-section' : 'tu-settings-section' ) . ( $slim ? ' slim-section' : '' ) . '">';
 
 		add_settings_field(
 			'termageddon_usercentrics_end-section-' . Termageddon_Usercentrics::generate_random_string( 5 ),
 			'	</th></tr></tbody></table>
-			</div>
-			<div class="tu-toggle-section">
-				<span class="tu-section-title">' . esc_html( $name ) . ':</span>
-				' . ( empty( $description ) ? '' : '<p>' . wp_kses_post( $description ) . '</p>' ) . '
-			</div>
-			<div class="' . ( $indent ? 'tu-toggle-section' : 'tu-settings-section' ) . ( $slim ? ' slim-section' : '' ) . '">
+				' . $section_contents . '
 				<table class="form-table" role="presentation">
 					<tbody>
 						<tr style="display: none">
@@ -262,6 +274,13 @@ class Termageddon_Usercentrics_Admin {
 		);
 	}
 
+
+	/** Generates and appends the popular label for a field.
+	 *
+	 *  @return string  */
+	public static function mark_as_popular() {
+		return ' <span class="tu-label-info">POPULAR</span>';
+	}
 
 	/** Generates and appends the beta label for a field.
 	 *
@@ -634,95 +653,51 @@ class Termageddon_Usercentrics_Admin {
 		// ======== Location specific settings ======== //
 		// ============================================ //
 
-		// Show only in EU.
-		add_settings_field(
-			'termageddon_usercentrics_show_in_eu',
-			__( 'European Union & European Economic Area (GDPR)', 'termageddon-usercentrics' ),
-			array( &$this, 'show_in_eu_html' ), // function which prints the field.
-			'termageddon-usercentrics', // page slug.
-			'termageddon_usercentrics_section_geolocation', // section ID.
-			array(
-				'label_for' => 'termageddon_usercentrics_show_in_eu',
-			)
-		);
+		$register_geolocation_heading = function( $loc_key, $loc_name ) {
+			// echo '<pre>' . json_encode( 'Register', JSON_PRETTY_PRINT ) . '</pre>';
+			// BREAK SECTION FOR PSL SETTINGS.
+			$this->add_new_subsection(
+				'termageddon_usercentrics_section_geolocation',
+				array(
+					'name'   => $loc_name,
+					'indent' => true,
+					'helper' => true,
+				)
+			);
+		};
 
-		register_setting(
-			'termageddon_usercentrics_settings', // settings group name.
-			'termageddon_usercentrics_show_in_eu', // option name.
-			'' // sanitization function.
-		);
+		$register_geolocation = function( $loc_key, $loc ) {
+			list ( 'title' => $loc_name, 'popular' => $loc_popular ) = $loc;
+			add_settings_field(
+				'termageddon_usercentrics_show_in_' . $loc_key,
+				$loc_name . ( $loc_popular ? self::mark_as_popular() : '' ),
+				array( &$this, 'geolocation_toggle_html' ), // function which prints the field.
+				'termageddon-usercentrics', // page slug.
+				'termageddon_usercentrics_section_geolocation', // section ID.
+				array(
+					'label_for' => 'termageddon_usercentrics_show_in_' . $loc_key,
+					'location'  => $loc_key,
+				)
+			);
 
-		// Show only in UK.
-		add_settings_field(
-			'termageddon_usercentrics_show_in_uk',
-			__( 'United Kingdom (UK DPA)', 'termageddon-usercentrics' ),
-			array( &$this, 'show_in_uk_html' ), // function which prints the field.
-			'termageddon-usercentrics', // page slug.
-			'termageddon_usercentrics_section_geolocation', // section ID.
-			array(
-				'label_for' => 'termageddon_usercentrics_show_in_uk',
-			)
-		);
-
-		register_setting(
-			'termageddon_usercentrics_settings', // settings group name.
-			'termageddon_usercentrics_show_in_uk', // option name.
-			'' // sanitization function.
-		);
-
-		// Show only in Canada.
-		add_settings_field(
-			'termageddon_usercentrics_show_in_canada',
-			__( 'Canada (PIPEDA)', 'termageddon-usercentrics' ),
-			array( &$this, 'show_in_canada_html' ), // function which prints the field.
-			'termageddon-usercentrics', // page slug.
-			'termageddon_usercentrics_section_geolocation', // section ID.
-			array(
-				'label_for' => 'termageddon_usercentrics_show_in_canada',
-			)
-		);
-
-		register_setting(
-			'termageddon_usercentrics_settings', // settings group name.
-			'termageddon_usercentrics_show_in_canada', // option name.
-			'' // sanitization function.
-		);
+			register_setting(
+				'termageddon_usercentrics_settings', // settings group name.
+				'termageddon_usercentrics_show_in_' . $loc_key, // option name.
+				'' // sanitization function.
+			);
+		};
 
 		// Show only in California.
-		add_settings_field(
-			'termageddon_usercentrics_show_in_california',
-			__( 'California (CPRA or CIPA)', 'termageddon-usercentrics' ),
-			array( &$this, 'show_in_california_html' ), // function which prints the field.
-			'termageddon-usercentrics', // page slug.
-			'termageddon_usercentrics_section_geolocation', // section ID.
-			array(
-				'label_for' => 'termageddon_usercentrics_show_in_california',
-			)
-		);
-
-		register_setting(
-			'termageddon_usercentrics_settings', // settings group name.
-			'termageddon_usercentrics_show_in_california', // option name.
-			'' // sanitization function.
-		);
-
-		// Show only in Virginia.
-		add_settings_field(
-			'termageddon_usercentrics_show_in_virginia',
-			__( 'Virginia (VCDPA)', 'termageddon-usercentrics' ),
-			array( &$this, 'show_in_virginia_html' ), // function which prints the field.
-			'termageddon-usercentrics', // page slug.
-			'termageddon_usercentrics_section_geolocation', // section ID.
-			array(
-				'label_for' => 'termageddon_usercentrics_show_in_virginia',
-			)
-		);
-
-		register_setting(
-			'termageddon_usercentrics_settings', // settings group name.
-			'termageddon_usercentrics_show_in_virginia', // option name.
-			'' // sanitization function.
-		);
+		$current_section = null;
+		foreach ( Termageddon_Usercentrics::get_geolocation_locations( true ) as $loc_key => $loc ) {
+			list ( 'title' => $loc_name ) = $loc;
+			if ( substr( $loc_key, 0, 8 ) === 'section_' ) { // Skip section headings.
+				$current_section = substr( $loc_key, 8 );
+				$register_geolocation_heading( $current_section, $loc_name );
+				continue;
+			}
+			$register_geolocation( $loc_key, $loc, $current_section );
+		}
 
 		// BREAK SECTION FOR GEOLOCATION SETTINGS.
 		$this->add_new_subsection(
@@ -1031,52 +1006,14 @@ class Termageddon_Usercentrics_Admin {
 	}
 
 	/**
-	 * The HTML field for the admin disable checkbox.
+	 * Generate the checkbox for the geolocation toggles.
 	 *
+	 * @param array $args are the arguments provided by the add_settings_field() method.
 	 * @return void
 	 */
-	public function show_in_eu_html() {
-		self::generate_checkbox( 'eu' );
-	}
-
-	/**
-	 * The HTML field for the admin disable checkbox.
-	 *
-	 * @return void
-	 */
-	public function show_in_uk_html() {
-		self::generate_checkbox( 'uk' );
-
-	}
-
-	/**
-	 * The HTML field for the admin disable checkbox.
-	 *
-	 * @return void
-	 */
-	public function show_in_canada_html() {
-		self::generate_checkbox( 'canada' );
-
-	}
-
-	/**
-	 * The HTML field for the admin disable checkbox.
-	 *
-	 * @return void
-	 */
-	public function show_in_california_html() {
-		self::generate_checkbox( 'california' );
-
-	}
-
-	/**
-	 * The HTML field for the admin disable checkbox.
-	 *
-	 * @return void
-	 */
-	public function show_in_virginia_html() {
-		self::generate_checkbox( 'virginia' );
-
+	public static function geolocation_toggle_html( array $args ) {
+		$location = $args['location'];
+		self::generate_checkbox( $location );
 	}
 
 	/**
@@ -1179,14 +1116,14 @@ class Termageddon_Usercentrics_Admin {
 		'</p>';
 
 		echo '<p>' .
-			esc_html__( 'Not sure what to select? Review', 'termageddon-usercentrics' ) . ' <a href="https://termageddon.freshdesk.com/support/solutions/articles/66000503289-how-to-activate-a-cookie-policy-and-cookie-consent-solution" target="_blank">' . esc_html__( 'this article', 'termageddon-usercentrics' ) . '</a>' . ' ' . esc_html__( 'along with page 1 of your Privacy Policy questionnaire within ', 'termageddon-usercentrics' ) . '<a href="https://app.termageddon.com/home" target="_blank">app.termageddon.com</a>.' .
+			esc_html__( 'Not sure what to select? Review', 'termageddon-usercentrics' ) . ' <a href="https://termageddon.freshdesk.com/support/solutions/articles/66000503289-how-to-activate-a-cookie-policy-and-cookie-consent-solution" target="_blank">' . esc_html__( 'this article', 'termageddon-usercentrics' ) . '</a> ' . esc_html__( 'along with page 1 of your Privacy Policy questionnaire within ', 'termageddon-usercentrics' ) . '<a href="https://app.termageddon.com/home" target="_blank">app.termageddon.com</a>.' .
 		'</p>';
 
 			echo '
 			<div class="tu-section-settings">
 				<div class="tu-toggle-section">
-					<div class="tu-section-title">' . esc_html__( 'Show widget if visitor is located in' ) . ':</div>
-					<div class="tu-section-title-helper">' . esc_html__( 'Not sure what to select? Review page 1 of your Privacy Policy questionnaire within' ) . ' <a href="https://app.termageddon.com" target="_blank">app.termageddon.com</a>.</div>
+					<div class="tu-section-title">' . esc_html__( 'Show widget if visitor is located in', 'termageddon-usercentrics' ) . ':</div>
+					<div class="tu-section-title-helper">' . esc_html__( 'Not sure what to select?', 'termageddon-usercentrics' ) . ' <a href="https://termageddon.freshdesk.com/support/solutions/articles/66000526304-using-the-geolocation-feature-of-the-termageddon-usercentrics-plugin" target="_blank">' . esc_html__( 'This article outlines which regions to select', 'termageddon-usercentrics' ) . '</a> ' . esc_html__( 'based on which privacy laws apply to you', 'termageddon-usercentrics' ) . '.</div>
 					<div class="notice-inline notice-alt notice-warning" id="no-geolocation-locations-selected" style="display:none">
 						<p><strong>' . esc_html__( 'Geo-Location is enabled, but no locations have been toggled on. This means that the cookie-consent will be hidden to all users.', 'termageddon-usercentrics' ) . '</strong></p>
 					</div></a>';

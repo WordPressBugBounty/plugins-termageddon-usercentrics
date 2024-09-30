@@ -9,11 +9,11 @@ namespace MaxMind\WebService\Http;
  *
  * @internal
  */
-interface Request
-{
-    public function __construct(string $url, array $options);
+interface Request {
 
-    public function post(string $body): array;
+	public function __construct( string $url, array $options);
 
-    public function get(): array;
+	public function post( string $body): array;
+
+	public function get(): array;
 }

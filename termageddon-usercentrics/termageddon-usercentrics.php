@@ -14,7 +14,7 @@
  * @wordpress-plugin
  * Plugin Name:       Termageddon + Usercentrics
  * Description:       Easily integrate the Usercentrics consent solution into your website while controlling visibility for logged in users and admins.
- * Version:           1.4.5
+ * Version:           1.5.0
  * Author:            Termageddon
  * Author URI:        https://termageddon.com
  * License:           GPL-2.0+
@@ -33,7 +33,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'TERMAGEDDON_COOKIE_VERSION', '1.4.5' );
+define( 'TERMAGEDDON_COOKIE_VERSION', '1.5.0' );
 
 define( 'TERMAGEDDON_COOKIE_PLUGIN_PATH', dirname( __FILE__ ) );// No trailing slash.
 

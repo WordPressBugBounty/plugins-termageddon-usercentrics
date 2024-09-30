@@ -22,31 +22,30 @@ use GeoIp2\Util;
  *      the record. In particular, this is the largest network where all of the
  *      fields besides $ipAddress have the same value.
  */
-class Isp extends AbstractModel
-{
-    protected $autonomousSystemNumber;
-    protected $autonomousSystemOrganization;
-    protected $isp;
-    protected $organization;
-    protected $ipAddress;
-    protected $network;
+class Isp extends AbstractModel {
 
-    /**
-     * @ignore
-     *
-     * @param mixed $raw
-     */
-    public function __construct($raw)
-    {
-        parent::__construct($raw);
-        $this->autonomousSystemNumber = $this->get('autonomous_system_number');
-        $this->autonomousSystemOrganization =
-            $this->get('autonomous_system_organization');
-        $this->isp = $this->get('isp');
-        $this->organization = $this->get('organization');
+	protected $autonomousSystemNumber;
+	protected $autonomousSystemOrganization;
+	protected $isp;
+	protected $organization;
+	protected $ipAddress;
+	protected $network;
 
-        $ipAddress = $this->get('ip_address');
-        $this->ipAddress = $ipAddress;
-        $this->network = Util::cidr($ipAddress, $this->get('prefix_len'));
-    }
+	/**
+	 * @ignore
+	 *
+	 * @param mixed $raw
+	 */
+	public function __construct( $raw ) {
+		parent::__construct( $raw );
+		$this->autonomousSystemNumber       = $this->get( 'autonomous_system_number' );
+		$this->autonomousSystemOrganization =
+			$this->get( 'autonomous_system_organization' );
+		$this->isp                          = $this->get( 'isp' );
+		$this->organization                 = $this->get( 'organization' );
+
+		$ipAddress       = $this->get( 'ip_address' );
+		$this->ipAddress = $ipAddress;
+		$this->network   = Util::cidr( $ipAddress, $this->get( 'prefix_len' ) );
+	}
 }

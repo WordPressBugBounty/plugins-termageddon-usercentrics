@@ -11,126 +11,121 @@ use MaxMind\Exception\HttpException;
  *
  * @internal
  */
-class CurlRequest implements Request
-{
-    /**
-     * @var \CurlHandle
-     */
-    private $ch;
+class CurlRequest implements Request {
 
-    /**
-     * @var string
-     */
-    private $url;
+	/**
+	 * @var \CurlHandle
+	 */
+	private $ch;
 
-    /**
-     * @var array
-     */
-    private $options;
+	/**
+	 * @var string
+	 */
+	private $url;
 
-    public function __construct(string $url, array $options)
-    {
-        $this->url = $url;
-        $this->options = $options;
-        $this->ch = $options['curlHandle'];
-    }
+	/**
+	 * @var array
+	 */
+	private $options;
 
-    /**
-     * @throws HttpException
-     */
-    public function post(string $body): array
-    {
-        $curl = $this->createCurl();
+	public function __construct( string $url, array $options ) {
+		$this->url     = $url;
+		$this->options = $options;
+		$this->ch      = $options['curlHandle'];
+	}
 
-        curl_setopt($curl, \CURLOPT_POST, true);
-        curl_setopt($curl, \CURLOPT_POSTFIELDS, $body);
+	/**
+	 * @throws HttpException
+	 */
+	public function post( string $body ): array {
+		$curl = $this->createCurl();
 
-        return $this->execute($curl);
-    }
+		curl_setopt( $curl, \CURLOPT_POST, true );
+		curl_setopt( $curl, \CURLOPT_POSTFIELDS, $body );
 
-    public function get(): array
-    {
-        $curl = $this->createCurl();
+		return $this->execute( $curl );
+	}
 
-        curl_setopt($curl, \CURLOPT_HTTPGET, true);
+	public function get(): array {
+		$curl = $this->createCurl();
 
-        return $this->execute($curl);
-    }
+		curl_setopt( $curl, \CURLOPT_HTTPGET, true );
 
-    /**
-     * @return \CurlHandle
-     */
-    private function createCurl()
-    {
-        curl_reset($this->ch);
+		return $this->execute( $curl );
+	}
 
-        $opts = [];
-        $opts[\CURLOPT_URL] = $this->url;
+	/**
+	 * @return \CurlHandle
+	 */
+	private function createCurl() {
+		curl_reset( $this->ch );
 
-        if (!empty($this->options['caBundle'])) {
-            $opts[\CURLOPT_CAINFO] = $this->options['caBundle'];
-        }
+		$opts                 = array();
+		$opts[ \CURLOPT_URL ] = $this->url;
 
-        $opts[\CURLOPT_ENCODING] = '';
-        $opts[\CURLOPT_SSL_VERIFYHOST] = 2;
-        $opts[\CURLOPT_FOLLOWLOCATION] = false;
-        $opts[\CURLOPT_SSL_VERIFYPEER] = true;
-        $opts[\CURLOPT_RETURNTRANSFER] = true;
+		if ( ! empty( $this->options['caBundle'] ) ) {
+			$opts[ \CURLOPT_CAINFO ] = $this->options['caBundle'];
+		}
 
-        $opts[\CURLOPT_HTTPHEADER] = $this->options['headers'];
-        $opts[\CURLOPT_USERAGENT] = $this->options['userAgent'];
-        $opts[\CURLOPT_PROXY] = $this->options['proxy'];
+		$opts[ \CURLOPT_ENCODING ]       = '';
+		$opts[ \CURLOPT_SSL_VERIFYHOST ] = 2;
+		$opts[ \CURLOPT_FOLLOWLOCATION ] = false;
+		$opts[ \CURLOPT_SSL_VERIFYPEER ] = true;
+		$opts[ \CURLOPT_RETURNTRANSFER ] = true;
 
-        // The defined()s are here as the *_MS opts are not available on older
-        // cURL versions
-        $connectTimeout = $this->options['connectTimeout'];
-        if (\defined('CURLOPT_CONNECTTIMEOUT_MS')) {
-            $opts[\CURLOPT_CONNECTTIMEOUT_MS] = ceil($connectTimeout * 1000);
-        } else {
-            $opts[\CURLOPT_CONNECTTIMEOUT] = ceil($connectTimeout);
-        }
+		$opts[ \CURLOPT_HTTPHEADER ] = $this->options['headers'];
+		$opts[ \CURLOPT_USERAGENT ]  = $this->options['userAgent'];
+		$opts[ \CURLOPT_PROXY ]      = $this->options['proxy'];
 
-        $timeout = $this->options['timeout'];
-        if (\defined('CURLOPT_TIMEOUT_MS')) {
-            $opts[\CURLOPT_TIMEOUT_MS] = ceil($timeout * 1000);
-        } else {
-            $opts[\CURLOPT_TIMEOUT] = ceil($timeout);
-        }
+		// The defined()s are here as the *_MS opts are not available on older
+		// cURL versions
+		$connectTimeout = $this->options['connectTimeout'];
+		if ( \defined( 'CURLOPT_CONNECTTIMEOUT_MS' ) ) {
+			$opts[ \CURLOPT_CONNECTTIMEOUT_MS ] = ceil( $connectTimeout * 1000 );
+		} else {
+			$opts[ \CURLOPT_CONNECTTIMEOUT ] = ceil( $connectTimeout );
+		}
 
-        curl_setopt_array($this->ch, $opts);
+		$timeout = $this->options['timeout'];
+		if ( \defined( 'CURLOPT_TIMEOUT_MS' ) ) {
+			$opts[ \CURLOPT_TIMEOUT_MS ] = ceil( $timeout * 1000 );
+		} else {
+			$opts[ \CURLOPT_TIMEOUT ] = ceil( $timeout );
+		}
 
-        return $this->ch;
-    }
+		curl_setopt_array( $this->ch, $opts );
 
-    /**
-     * @param \CurlHandle $curl
-     *
-     * @throws HttpException
-     */
-    private function execute($curl): array
-    {
-        $body = curl_exec($curl);
-        if ($errno = curl_errno($curl)) {
-            $errorMessage = curl_error($curl);
+		return $this->ch;
+	}
 
-            throw new HttpException(
-                "cURL error ({$errno}): {$errorMessage}",
-                0,
-                $this->url
-            );
-        }
+	/**
+	 * @param \CurlHandle $curl
+	 *
+	 * @throws HttpException
+	 */
+	private function execute( $curl ): array {
+		$body = curl_exec( $curl );
+		if ( $errno = curl_errno( $curl ) ) {
+			$errorMessage = curl_error( $curl );
 
-        $statusCode = curl_getinfo($curl, \CURLINFO_HTTP_CODE);
-        $contentType = curl_getinfo($curl, \CURLINFO_CONTENT_TYPE);
+			throw new HttpException(
+				"cURL error ({$errno}): {$errorMessage}",
+				0,
+				$this->url
+			);
+		}
 
-        return [
-            $statusCode,
-            // The PHP docs say "Content-Type: of the requested document. NULL
-            // indicates server did not send valid Content-Type: header" for
-            // CURLINFO_CONTENT_TYPE. However, it will return FALSE if no header
-            // is set. To keep our types simple, we return null in this case.
-            ($contentType === false ? null : $contentType),
-            $body,
-        ];
-    }
+		$statusCode  = curl_getinfo( $curl, \CURLINFO_HTTP_CODE );
+		$contentType = curl_getinfo( $curl, \CURLINFO_CONTENT_TYPE );
+
+		return array(
+			$statusCode,
+			// The PHP docs say "Content-Type: of the requested document. NULL
+			// indicates server did not send valid Content-Type: header" for
+			// CURLINFO_CONTENT_TYPE. However, it will return FALSE if no header
+			// is set. To keep our types simple, we return null in this case.
+			( $contentType === false ? null : $contentType ),
+			$body,
+		);
+	}
 }

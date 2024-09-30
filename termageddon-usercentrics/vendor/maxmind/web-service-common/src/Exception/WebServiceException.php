@@ -7,6 +7,6 @@ namespace MaxMind\Exception;
 /**
  * This class represents a generic web service error.
  */
-class WebServiceException extends \Exception
-{
+class WebServiceException extends \Exception {
+
 }

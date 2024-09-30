@@ -9,6 +9,6 @@ namespace GeoIp2\Model;
  * fields in each record may be populated. See
  * https://dev.maxmind.com/geoip/geoip2/web-services for more details.
  */
-class Insights extends City
-{
+class Insights extends City {
+
 }
