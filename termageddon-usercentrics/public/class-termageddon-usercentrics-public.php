@@ -135,13 +135,11 @@ class Termageddon_Usercentrics_Public {
 				list('city' => $city, 'state' => $state, 'country' => $country) = Termageddon_Usercentrics::lookup_ip_address();
 
 				// Iterate through locations.
-				$locations = array_map(
-					function( $loc_key, $loc ) {
-						list ( 'title' => $loc_name ) = $loc;
-						return 'Located in ' . $loc_name . ': ' . ( Termageddon_Usercentrics::is_located_in( $loc_key ) ? 'Yes' : 'No' );
-					},
-					Termageddon_Usercentrics::get_geolocation_locations()
-				);
+				$locations = array();
+				foreach (Termageddon_Usercentrics::get_geolocation_locations() as $loc_key => $loc) {
+					list ( 'title' => $loc_name ) = $loc;
+					$locations[] = 'Located in ' . $loc_name . ': ' . ( Termageddon_Usercentrics::is_located_in( $loc_key ) ? 'Yes' : 'No' );
+				}
 
 				// Output debug message to console.
 				Termageddon_Usercentrics::debug(

@@ -4,7 +4,7 @@ Donate link: https://termageddon.com
 Tags: termageddon, cookie, consent, embed, usercentrics
 Requires at least: 3.0.1
 Tested up to: 6.6.1
-Stable tag: 1.5.0
+Stable tag: 1.5.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,6 +25,10 @@ If you wish to place a privacy settings link in the footer or anywhere else, you
 **Please note**: When GeoIP is enabled, you will be collecting IP addresses for the purposes of determining which cookie consent solution (or lack thereof) to provide to each website visitor (CPRA or CIPA cookie consent, GDPR cookie consent, UK DPA consent or none), based on their location. A cookie will then be placed on the user's browser to log their session, which helps improve page load speed when the user visits other pages on the website. You should ensure that you are in compliance with all applicable privacy laws prior to installing this plugin (or any other technologies on your website). To opt out of this feature, keep all GeoIP checkboxes unchecked (default).
 
 == Changelog ==
+
+= 1.5.1 =
+
+-   [FIX] Fixed an issue in which the plugin would present a fatal error when Geolocation was disabled.
 
 = 1.5.0 =
 
