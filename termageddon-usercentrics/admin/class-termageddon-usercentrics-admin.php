@@ -155,7 +155,7 @@ class Termageddon_Usercentrics_Admin {
 		echo '<div class="wrap">
 			<h1>' . esc_html__( 'Termageddon + Usercentrics', 'termageddon-usercentrics' ) . '</h1>';
 
-			  // Get the active tab from the $_GET param.
+			// Get the active tab from the $_GET param.
 
 		// Invalid tab error message.
 		if ( ! in_array( $this->current_tab, array( 'embed', 'settings', 'geolocation', 'admin' ), true ) ) {

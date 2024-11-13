@@ -136,10 +136,10 @@ class Termageddon_Usercentrics_Public {
 
 				// Iterate through locations.
 				$locations = array();
-				foreach (Termageddon_Usercentrics::get_geolocation_locations() as $loc_key => $loc) {
-					list ( 'title' => $loc_name ) = $loc;
-					$locations[] = 'Located in ' . $loc_name . ': ' . ( Termageddon_Usercentrics::is_located_in( $loc_key ) ? 'Yes' : 'No' );
-				}
+			foreach ( Termageddon_Usercentrics::get_geolocation_locations() as $loc_key => $loc ) {
+				list ( 'title' => $loc_name ) = $loc;
+				$locations[]                  = 'Located in ' . $loc_name . ': ' . ( Termageddon_Usercentrics::is_located_in( $loc_key ) ? 'Yes' : 'No' );
+			}
 
 				// Output debug message to console.
 				Termageddon_Usercentrics::debug(
@@ -236,7 +236,7 @@ window.addEventListener(\'load\', function () {
 	jQuery(\'div.et_pb_video_overlay_hover\').on(\'click\', function(e) {
 		jQuery(this).closest(\'div.et_pb_video_overlay\').hide()
 	}).find(\'a.et_pb_video_play\').attr(\'href\', \'javascript:void(0)\')
-	})
+})
 </script>';
 		}
 
@@ -247,6 +247,7 @@ window.addEventListener(\'load\', function () {
 	jQuery(\'.pp-media-overlay\').on(\'click\', function(e) {
 		jQuery(this).hide()
 	})
+})
 </script>';
 		}
 
