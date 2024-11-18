@@ -4,62 +4,59 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit68df2c2b623d60a4301d3d70719d751e {
+class ComposerStaticInit68df2c2b623d60a4301d3d70719d751e
+{
+    public static $prefixLengthsPsr4 = array (
+        'M' => 
+        array (
+            'MaxMind\\WebService\\' => 19,
+            'MaxMind\\Exception\\' => 18,
+            'MaxMind\\Db\\' => 11,
+        ),
+        'G' => 
+        array (
+            'GeoIp2\\' => 7,
+        ),
+        'C' => 
+        array (
+            'Composer\\CaBundle\\' => 18,
+        ),
+    );
 
-	public static $prefixLengthsPsr4 = array(
-		'M' =>
-		array(
-			'MaxMind\\WebService\\' => 19,
-			'MaxMind\\Exception\\'  => 18,
-			'MaxMind\\Db\\'         => 11,
-		),
-		'G' =>
-		array(
-			'GeoIp2\\' => 7,
-		),
-		'C' =>
-		array(
-			'Composer\\CaBundle\\' => 18,
-		),
-	);
+    public static $prefixDirsPsr4 = array (
+        'MaxMind\\WebService\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/maxmind/web-service-common/src/WebService',
+        ),
+        'MaxMind\\Exception\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/maxmind/web-service-common/src/Exception',
+        ),
+        'MaxMind\\Db\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/maxmind-db/reader/src/MaxMind/Db',
+        ),
+        'GeoIp2\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/geoip2/geoip2/src',
+        ),
+        'Composer\\CaBundle\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/composer/ca-bundle/src',
+        ),
+    );
 
-	public static $prefixDirsPsr4 = array(
-		'MaxMind\\WebService\\' =>
-		array(
-			0 => __DIR__ . '/..' . '/maxmind/web-service-common/src/WebService',
-		),
-		'MaxMind\\Exception\\'  =>
-		array(
-			0 => __DIR__ . '/..' . '/maxmind/web-service-common/src/Exception',
-		),
-		'MaxMind\\Db\\'         =>
-		array(
-			0 => __DIR__ . '/..' . '/maxmind-db/reader/src/MaxMind/Db',
-		),
-		'GeoIp2\\'              =>
-		array(
-			0 => __DIR__ . '/..' . '/geoip2/geoip2/src',
-		),
-		'Composer\\CaBundle\\'  =>
-		array(
-			0 => __DIR__ . '/..' . '/composer/ca-bundle/src',
-		),
-	);
+    public static $classMap = array (
+        'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+    );
 
-	public static $classMap = array(
-		'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
-	);
+    public static function getInitializer(ClassLoader $loader)
+    {
+        return \Closure::bind(function () use ($loader) {
+            $loader->prefixLengthsPsr4 = ComposerStaticInit68df2c2b623d60a4301d3d70719d751e::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit68df2c2b623d60a4301d3d70719d751e::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit68df2c2b623d60a4301d3d70719d751e::$classMap;
 
-	public static function getInitializer( ClassLoader $loader ) {
-		return \Closure::bind(
-			function () use ( $loader ) {
-				$loader->prefixLengthsPsr4 = ComposerStaticInit68df2c2b623d60a4301d3d70719d751e::$prefixLengthsPsr4;
-				$loader->prefixDirsPsr4    = ComposerStaticInit68df2c2b623d60a4301d3d70719d751e::$prefixDirsPsr4;
-				$loader->classMap          = ComposerStaticInit68df2c2b623d60a4301d3d70719d751e::$classMap;
-
-			},
-			null,
-			ClassLoader::class
-		);
-	}
+        }, null, ClassLoader::class);
+    }
 }

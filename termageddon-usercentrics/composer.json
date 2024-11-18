@@ -2,7 +2,8 @@
     "name": "termageddon/termageddon-usercentrics",
     "description": "Easily integrate the Usercentrics consent solution into your website while controlling visibility for logged in users and admins.",
     "require": {
-        "geoip2/geoip2": "2.10.0"
+        "php": ">=7.2",
+        "geoip2/geoip2": "^2.13.0"
     },
     "authors": [
         {

@@ -4,360 +4,407 @@ declare(strict_types=1);
 
 namespace MaxMind\Db;
 
-use ArgumentCountError;
-use BadMethodCallException;
-use Exception;
-use InvalidArgumentException;
 use MaxMind\Db\Reader\Decoder;
 use MaxMind\Db\Reader\InvalidDatabaseException;
 use MaxMind\Db\Reader\Metadata;
 use MaxMind\Db\Reader\Util;
-use UnexpectedValueException;
 
 /**
  * Instances of this class provide a reader for the MaxMind DB format. IP
  * addresses can be looked up using the get method.
  */
-class Reader {
+class Reader
+{
+    /**
+     * @var int
+     */
+    private static $DATA_SECTION_SEPARATOR_SIZE = 16;
 
-	/**
-	 * @var int
-	 */
-	private static $DATA_SECTION_SEPARATOR_SIZE = 16;
-	/**
-	 * @var string
-	 */
-	private static $METADATA_START_MARKER = "\xAB\xCD\xEFMaxMind.com";
-	/**
-	 * @var int
-	 */
-	private static $METADATA_START_MARKER_LENGTH = 14;
-	/**
-	 * @var int
-	 */
-	private static $METADATA_MAX_SIZE = 131072; // 128 * 1024 = 128KiB
+    /**
+     * @var string
+     */
+    private static $METADATA_START_MARKER = "\xAB\xCD\xEFMaxMind.com";
 
-	/**
-	 * @var Decoder
-	 */
-	private $decoder;
-	/**
-	 * @var resource
-	 */
-	private $fileHandle;
-	/**
-	 * @var int
-	 */
-	private $fileSize;
-	/**
-	 * @var int
-	 */
-	private $ipV4Start;
-	/**
-	 * @var Metadata
-	 */
-	private $metadata;
+    /**
+     * @var int<0, max>
+     */
+    private static $METADATA_START_MARKER_LENGTH = 14;
 
-	/**
-	 * Constructs a Reader for the MaxMind DB format. The file passed to it must
-	 * be a valid MaxMind DB file such as a GeoIp2 database file.
-	 *
-	 * @param string $database
-	 *                         the MaxMind DB file to use
-	 *
-	 * @throws InvalidArgumentException for invalid database path or unknown arguments
-	 * @throws InvalidDatabaseException
-	 *                                  if the database is invalid or there is an error reading
-	 *                                  from it
-	 */
-	public function __construct( string $database ) {
-		if ( \func_num_args() !== 1 ) {
-			throw new ArgumentCountError(
-				sprintf( '%s() expects exactly 1 parameter, %d given', __METHOD__, \func_num_args() )
-			);
-		}
+    /**
+     * @var int
+     */
+    private static $METADATA_MAX_SIZE = 131072; // 128 * 1024 = 128KiB
 
-		$fileHandle = @fopen( $database, 'rb' );
-		if ( $fileHandle === false ) {
-			throw new InvalidArgumentException(
-				"The file \"$database\" does not exist or is not readable."
-			);
-		}
-		$this->fileHandle = $fileHandle;
+    /**
+     * @var Decoder
+     */
+    private $decoder;
 
-		$fileSize = @filesize( $database );
-		if ( $fileSize === false ) {
-			throw new UnexpectedValueException(
-				"Error determining the size of \"$database\"."
-			);
-		}
-		$this->fileSize = $fileSize;
+    /**
+     * @var resource
+     */
+    private $fileHandle;
 
-		$start           = $this->findMetadataStart( $database );
-		$metadataDecoder = new Decoder( $this->fileHandle, $start );
-		[$metadataArray] = $metadataDecoder->decode( $start );
-		$this->metadata  = new Metadata( $metadataArray );
-		$this->decoder   = new Decoder(
-			$this->fileHandle,
-			$this->metadata->searchTreeSize + self::$DATA_SECTION_SEPARATOR_SIZE
-		);
-		$this->ipV4Start = $this->ipV4StartNode();
-	}
+    /**
+     * @var int
+     */
+    private $fileSize;
 
-	/**
-	 * Retrieves the record for the IP address.
-	 *
-	 * @param string $ipAddress
-	 *                          the IP address to look up
-	 *
-	 * @throws BadMethodCallException   if this method is called on a closed database
-	 * @throws InvalidArgumentException if something other than a single IP address is passed to the method
-	 * @throws InvalidDatabaseException
-	 *                                  if the database is invalid or there is an error reading
-	 *                                  from it
-	 *
-	 * @return mixed the record for the IP address
-	 */
-	public function get( string $ipAddress ) {
-		if ( \func_num_args() !== 1 ) {
-			throw new ArgumentCountError(
-				sprintf( '%s() expects exactly 1 parameter, %d given', __METHOD__, \func_num_args() )
-			);
-		}
-		[$record] = $this->getWithPrefixLen( $ipAddress );
+    /**
+     * @var int
+     */
+    private $ipV4Start;
 
-		return $record;
-	}
+    /**
+     * @var Metadata
+     */
+    private $metadata;
 
-	/**
-	 * Retrieves the record for the IP address and its associated network prefix length.
-	 *
-	 * @param string $ipAddress
-	 *                          the IP address to look up
-	 *
-	 * @throws BadMethodCallException   if this method is called on a closed database
-	 * @throws InvalidArgumentException if something other than a single IP address is passed to the method
-	 * @throws InvalidDatabaseException
-	 *                                  if the database is invalid or there is an error reading
-	 *                                  from it
-	 *
-	 * @return array an array where the first element is the record and the
-	 *               second the network prefix length for the record
-	 */
-	public function getWithPrefixLen( string $ipAddress ): array {
-		if ( \func_num_args() !== 1 ) {
-			throw new ArgumentCountError(
-				sprintf( '%s() expects exactly 1 parameter, %d given', __METHOD__, \func_num_args() )
-			);
-		}
+    /**
+     * Constructs a Reader for the MaxMind DB format. The file passed to it must
+     * be a valid MaxMind DB file such as a GeoIp2 database file.
+     *
+     * @param string $database the MaxMind DB file to use
+     *
+     * @throws \InvalidArgumentException for invalid database path or unknown arguments
+     * @throws InvalidDatabaseException
+     *                                   if the database is invalid or there is an error reading
+     *                                   from it
+     */
+    public function __construct(string $database)
+    {
+        if (\func_num_args() !== 1) {
+            throw new \ArgumentCountError(
+                \sprintf('%s() expects exactly 1 parameter, %d given', __METHOD__, \func_num_args())
+            );
+        }
 
-		if ( ! \is_resource( $this->fileHandle ) ) {
-			throw new BadMethodCallException(
-				'Attempt to read from a closed MaxMind DB.'
-			);
-		}
+        if (is_dir($database)) {
+            // This matches the error that the C extension throws.
+            throw new InvalidDatabaseException(
+                "Error opening database file ($database). Is this a valid MaxMind DB file?"
+            );
+        }
 
-		[$pointer, $prefixLen] = $this->findAddressInTree( $ipAddress );
-		if ( $pointer === 0 ) {
-			return array( null, $prefixLen );
-		}
+        $fileHandle = @fopen($database, 'rb');
+        if ($fileHandle === false) {
+            throw new \InvalidArgumentException(
+                "The file \"$database\" does not exist or is not readable."
+            );
+        }
+        $this->fileHandle = $fileHandle;
 
-		return array( $this->resolveDataPointer( $pointer ), $prefixLen );
-	}
+        $fileSize = @filesize($database);
+        if ($fileSize === false) {
+            throw new \UnexpectedValueException(
+                "Error determining the size of \"$database\"."
+            );
+        }
+        $this->fileSize = $fileSize;
 
-	private function findAddressInTree( string $ipAddress ): array {
-		$packedAddr = @inet_pton( $ipAddress );
-		if ( $packedAddr === false ) {
-			throw new InvalidArgumentException(
-				"The value \"$ipAddress\" is not a valid IP address."
-			);
-		}
+        $start = $this->findMetadataStart($database);
+        $metadataDecoder = new Decoder($this->fileHandle, $start);
+        [$metadataArray] = $metadataDecoder->decode($start);
+        $this->metadata = new Metadata($metadataArray);
+        $this->decoder = new Decoder(
+            $this->fileHandle,
+            $this->metadata->searchTreeSize + self::$DATA_SECTION_SEPARATOR_SIZE
+        );
+        $this->ipV4Start = $this->ipV4StartNode();
+    }
 
-		$rawAddress = unpack( 'C*', $packedAddr );
+    /**
+     * Retrieves the record for the IP address.
+     *
+     * @param string $ipAddress the IP address to look up
+     *
+     * @throws \BadMethodCallException   if this method is called on a closed database
+     * @throws \InvalidArgumentException if something other than a single IP address is passed to the method
+     * @throws InvalidDatabaseException
+     *                                   if the database is invalid or there is an error reading
+     *                                   from it
+     *
+     * @return mixed the record for the IP address
+     */
+    public function get(string $ipAddress)
+    {
+        if (\func_num_args() !== 1) {
+            throw new \ArgumentCountError(
+                \sprintf('%s() expects exactly 1 parameter, %d given', __METHOD__, \func_num_args())
+            );
+        }
+        [$record] = $this->getWithPrefixLen($ipAddress);
 
-		$bitCount = \count( $rawAddress ) * 8;
+        return $record;
+    }
 
-		// The first node of the tree is always node 0, at the beginning of the
-		// value
-		$node = 0;
+    /**
+     * Retrieves the record for the IP address and its associated network prefix length.
+     *
+     * @param string $ipAddress the IP address to look up
+     *
+     * @throws \BadMethodCallException   if this method is called on a closed database
+     * @throws \InvalidArgumentException if something other than a single IP address is passed to the method
+     * @throws InvalidDatabaseException
+     *                                   if the database is invalid or there is an error reading
+     *                                   from it
+     *
+     * @return array{0:mixed, 1:int} an array where the first element is the record and the
+     *                               second the network prefix length for the record
+     */
+    public function getWithPrefixLen(string $ipAddress): array
+    {
+        if (\func_num_args() !== 1) {
+            throw new \ArgumentCountError(
+                \sprintf('%s() expects exactly 1 parameter, %d given', __METHOD__, \func_num_args())
+            );
+        }
 
-		$metadata = $this->metadata;
+        if (!\is_resource($this->fileHandle)) {
+            throw new \BadMethodCallException(
+                'Attempt to read from a closed MaxMind DB.'
+            );
+        }
 
-		// Check if we are looking up an IPv4 address in an IPv6 tree. If this
-		// is the case, we can skip over the first 96 nodes.
-		if ( $metadata->ipVersion === 6 ) {
-			if ( $bitCount === 32 ) {
-				$node = $this->ipV4Start;
-			}
-		} elseif ( $metadata->ipVersion === 4 && $bitCount === 128 ) {
-			throw new InvalidArgumentException(
-				"Error looking up $ipAddress. You attempted to look up an"
-				. ' IPv6 address in an IPv4-only database.'
-			);
-		}
+        [$pointer, $prefixLen] = $this->findAddressInTree($ipAddress);
+        if ($pointer === 0) {
+            return [null, $prefixLen];
+        }
 
-		$nodeCount = $metadata->nodeCount;
+        return [$this->resolveDataPointer($pointer), $prefixLen];
+    }
 
-		for ( $i = 0; $i < $bitCount && $node < $nodeCount; ++$i ) {
-			$tempBit = 0xFF & $rawAddress[ ( $i >> 3 ) + 1 ];
-			$bit     = 1 & ( $tempBit >> 7 - ( $i % 8 ) );
+    /**
+     * @return array{0:int, 1:int}
+     */
+    private function findAddressInTree(string $ipAddress): array
+    {
+        $packedAddr = @inet_pton($ipAddress);
+        if ($packedAddr === false) {
+            throw new \InvalidArgumentException(
+                "The value \"$ipAddress\" is not a valid IP address."
+            );
+        }
 
-			$node = $this->readNode( $node, $bit );
-		}
-		if ( $node === $nodeCount ) {
-			// Record is empty
-			return array( 0, $i );
-		}
-		if ( $node > $nodeCount ) {
-			// Record is a data pointer
-			return array( $node, $i );
-		}
+        $rawAddress = unpack('C*', $packedAddr);
+        if ($rawAddress === false) {
+            throw new InvalidDatabaseException(
+                'Could not unpack the unsigned char of the packed in_addr representation.'
+            );
+        }
 
-		throw new InvalidDatabaseException(
-			'Invalid or corrupt database. Maximum search depth reached without finding a leaf node'
-		);
-	}
+        $bitCount = \count($rawAddress) * 8;
 
-	private function ipV4StartNode(): int {
-		// If we have an IPv4 database, the start node is the first node
-		if ( $this->metadata->ipVersion === 4 ) {
-			return 0;
-		}
+        // The first node of the tree is always node 0, at the beginning of the
+        // value
+        $node = 0;
 
-		$node = 0;
+        $metadata = $this->metadata;
 
-		for ( $i = 0; $i < 96 && $node < $this->metadata->nodeCount; ++$i ) {
-			$node = $this->readNode( $node, 0 );
-		}
+        // Check if we are looking up an IPv4 address in an IPv6 tree. If this
+        // is the case, we can skip over the first 96 nodes.
+        if ($metadata->ipVersion === 6) {
+            if ($bitCount === 32) {
+                $node = $this->ipV4Start;
+            }
+        } elseif ($metadata->ipVersion === 4 && $bitCount === 128) {
+            throw new \InvalidArgumentException(
+                "Error looking up $ipAddress. You attempted to look up an"
+                . ' IPv6 address in an IPv4-only database.'
+            );
+        }
 
-		return $node;
-	}
+        $nodeCount = $metadata->nodeCount;
 
-	private function readNode( int $nodeNumber, int $index ): int {
-		$baseOffset = $nodeNumber * $this->metadata->nodeByteSize;
+        for ($i = 0; $i < $bitCount && $node < $nodeCount; ++$i) {
+            $tempBit = 0xFF & $rawAddress[($i >> 3) + 1];
+            $bit = 1 & ($tempBit >> 7 - ($i % 8));
 
-		switch ( $this->metadata->recordSize ) {
-			case 24:
-				$bytes    = Util::read( $this->fileHandle, $baseOffset + $index * 3, 3 );
-				[, $node] = unpack( 'N', "\x00" . $bytes );
+            $node = $this->readNode($node, $bit);
+        }
+        if ($node === $nodeCount) {
+            // Record is empty
+            return [0, $i];
+        }
+        if ($node > $nodeCount) {
+            // Record is a data pointer
+            return [$node, $i];
+        }
 
-				return $node;
+        throw new InvalidDatabaseException(
+            'Invalid or corrupt database. Maximum search depth reached without finding a leaf node'
+        );
+    }
 
-			case 28:
-				$bytes = Util::read( $this->fileHandle, $baseOffset + 3 * $index, 4 );
-				if ( $index === 0 ) {
-					$middle = ( 0xF0 & \ord( $bytes[3] ) ) >> 4;
-				} else {
-					$middle = 0x0F & \ord( $bytes[0] );
-				}
-				[, $node] = unpack( 'N', \chr( $middle ) . substr( $bytes, $index, 3 ) );
+    private function ipV4StartNode(): int
+    {
+        // If we have an IPv4 database, the start node is the first node
+        if ($this->metadata->ipVersion === 4) {
+            return 0;
+        }
 
-				return $node;
+        $node = 0;
 
-			case 32:
-				$bytes    = Util::read( $this->fileHandle, $baseOffset + $index * 4, 4 );
-				[, $node] = unpack( 'N', $bytes );
+        for ($i = 0; $i < 96 && $node < $this->metadata->nodeCount; ++$i) {
+            $node = $this->readNode($node, 0);
+        }
 
-				return $node;
+        return $node;
+    }
 
-			default:
-				throw new InvalidDatabaseException(
-					'Unknown record size: '
-					. $this->metadata->recordSize
-				);
-		}
-	}
+    private function readNode(int $nodeNumber, int $index): int
+    {
+        $baseOffset = $nodeNumber * $this->metadata->nodeByteSize;
 
-	/**
-	 * @return mixed
-	 */
-	private function resolveDataPointer( int $pointer ) {
-		$resolved = $pointer - $this->metadata->nodeCount
-			+ $this->metadata->searchTreeSize;
-		if ( $resolved >= $this->fileSize ) {
-			throw new InvalidDatabaseException(
-				"The MaxMind DB file's search tree is corrupt"
-			);
-		}
+        switch ($this->metadata->recordSize) {
+            case 24:
+                $bytes = Util::read($this->fileHandle, $baseOffset + $index * 3, 3);
+                $rc = unpack('N', "\x00" . $bytes);
+                if ($rc === false) {
+                    throw new InvalidDatabaseException(
+                        'Could not unpack the unsigned long of the node.'
+                    );
+                }
+                [, $node] = $rc;
 
-		[$data] = $this->decoder->decode( $resolved );
+                return $node;
 
-		return $data;
-	}
+            case 28:
+                $bytes = Util::read($this->fileHandle, $baseOffset + 3 * $index, 4);
+                if ($index === 0) {
+                    $middle = (0xF0 & \ord($bytes[3])) >> 4;
+                } else {
+                    $middle = 0x0F & \ord($bytes[0]);
+                }
+                $rc = unpack('N', \chr($middle) . substr($bytes, $index, 3));
+                if ($rc === false) {
+                    throw new InvalidDatabaseException(
+                        'Could not unpack the unsigned long of the node.'
+                    );
+                }
+                [, $node] = $rc;
 
-	/*
-	 * This is an extremely naive but reasonably readable implementation. There
-	 * are much faster algorithms (e.g., Boyer-Moore) for this if speed is ever
-	 * an issue, but I suspect it won't be.
-	 */
-	private function findMetadataStart( string $filename ): int {
-		$handle       = $this->fileHandle;
-		$fstat        = fstat( $handle );
-		$fileSize     = $fstat['size'];
-		$marker       = self::$METADATA_START_MARKER;
-		$markerLength = self::$METADATA_START_MARKER_LENGTH;
+                return $node;
 
-		$minStart = $fileSize - min( self::$METADATA_MAX_SIZE, $fileSize );
+            case 32:
+                $bytes = Util::read($this->fileHandle, $baseOffset + $index * 4, 4);
+                $rc = unpack('N', $bytes);
+                if ($rc === false) {
+                    throw new InvalidDatabaseException(
+                        'Could not unpack the unsigned long of the node.'
+                    );
+                }
+                [, $node] = $rc;
 
-		for ( $offset = $fileSize - $markerLength; $offset >= $minStart; --$offset ) {
-			if ( fseek( $handle, $offset ) !== 0 ) {
-				break;
-			}
+                return $node;
 
-			$value = fread( $handle, $markerLength );
-			if ( $value === $marker ) {
-				return $offset + $markerLength;
-			}
-		}
+            default:
+                throw new InvalidDatabaseException(
+                    'Unknown record size: '
+                    . $this->metadata->recordSize
+                );
+        }
+    }
 
-		throw new InvalidDatabaseException(
-			"Error opening database file ($filename). " .
-			'Is this a valid MaxMind DB file?'
-		);
-	}
+    /**
+     * @return mixed
+     */
+    private function resolveDataPointer(int $pointer)
+    {
+        $resolved = $pointer - $this->metadata->nodeCount
+            + $this->metadata->searchTreeSize;
+        if ($resolved >= $this->fileSize) {
+            throw new InvalidDatabaseException(
+                "The MaxMind DB file's search tree is corrupt"
+            );
+        }
 
-	/**
-	 * @throws InvalidArgumentException if arguments are passed to the method
-	 * @throws BadMethodCallException   if the database has been closed
-	 *
-	 * @return Metadata object for the database
-	 */
-	public function metadata(): Metadata {
-		if ( \func_num_args() ) {
-			throw new ArgumentCountError(
-				sprintf( '%s() expects exactly 0 parameters, %d given', __METHOD__, \func_num_args() )
-			);
-		}
+        [$data] = $this->decoder->decode($resolved);
 
-		// Not technically required, but this makes it consistent with
-		// C extension and it allows us to change our implementation later.
-		if ( ! \is_resource( $this->fileHandle ) ) {
-			throw new BadMethodCallException(
-				'Attempt to read from a closed MaxMind DB.'
-			);
-		}
+        return $data;
+    }
 
-		return clone $this->metadata;
-	}
+    /*
+     * This is an extremely naive but reasonably readable implementation. There
+     * are much faster algorithms (e.g., Boyer-Moore) for this if speed is ever
+     * an issue, but I suspect it won't be.
+     */
+    private function findMetadataStart(string $filename): int
+    {
+        $handle = $this->fileHandle;
+        $fstat = fstat($handle);
+        if ($fstat === false) {
+            throw new InvalidDatabaseException(
+                "Error getting file information ($filename)."
+            );
+        }
+        $fileSize = $fstat['size'];
+        $marker = self::$METADATA_START_MARKER;
+        $markerLength = self::$METADATA_START_MARKER_LENGTH;
 
-	/**
-	 * Closes the MaxMind DB and returns resources to the system.
-	 *
-	 * @throws Exception
-	 *                   if an I/O error occurs
-	 */
-	public function close(): void {
-		if ( \func_num_args() ) {
-			throw new ArgumentCountError(
-				sprintf( '%s() expects exactly 0 parameters, %d given', __METHOD__, \func_num_args() )
-			);
-		}
+        $minStart = $fileSize - min(self::$METADATA_MAX_SIZE, $fileSize);
 
-		if ( ! \is_resource( $this->fileHandle ) ) {
-			throw new BadMethodCallException(
-				'Attempt to close a closed MaxMind DB.'
-			);
-		}
-		fclose( $this->fileHandle );
-	}
+        for ($offset = $fileSize - $markerLength; $offset >= $minStart; --$offset) {
+            if (fseek($handle, $offset) !== 0) {
+                break;
+            }
+
+            $value = fread($handle, $markerLength);
+            if ($value === $marker) {
+                return $offset + $markerLength;
+            }
+        }
+
+        throw new InvalidDatabaseException(
+            "Error opening database file ($filename). " .
+            'Is this a valid MaxMind DB file?'
+        );
+    }
+
+    /**
+     * @throws \InvalidArgumentException if arguments are passed to the method
+     * @throws \BadMethodCallException   if the database has been closed
+     *
+     * @return Metadata object for the database
+     */
+    public function metadata(): Metadata
+    {
+        if (\func_num_args()) {
+            throw new \ArgumentCountError(
+                \sprintf('%s() expects exactly 0 parameters, %d given', __METHOD__, \func_num_args())
+            );
+        }
+
+        // Not technically required, but this makes it consistent with
+        // C extension and it allows us to change our implementation later.
+        if (!\is_resource($this->fileHandle)) {
+            throw new \BadMethodCallException(
+                'Attempt to read from a closed MaxMind DB.'
+            );
+        }
+
+        return clone $this->metadata;
+    }
+
+    /**
+     * Closes the MaxMind DB and returns resources to the system.
+     *
+     * @throws \Exception
+     *                    if an I/O error occurs
+     */
+    public function close(): void
+    {
+        if (\func_num_args()) {
+            throw new \ArgumentCountError(
+                \sprintf('%s() expects exactly 0 parameters, %d given', __METHOD__, \func_num_args())
+            );
+        }
+
+        if (!\is_resource($this->fileHandle)) {
+            throw new \BadMethodCallException(
+                'Attempt to close a closed MaxMind DB.'
+            );
+        }
+        fclose($this->fileHandle);
+    }
 }
