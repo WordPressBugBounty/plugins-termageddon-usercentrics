@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace GeoIp2\Model;
 
 use GeoIp2\Util;
@@ -18,33 +16,23 @@ use GeoIp2\Util;
  *      the record. In particular, this is the largest network where all of the
  *      fields besides $ipAddress have the same value.
  */
-class Domain extends AbstractModel
-{
-    /**
-     * @var string|null
-     */
-    protected $domain;
+class Domain extends AbstractModel {
 
-    /**
-     * @var string
-     */
-    protected $ipAddress;
+	protected $domain;
+	protected $ipAddress;
+	protected $network;
 
-    /**
-     * @var string
-     */
-    protected $network;
+	/**
+	 * @ignore
+	 *
+	 * @param mixed $raw
+	 */
+	public function __construct( $raw ) {
+		parent::__construct( $raw );
 
-    /**
-     * @ignore
-     */
-    public function __construct(array $raw)
-    {
-        parent::__construct($raw);
-
-        $this->domain = $this->get('domain');
-        $ipAddress = $this->get('ip_address');
-        $this->ipAddress = $ipAddress;
-        $this->network = Util::cidr($ipAddress, $this->get('prefix_len'));
-    }
+		$this->domain    = $this->get( 'domain' );
+		$ipAddress       = $this->get( 'ip_address' );
+		$this->ipAddress = $ipAddress;
+		$this->network   = Util::cidr( $ipAddress, $this->get( 'prefix_len' ) );
+	}
 }

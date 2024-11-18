@@ -1,15 +1,13 @@
 <?php
 
-declare(strict_types=1);
-
 namespace GeoIp2\Model;
 
 /**
- * Model class for the data returned by City Plus web service and City
- * database.
+ * Model class for the data returned by GeoIP2 City web service and database.
  *
- * See https://dev.maxmind.com/geoip/docs/web-services?lang=en for more
- * details.
+ * The only difference between the City and Insights model classes is which
+ * fields in each record may be populated. See
+ * https://dev.maxmind.com/geoip/geoip2/web-services for more details.
  *
  * @property-read \GeoIp2\Record\City $city City data for the requested IP
  * address.
@@ -29,95 +27,85 @@ namespace GeoIp2\Model;
  * did not contain any subdivisions, this method returns an empty
  * \GeoIp2\Record\Subdivision object.
  */
-class City extends Country
-{
-    /**
-     * @ignore
-     *
-     * @var \GeoIp2\Record\City
-     */
-    protected $city;
+class City extends Country {
 
-    /**
-     * @ignore
-     *
-     * @var \GeoIp2\Record\Location
-     */
-    protected $location;
+	/**
+	 * @ignore
+	 */
+	protected $city;
+	/**
+	 * @ignore
+	 */
+	protected $location;
+	/**
+	 * @ignore
+	 */
+	protected $postal;
+	/**
+	 * @ignore
+	 */
+	protected $subdivisions = array();
 
-    /**
-     * @ignore
-     *
-     * @var \GeoIp2\Record\Postal
-     */
-    protected $postal;
+	/**
+	 * @ignore
+	 *
+	 * @param mixed $raw
+	 * @param mixed $locales
+	 */
+	public function __construct( $raw, $locales = array( 'en' ) ) {
+		parent::__construct( $raw, $locales );
 
-    /**
-     * @ignore
-     *
-     * @var array<\GeoIp2\Record\Subdivision>
-     */
-    protected $subdivisions = [];
+		$this->city     = new \GeoIp2\Record\City( $this->get( 'city' ), $locales );
+		$this->location = new \GeoIp2\Record\Location( $this->get( 'location' ) );
+		$this->postal   = new \GeoIp2\Record\Postal( $this->get( 'postal' ) );
 
-    /**
-     * @ignore
-     */
-    public function __construct(array $raw, array $locales = ['en'])
-    {
-        parent::__construct($raw, $locales);
+		$this->createSubdivisions( $raw, $locales );
+	}
 
-        $this->city = new \GeoIp2\Record\City($this->get('city'), $locales);
-        $this->location = new \GeoIp2\Record\Location($this->get('location'));
-        $this->postal = new \GeoIp2\Record\Postal($this->get('postal'));
+	private function createSubdivisions( $raw, $locales ) {
+		if ( ! isset( $raw['subdivisions'] ) ) {
+			return;
+		}
 
-        $this->createSubdivisions($raw, $locales);
-    }
+		foreach ( $raw['subdivisions'] as $sub ) {
+			array_push(
+				$this->subdivisions,
+				new \GeoIp2\Record\Subdivision( $sub, $locales )
+			);
+		}
+	}
 
-    private function createSubdivisions(array $raw, array $locales): void
-    {
-        if (!isset($raw['subdivisions'])) {
-            return;
-        }
+	/**
+	 * @ignore
+	 *
+	 * @param mixed $attr
+	 */
+	public function __get( $attr ) {
+		if ( $attr === 'mostSpecificSubdivision' ) {
+			return $this->$attr();
+		}
 
-        foreach ($raw['subdivisions'] as $sub) {
-            $this->subdivisions[] =
-                new \GeoIp2\Record\Subdivision($sub, $locales)
-            ;
-        }
-    }
+		return parent::__get( $attr );
+	}
 
-    /**
-     * @ignore
-     *
-     * @return mixed
-     */
-    public function __get(string $attr)
-    {
-        if ($attr === 'mostSpecificSubdivision') {
-            return $this->{$attr}();
-        }
+	/**
+	 * @ignore
+	 *
+	 * @param mixed $attr
+	 */
+	public function __isset( $attr ) {
+		if ( $attr === 'mostSpecificSubdivision' ) {
+			// We always return a mostSpecificSubdivision, even if it is the
+			// empty subdivision
+			return true;
+		}
 
-        return parent::__get($attr);
-    }
+		return parent::__isset( $attr );
+	}
 
-    /**
-     * @ignore
-     */
-    public function __isset(string $attr): bool
-    {
-        if ($attr === 'mostSpecificSubdivision') {
-            // We always return a mostSpecificSubdivision, even if it is the
-            // empty subdivision
-            return true;
-        }
-
-        return parent::__isset($attr);
-    }
-
-    private function mostSpecificSubdivision(): \GeoIp2\Record\Subdivision
-    {
-        return empty($this->subdivisions) ?
-            new \GeoIp2\Record\Subdivision([], $this->locales) :
-            end($this->subdivisions);
-    }
+	private function mostSpecificSubdivision() {
+		return empty( $this->subdivisions ) ?
+			new \GeoIp2\Record\Subdivision( array(), $this->locales ) :
+			end( $this->subdivisions );
+	}
 }

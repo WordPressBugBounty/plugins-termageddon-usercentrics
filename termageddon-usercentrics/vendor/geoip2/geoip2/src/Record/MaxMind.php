@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace GeoIp2\Record;
 
 /**
@@ -12,12 +10,10 @@ namespace GeoIp2\Record;
  * @property-read int|null $queriesRemaining The number of remaining queries you
  * have for the service you are calling.
  */
-class MaxMind extends AbstractRecord
-{
-    /**
-     * @ignore
-     *
-     * @var array<string>
-     */
-    protected $validAttributes = ['queriesRemaining'];
+class MaxMind extends AbstractRecord {
+
+	/**
+	 * @ignore
+	 */
+	protected $validAttributes = array( 'queriesRemaining' );
 }

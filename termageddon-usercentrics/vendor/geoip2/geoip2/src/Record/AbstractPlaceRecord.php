@@ -1,67 +1,61 @@
 <?php
 
-declare(strict_types=1);
-
 namespace GeoIp2\Record;
 
-abstract class AbstractPlaceRecord extends AbstractRecord
-{
-    /**
-     * @var array<string>
-     */
-    private $locales;
+abstract class AbstractPlaceRecord extends AbstractRecord {
 
-    /**
-     * @ignore
-     */
-    public function __construct(?array $record, array $locales = ['en'])
-    {
-        $this->locales = $locales;
-        parent::__construct($record);
-    }
+	private $locales;
 
-    /**
-     * @ignore
-     *
-     * @return mixed
-     */
-    public function __get(string $attr)
-    {
-        if ($attr === 'name') {
-            return $this->name();
-        }
+	/**
+	 * @ignore
+	 *
+	 * @param mixed $record
+	 * @param mixed $locales
+	 */
+	public function __construct( $record, $locales = array( 'en' ) ) {
+		$this->locales = $locales;
+		parent::__construct( $record );
+	}
 
-        return parent::__get($attr);
-    }
+	/**
+	 * @ignore
+	 *
+	 * @param mixed $attr
+	 */
+	public function __get( $attr ) {
+		if ( $attr === 'name' ) {
+			return $this->name();
+		}
 
-    /**
-     * @ignore
-     */
-    public function __isset(string $attr): bool
-    {
-        if ($attr === 'name') {
-            return $this->firstSetNameLocale() !== null;
-        }
+		return parent::__get( $attr );
+	}
 
-        return parent::__isset($attr);
-    }
+	/**
+	 * @ignore
+	 *
+	 * @param mixed $attr
+	 */
+	public function __isset( $attr ) {
+		if ( $attr === 'name' ) {
+			return $this->firstSetNameLocale() === null ? false : true;
+		}
 
-    private function name(): ?string
-    {
-        $locale = $this->firstSetNameLocale();
+		return parent::__isset( $attr );
+	}
 
-        // @phpstan-ignore-next-line
-        return $locale === null ? null : $this->names[$locale];
-    }
+	private function name() {
+		$locale = $this->firstSetNameLocale();
 
-    private function firstSetNameLocale(): ?string
-    {
-        foreach ($this->locales as $locale) {
-            if (isset($this->names[$locale])) {
-                return $locale;
-            }
-        }
+		return $locale === null ? null : $this->names[ $locale ];
+	}
 
-        return null;
-    }
+	private function firstSetNameLocale() {
+		foreach ( $this->locales as $locale ) {
+			if ( isset( $this->names[ $locale ] ) ) {
+				return $locale;
+			}
+		}
+
+		return null;
+	}
 }

@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace GeoIp2\Record;
 
 /**
@@ -15,19 +13,14 @@ namespace GeoIp2\Record;
  * representing the country. Currently we only return <code>military</code>
  * but this could expand to include other types in the future.
  */
-class RepresentedCountry extends Country
-{
-    /**
-     * @ignore
-     *
-     * @var array<string>
-     */
-    protected $validAttributes = [
-        'confidence',
-        'geonameId',
-        'isInEuropeanUnion',
-        'isoCode',
-        'names',
-        'type',
-    ];
+class RepresentedCountry extends Country {
+
+	protected $validAttributes = array(
+		'confidence',
+		'geonameId',
+		'isInEuropeanUnion',
+		'isoCode',
+		'names',
+		'type',
+	);
 }

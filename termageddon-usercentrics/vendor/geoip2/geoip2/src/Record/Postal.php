@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types=1);
-
 namespace GeoIp2\Record;
 
 /**
@@ -19,12 +17,10 @@ namespace GeoIp2\Record;
  * available from the Insights service and the GeoIP2 Enterprise
  * database.
  */
-class Postal extends AbstractRecord
-{
-    /**
-     * @ignore
-     *
-     * @var array<string>
-     */
-    protected $validAttributes = ['code', 'confidence'];
+class Postal extends AbstractRecord {
+
+	/**
+	 * @ignore
+	 */
+	protected $validAttributes = array( 'code', 'confidence' );
 }

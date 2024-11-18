@@ -9,43 +9,37 @@ namespace MaxMind\WebService\Http;
  *
  * @internal
  */
-class RequestFactory
-{
-    /**
-     * Keep the cURL resource here, so that if there are multiple API requests
-     * done the connection is kept alive, SSL resumption can be used
-     * etcetera.
-     *
-     * @var \CurlHandle|null
-     */
-    private $ch;
+class RequestFactory {
 
-    public function __destruct()
-    {
-        if (!empty($this->ch)) {
-            curl_close($this->ch);
-        }
-    }
+	/**
+	 * Keep the cURL resource here, so that if there are multiple API requests
+	 * done the connection is kept alive, SSL resumption can be used
+	 * etcetera.
+	 *
+	 * @var \CurlHandle|null
+	 */
+	private $ch;
 
-    /**
-     * @return \CurlHandle
-     */
-    private function getCurlHandle()
-    {
-        if (empty($this->ch)) {
-            $this->ch = curl_init();
-        }
+	public function __destruct() {
+		if ( ! empty( $this->ch ) ) {
+			curl_close( $this->ch );
+		}
+	}
 
-        return $this->ch;
-    }
+	/**
+	 * @return \CurlHandle
+	 */
+	private function getCurlHandle() {
+		if ( empty( $this->ch ) ) {
+			$this->ch = curl_init();
+		}
 
-    /**
-     * @param array<string, mixed> $options
-     */
-    public function request(string $url, array $options): Request
-    {
-        $options['curlHandle'] = $this->getCurlHandle();
+		return $this->ch;
+	}
 
-        return new CurlRequest($url, $options);
-    }
+	public function request( string $url, array $options ): Request {
+		$options['curlHandle'] = $this->getCurlHandle();
+
+		return new CurlRequest( $url, $options );
+	}
 }

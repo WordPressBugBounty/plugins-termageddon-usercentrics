@@ -1,68 +1,62 @@
 <?php
 
-declare(strict_types=1);
-
 namespace GeoIp2\Model;
 
 /**
  * @ignore
  */
-abstract class AbstractModel implements \JsonSerializable
-{
-    /**
-     * @var array<string, mixed>
-     */
-    protected $raw;
+abstract class AbstractModel implements \JsonSerializable {
 
-    /**
-     * @ignore
-     */
-    public function __construct(array $raw)
-    {
-        $this->raw = $raw;
-    }
+	protected $raw;
 
-    /**
-     * @ignore
-     *
-     * @return mixed
-     */
-    protected function get(string $field)
-    {
-        if (isset($this->raw[$field])) {
-            return $this->raw[$field];
-        }
-        if (preg_match('/^is_/', $field)) {
-            return false;
-        }
+	/**
+	 * @ignore
+	 *
+	 * @param mixed $raw
+	 */
+	public function __construct( $raw ) {
+		$this->raw = $raw;
+	}
 
-        return null;
-    }
+	/**
+	 * @ignore
+	 *
+	 * @param mixed $field
+	 */
+	protected function get( $field ) {
+		if ( isset( $this->raw[ $field ] ) ) {
+			return $this->raw[ $field ];
+		}
+		if ( preg_match( '/^is_/', $field ) ) {
+			return false;
+		}
 
-    /**
-     * @ignore
-     *
-     * @return mixed
-     */
-    public function __get(string $attr)
-    {
-        if ($attr !== 'instance' && property_exists($this, $attr)) {
-            return $this->{$attr};
-        }
+		return null;
+	}
 
-        throw new \RuntimeException("Unknown attribute: $attr");
-    }
+	/**
+	 * @ignore
+	 *
+	 * @param mixed $attr
+	 */
+	public function __get( $attr ) {
+		if ( $attr !== 'instance' && property_exists( $this, $attr ) ) {
+			return $this->$attr;
+		}
 
-    /**
-     * @ignore
-     */
-    public function __isset(string $attr): bool
-    {
-        return $attr !== 'instance' && isset($this->{$attr});
-    }
+		throw new \RuntimeException( "Unknown attribute: $attr" );
+	}
 
-    public function jsonSerialize(): array
-    {
-        return $this->raw;
-    }
+	/**
+	 * @ignore
+	 *
+	 * @param mixed $attr
+	 */
+	public function __isset( $attr ) {
+		return $attr !== 'instance' && isset( $this->$attr );
+	}
+
+	public function jsonSerialize() {
+		return $this->raw;
+	}
 }

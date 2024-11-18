@@ -3,9 +3,8 @@ Contributors: dintriglia
 Donate link: https://termageddon.com
 Tags: termageddon, cookie, consent, embed, usercentrics
 Requires at least: 3.0.1
-Requires PHP: 7.2
 Tested up to: 6.7
-Stable tag: 1.5.3
+Stable tag: 1.5.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -27,10 +26,9 @@ If you wish to place a privacy settings link in the footer or anywhere else, you
 
 == Changelog ==
 
-= 1.5.3 =
+= 1.5.4 =
 
--   [CHANGE] Bumped minimum PHP version to 7.2.
--   [CHANGE] Updated MaxMind GeoLite2 Reader version to 2.13.
+-   [FIX] Fixed an issue in which older sites were not compatible with the composer autoloader.
 
 = 1.5.2 =
 
