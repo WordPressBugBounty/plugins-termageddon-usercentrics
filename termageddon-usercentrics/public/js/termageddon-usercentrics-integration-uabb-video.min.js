@@ -1,0 +1,1 @@
+const style=document.createElement("style");style.id="termageddon-usercentrics-integration-uabb-video-style",style.textContent="\n.uabb-video__outer-wrap:before {\n    z-index: 0 !important;\n}\n",document.head.appendChild(style);

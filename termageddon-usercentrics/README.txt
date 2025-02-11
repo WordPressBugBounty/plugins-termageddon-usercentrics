@@ -3,8 +3,8 @@ Contributors: dintriglia
 Donate link: https://termageddon.com
 Tags: termageddon, cookie, consent, embed, usercentrics
 Requires at least: 3.0.1
-Tested up to: 6.7
-Stable tag: 1.5.4
+Tested up to: 6.7.1
+Stable tag: 1.6.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,6 +25,13 @@ If you wish to place a privacy settings link in the footer or anywhere else, you
 **Please note**: When GeoIP is enabled, you will be collecting IP addresses for the purposes of determining which cookie consent solution (or lack thereof) to provide to each website visitor (CPRA or CIPA cookie consent, GDPR cookie consent, UK DPA consent or none), based on their location. A cookie will then be placed on the user's browser to log their session, which helps improve page load speed when the user visits other pages on the website. You should ensure that you are in compliance with all applicable privacy laws prior to installing this plugin (or any other technologies on your website). To opt out of this feature, keep all GeoIP checkboxes unchecked (default).
 
 == Changelog ==
+
+= 1.6.0 =
+
+-   [ADD] Added Usercentrics Consent API V3 with new and improved embed code.
+-   [ADD] Added alternative injection method for alternate implementation of Usercentrics.
+-   [CHANGE] Switch to using Settings ID instead of an embed code. Plugin will prompt for one-click conversion on visiting the settings page.
+-   [ADD] Added support for new integrations: PowerPack Video, Ultimate Addons for Beaver Builder Video.
 
 = 1.5.4 =
 

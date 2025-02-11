@@ -1,6 +1,7 @@
 const tuCookieHideName = "tu-geoip-hide";
 const tuDebug = termageddon_usercentrics_obj.debug === "true";
 const tuPSLHide = termageddon_usercentrics_obj["psl_hide"] === "true";
+const tuToggle = "div#usercentrics-root,aside#usercentrics-cmp-ui";
 
 if (tuDebug) console.log("UC: AJAX script initialized");
 
@@ -36,7 +37,7 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 			if (tuPSLHide)
 				jQuery("#usercentrics-psl, .usercentrics-psl").show();
 
-			jQuery("div#usercentrics-root").show();
+			jQuery(tuToggle).show();
 
 			if (!UC_UI.isConsentRequired()) return UC_UI.closeCMP();
 			return UC_UI.showFirstLayer();
@@ -46,7 +47,7 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 			if (tuPSLHide)
 				jQuery("#usercentrics-psl, .usercentrics-psl").hide();
 
-			jQuery("div#usercentrics-root").hide();
+			jQuery(tuToggle).hide();
 
 			//Check for already acceptance.
 			if (UC_UI.areAllConsentsAccepted()) return;

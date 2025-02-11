@@ -49,6 +49,15 @@ class Termageddon_Usercentrics_Admin {
 	private $version;
 
 	/**
+	 * The tabs for the admin page.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 * @var      array    $tabs    The tabs for the admin page.
+	 */
+	private $tabs;
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
@@ -60,8 +69,32 @@ class Termageddon_Usercentrics_Admin {
 		$this->plugin_name = $plugin_name;
 		$this->version     = $version;
 
+		$this->tabs = array(
+			'config'       => array(
+				'title' => __( 'Configuration', 'termageddon-usercentrics' ),
+				'url'   => '?page=termageddon-usercentrics',
+			),
+			'integrations' => array(
+				'title' => __( 'Integrations', 'termageddon-usercentrics' ),
+				'url'   => '?page=termageddon-usercentrics&tab=integrations',
+			),
+			'settings'     => array(
+				'title' => __( 'Settings', 'termageddon-usercentrics' ),
+				'url'   => '?page=termageddon-usercentrics&tab=settings',
+			),
+			'geolocation'  => array(
+				'title' => __( 'Geo-Location', 'termageddon-usercentrics' ),
+				'url'   => '?page=termageddon-usercentrics&tab=geolocation',
+			),
+			'admin'        => array(
+				'title'  => __( 'Advanced Configuration & Troubleshooting', 'termageddon-usercentrics' ),
+				'url'    => '?page=termageddon-usercentrics&tab=admin',
+				'hidden' => true,
+			),
+		);
+
 		// Calculate current tab.
-		$default_tab = 'embed';
+		$default_tab = array_keys( $this->tabs )[0];
 		$tab         = isset( $_GET['tab'] ) ? sanitize_text_field( wp_unslash( $_GET['tab'] ) ) : $default_tab;
 
 		// Set property on object.
@@ -155,10 +188,10 @@ class Termageddon_Usercentrics_Admin {
 		echo '<div class="wrap">
 			<h1>' . esc_html__( 'Termageddon + Usercentrics', 'termageddon-usercentrics' ) . '</h1>';
 
-			// Get the active tab from the $_GET param.
+		// Get the active tab from the $_GET param.
 
 		// Invalid tab error message.
-		if ( ! in_array( $this->current_tab, array( 'embed', 'settings', 'geolocation', 'admin' ), true ) ) {
+		if ( ! in_array( $this->current_tab, array_keys( $this->tabs ) ) ) {
 			echo '<div class="error notice">' . esc_html__( 'Invalid tab. Please check the link and try again.', 'termageddon-usercentrics' ) . '</div>';
 			return;
 		}
@@ -167,9 +200,13 @@ class Termageddon_Usercentrics_Admin {
 
 		?>
 		<nav class="nav-tab-wrapper">
-			<a href="?page=termageddon-usercentrics" class="nav-tab <?php echo ( 'embed' === $this->current_tab ? 'nav-tab-active' : '' ); ?>"><?php esc_html_e( 'Embed Code', 'termageddon-usercentrics' ); ?></a>
-			<a href="?page=termageddon-usercentrics&tab=settings" class="nav-tab <?php echo( 'settings' === $this->current_tab ? 'nav-tab-active' : '' ); ?>"><?php esc_html_e( 'Settings', 'termageddon-usercentrics' ); ?></a>
-			<a href="?page=termageddon-usercentrics&tab=geolocation" class="nav-tab <?php echo ( 'geolocation' === $this->current_tab ? 'nav-tab-active' : '' ); ?>"><?php esc_html_e( 'Geo-Location', 'termageddon-usercentrics' ); ?></a>
+		<?php
+		foreach ( $this->tabs as $tab_key => $tab ) {
+			if ( ! isset( $tab['hidden'] ) ) {
+				echo '<a href="' . esc_url( $tab['url'] ) . '" class="nav-tab ' . ( $tab_key === $this->current_tab ? 'nav-tab-active' : '' ) . '">' . esc_html( $tab['title'] ) . '</a>';
+			}
+		}
+		?>
 		</nav>
 
 		<div class="tab-content">
@@ -198,9 +235,9 @@ class Termageddon_Usercentrics_Admin {
 			}
 		}
 		echo '<form method="post" action="options.php">';
-				settings_fields( 'termageddon_usercentrics_settings' ); // Settings group name.
-				do_settings_sections( 'termageddon-usercentrics' ); // page slug.
-				submit_button();
+			settings_fields( 'termageddon_usercentrics_settings' ); // Settings group name.
+			do_settings_sections( 'termageddon-usercentrics' ); // page slug.
+			submit_button();
 		echo '
 				</form>
 			</div>';
@@ -295,12 +332,10 @@ class Termageddon_Usercentrics_Admin {
 	 *
 	 * @return void  */
 	public function register_all_settings() {
-
-		$this->register_settings_embed();
-		$this->register_settings_settings();
-		$this->register_settings_geolocation();
-		$this->register_settings_admin();
-
+		// Based on the tab, call the appropriate register_settings function.
+		foreach ( $this->tabs as $tab_key => $tab ) {
+			call_user_func( array( $this, "register_settings_{$tab_key}" ) );
+		}
 	}
 
 	/**
@@ -359,26 +394,51 @@ class Termageddon_Usercentrics_Admin {
 	 *
 	 * @return void
 	 */
-	public function register_settings_embed() {
+	public function register_settings_config() {
 
 		// Build Settings Sections.
 		add_settings_section(
 			'termageddon_usercentrics_section_embed', // section ID.
-			'Embed Code', // title (if needed).
+			'Configuration', // title (if needed).
 			array( &$this, 'embed_description_html' ), // callback function (if needed).
 			'termageddon-usercentrics', // page slug.
-			$this->build_section_args( 'embed' ) // before and after sections.
+			$this->build_section_args( 'config' )
+		);
+
+		// Settings ID Field.
+		add_settings_field(
+			'termageddon_usercentrics_settings_id',
+			__( 'Settings ID', 'termageddon-usercentrics' ),
+			array( &$this, 'settings_id_html' ),
+			'termageddon-usercentrics', // page slug.
+			'termageddon_usercentrics_section_embed', // section ID.
+			array(
+				'label_for'   => 'termageddon_usercentrics_settings_id',
+				'description' => __( 'Enter your Usercentrics Settings ID. This can be found on the "View Embed Code" page of your Cookie Policy and Consent Tool questionnaire.', 'termageddon-usercentrics' ) . self::generate_conversion_script(),
+				'type'        => 'text',
+				'option'      => 'settings_id', // Pass option name for generate_input.
+			)
+		);
+
+		register_setting(
+			'termageddon_usercentrics_settings', // settings group name.
+			'termageddon_usercentrics_settings_id', // option name.
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( &$this, 'sanitize_text' ),
+			)
 		);
 
 		// Embed Code.
 		add_settings_field(
 			'termageddon_usercentrics_embed_code',
-			__( 'Embed Code', 'termageddon-usercentrics' ),
+			Termageddon_Usercentrics::check_for_conversion_needed() ? __( 'Embed Code (Legacy)', 'termageddon-usercentrics' ) : __( 'Additional Scripts', 'termageddon-usercentrics' ),
 			array( &$this, 'embed_code_html' ), // function which prints the field.
 			'termageddon-usercentrics', // page slug.
 			'termageddon_usercentrics_section_embed', // section ID.
 			array(
-				'label_for' => 'termageddon_usercentrics_embed_code',
+				'label_for'   => 'termageddon_usercentrics_embed_code',
+				'description' => Termageddon_Usercentrics::check_for_conversion_needed() ? __( 'This section should no longer be used for the embed code from the Termageddon dashboard. We recommend migrating to the new Settings ID format using the button above.', 'termageddon-usercentrics' ) : __( 'This section can be used to add customizations to your Usercentrics embed code, such as event handling, and other customizations. Reach out to our support team for more information.', 'termageddon-usercentrics' ),
 			)
 		);
 
@@ -389,7 +449,6 @@ class Termageddon_Usercentrics_Admin {
 		);
 
 	}
-
 
 	/**
 	 * Register all settings for the tools page.
@@ -480,7 +539,7 @@ class Termageddon_Usercentrics_Admin {
 			'termageddon_usercentrics_section_settings', // section ID.
 			array(
 				'label_for'   => 'termageddon_usercentrics_location_psl_hide',
-				'description' => __( 'When enabled, the Privacy Settings link will be hidden from certain users, whether that be certain logged in users (via your selections above in the “Hide widget for:” area) or if you enabled geolocation and are hiding the consent tool from certain visitors. For example, if you enable the option to hide the consent tool for logged in administrator (and enable this toggle), the Privacy Settings link will <strong>not</strong> show to logged in administrators.  If you enable the option to hide the consent tool based on geolocation for certain users, the Privacy Settings link will no longer be displayed to those respective users as well.', 'termageddon-usercentrics' ),
+				'description' => __( 'When enabled, the Privacy Settings link will be hidden from certain users, whether that be certain logged in users (via your selections above in the "Hide widget for:" area) or if you enabled geolocation and are hiding the consent tool from certain visitors. For example, if you enable the option to hide the consent tool for logged in administrator (and enable this toggle), the Privacy Settings link will <strong>not</strong> show to logged in administrators.  If you enable the option to hide the consent tool based on geolocation for certain users, the Privacy Settings link will no longer be displayed to those respective users as well.', 'termageddon-usercentrics' ),
 			)
 		);
 
@@ -509,71 +568,6 @@ class Termageddon_Usercentrics_Admin {
 			'' // sanitization function.
 		);
 
-		// BREAK SECTION FOR INTEGRATION SETTINGS.
-		$this->add_new_subsection(
-			'termageddon_usercentrics_section_settings',
-			array(
-				'name'        => 'Integrations',
-				'description' => 'We love to partner with other plugin developers to improve support with their plugins. If you encounter an issue, please contact our support to let us know.',
-			)
-		);
-
-		// Divi Video Overlay Integration Player.
-		add_settings_field(
-			'termageddon_usercentrics_integration_divi_video',
-			__( 'Divi Video Player Integration', 'termageddon-usercentrics' ) . '<br>
-			<em>' . __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the Divi video embed.', 'termageddon-usercentrics' ) . '</em>',
-			array( &$this, 'divi_video_support' ), // function which prints the field.
-			'termageddon-usercentrics', // page slug.
-			'termageddon_usercentrics_section_settings', // section ID.
-			array(
-				'label_for' => 'termageddon_usercentrics_integration_divi_video',
-			)
-		);
-
-		register_setting(
-			'termageddon_usercentrics_settings', // settings group name.
-			'termageddon_usercentrics_integration_divi_video', // option name.
-			'' // sanitization function.
-		);
-
-		// Elementor Video Overlay Integration Player.
-		add_settings_field(
-			'termageddon_usercentrics_integration_elementor_video',
-			__( 'Elementor Video Player Integration', 'termageddon-usercentrics' ) . $this->mark_as_beta() . '<br>
-			<em>' . __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the Elementor video embed.', 'termageddon-usercentrics' ) . '</em>',
-			array( &$this, 'elementor_video_support' ), // function which prints the field.
-			'termageddon-usercentrics', // page slug.
-			'termageddon_usercentrics_section_settings', // section ID.
-			array(
-				'label_for' => 'termageddon_usercentrics_integration_elementor_video',
-			)
-		);
-
-		register_setting(
-			'termageddon_usercentrics_settings', // settings group name.
-			'termageddon_usercentrics_integration_elementor_video', // option name.
-			'' // sanitization function.
-		);
-
-		// Presto Player.
-		add_settings_field(
-			'termageddon_usercentrics_integration_presto_player',
-			__( 'Presto Player', 'termageddon-usercentrics' ),
-			array( &$this, 'presto_player_support' ), // function which prints the field.
-			'termageddon-usercentrics', // page slug.
-			'termageddon_usercentrics_section_settings', // section ID.
-			array(
-				'label_for' => 'termageddon_usercentrics_integration_presto_player',
-			)
-		);
-
-		register_setting(
-			'termageddon_usercentrics_settings', // settings group name.
-			'termageddon_usercentrics_integration_presto_player', // option name.
-			'' // sanitization function.
-		);
-
 		// BREAK SECTION FOR OTHER SETTINGS.
 		$this->add_new_subsection(
 			'termageddon_usercentrics_section_settings',
@@ -583,10 +577,10 @@ class Termageddon_Usercentrics_Admin {
 			)
 		);
 
-		// Privacy Settings Link Disable.
+		// Embed Code Priority.
 		add_settings_field(
 			'termageddon_usercentrics_embed_priority',
-			__( 'Embed Code Priority', 'termageddon-usercentrics' ) . $this->mark_as_beta(),
+			__( 'Embed Code Priority', 'termageddon-usercentrics' ),
 			array( &$this, 'embed_priority_html' ), // function which prints the field.
 			'termageddon-usercentrics', // page slug.
 			'termageddon_usercentrics_section_settings', // section ID.
@@ -606,6 +600,63 @@ class Termageddon_Usercentrics_Admin {
 			)
 		);
 
+		// Embed Code Injection Method.
+		add_settings_field(
+			'termageddon_usercentrics_embed_injection_method',
+			__( 'Embed Code Injection Method', 'termageddon-usercentrics' ) . $this->mark_as_beta(),
+			array( &$this, 'embed_implementation_html' ), // function which prints the field.
+			'termageddon-usercentrics', // page slug.
+			'termageddon_usercentrics_section_settings', // section ID.
+			array(
+				'label_for'   => 'termageddon_usercentrics_embed_injection_method',
+				'description' => __( 'The default injection option, wp_head, will inject the embed code in the wp_head action which typically runs before any other action. Alternatively, wp_enqueue_scripts will inject the embed code along with other scripts, leading to more compatibility with certain websites.', 'termageddon-usercentrics' ),
+				'options'     => array(
+					'wp_head'            => __( 'wp_head (Default)', 'termageddon-usercentrics' ),
+					'wp_enqueue_scripts' => __( 'wp_enqueue_scripts', 'termageddon-usercentrics' ),
+				),
+				'default'     => 'wp_head',
+			)
+		);
+
+		register_setting(
+			'termageddon_usercentrics_settings', // settings group name.
+			'termageddon_usercentrics_embed_injection_method', // option name.
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( &$this, 'sanitize_text' ),
+				'default'           => 'wp_head',
+			)
+		);
+
+		// Embed Code Version Field.
+		add_settings_field(
+			'termageddon_usercentrics_embed_version',
+			__( 'Embed Code Version', 'termageddon-usercentrics' ),
+			array( &$this, 'embed_version_html' ),
+			'termageddon-usercentrics',
+			'termageddon_usercentrics_section_settings',
+			array(
+				'label_for'   => 'termageddon_usercentrics_embed_version',
+				'description' => __( 'Select which version of the Usercentrics embed code you would like to use.', 'termageddon-usercentrics' ),
+				'options'     => array(
+					'v2' => __( 'v2', 'termageddon-usercentrics' ),
+					'v3' => __( 'v3 (Beta)', 'termageddon-usercentrics' ),
+				),
+				'default'     => 'v2',
+			)
+		);
+
+		register_setting(
+			'termageddon_usercentrics_settings',
+			'termageddon_usercentrics_embed_version',
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( &$this, 'sanitize_text' ),
+				'default'           => 'v2',
+			)
+		);
+
+		// Disable Troubleshooting.
 		add_settings_field(
 			'termageddon_usercentrics_disable_troubleshooting',
 			__( 'Disable for Troubleshooting', 'termageddon-usercentrics' ),
@@ -749,6 +800,72 @@ class Termageddon_Usercentrics_Admin {
 
 	}
 	/**
+	 * Register all settings for the integrations tab.
+	 *
+	 * @return void
+	 */
+	public function register_settings_integrations() {
+		// Build Settings Section.
+		add_settings_section(
+			'termageddon_usercentrics_section_integrations', // section ID.
+			__( 'Integrations', 'termageddon-usercentrics' ), // title.
+			array( &$this, 'settings_integrations_html' ), // callback function.
+			'termageddon-usercentrics', // page slug.
+			$this->build_section_args( 'integrations' ) // section args.
+		);
+
+		// BREAK SECTION FOR INTEGRATION SETTINGS.
+		$this->add_new_subsection(
+			'termageddon_usercentrics_section_integrations',
+			array(
+				'name'        => __( 'Plugin & Theme Integrations', 'termageddon-usercentrics' ),
+				'description' => __( 'If you have a script or code snippet to share, would like to improve support with your plugin/theme, or run into an issue implementing Termageddon/Usercentrics, please contact our support team.', 'termageddon-usercentrics' ),
+			)
+		);
+
+		// Add settings fields for all integrations.
+		foreach ( Termageddon_Usercentrics::get_integrations() as $integration => $integration_config ) {
+			list( 'name' => $display_name, 'description' => $description, 'beta' => $beta ) = $integration_config;
+
+			add_settings_field(
+				'termageddon_usercentrics_integration_' . $integration,
+				$display_name . ' ' . __( 'Integration', 'termageddon-usercentrics' ) . ( $beta ? $this->mark_as_beta() : '' ) . ( $description ? '<br>
+				<em>' . $description . '</em>' : '' ),
+				array( &$this, 'integration_support' ), // function which prints the field.
+				'termageddon-usercentrics', // page slug.
+				'termageddon_usercentrics_section_integrations', // section ID.
+				array(
+					'label_for'   => 'termageddon_usercentrics_integration_' . $integration,
+					'integration' => $integration,
+				)
+			);
+
+			register_setting(
+				'termageddon_usercentrics_settings', // settings group name.
+				'termageddon_usercentrics_integration_' . $integration, // option name.
+				'' // sanitization function.
+			);
+		}
+
+	}
+
+	/**
+	 * The html for above the integrations settings.
+	 *
+	 * @return void
+	 */
+	public function settings_integrations_html() {
+		echo '<p>' .
+			esc_html__( 'On this page, you can find custom implementation to improve support and compatibility with various plugins and page-builders.', 'termageddon-usercentrics' ) .
+		'</p>';
+
+		echo '<div class="tu-section-settings">
+			<div class="tu-section">
+			';
+
+	}
+
+	/**
 	 * Register all settings for the admin tab.
 	 *
 	 * @return void
@@ -825,6 +942,7 @@ class Termageddon_Usercentrics_Admin {
 		$label       = ( isset( $args['label'] ) ? $args['label'] : '' );
 		$tip         = ( isset( $args['tip'] ) ? $args['tip'] : null );
 		$description = ( isset( $args['description'] ) ? $args['description'] : null );
+		$placeholder = ( isset( $args['placeholder'] ) ? $args['placeholder'] : null );
 
 		// Is the option currently active?
 		$value = get_option( $option_name, $default );
@@ -835,6 +953,7 @@ class Termageddon_Usercentrics_Admin {
 			id="' . esc_attr( $option_name ) . '"
 			name="' . esc_attr( $option_name ) . '"
 			value="' . esc_attr( $value ) . '"
+			' . ( is_null( $placeholder ) ? '' : 'placeholder="' . esc_attr( $placeholder ) . '"' ) . '
 			' . ( is_null( $min ) ? '' : 'min="' . esc_attr( $min ) . '"' ) . '
 			' . ( is_null( $max ) ? '' : 'max="' . esc_attr( $max ) . '"' ) . '
 			 />';
@@ -847,6 +966,47 @@ class Termageddon_Usercentrics_Admin {
 		}
 
 	}
+
+	/**
+	 * Helper method to easily generate a quick select field.
+	 *
+	 * @param string $option - The option name/location you are building the select for.
+	 * @param array  $args The arguments provided by the add_settings_field() method.
+	 * @return void
+	 */
+	private static function generate_select( string $option, array $args = array() ) {
+		$option_name = 'termageddon_usercentrics_' . $option;
+
+		// Options.
+		$default     = ( isset( $args['default'] ) ? $args['default'] : null );
+		$options     = ( isset( $args['options'] ) ? $args['options'] : array() );
+		$tip         = ( isset( $args['tip'] ) ? $args['tip'] : null );
+		$description = ( isset( $args['description'] ) ? $args['description'] : null );
+
+		// Get current value.
+		$value = get_option( $option_name, $default );
+
+		echo '<select id="' . esc_attr( $option_name ) . '" name="' . esc_attr( $option_name ) . '" class="regular-text">';
+
+		foreach ( $options as $option_value => $label ) {
+			printf(
+				'<option value="%s" %s>%s</option>',
+				esc_attr( $option_value ),
+				selected( $value, $option_value, false ),
+				esc_html( $label )
+			);
+		}
+
+		echo '</select>';
+
+		if ( $tip ) {
+			echo '<b class="wntip" data-title="' . esc_attr( $tip ) . '"> ? </b>';
+		}
+		if ( $description ) {
+			echo '<p class="description">' . wp_kses_post( $description ) . '</p>';
+		}
+	}
+
 	/**
 	 * Helper method to easily generate a quick checkbox.
 	 *
@@ -912,36 +1072,14 @@ class Termageddon_Usercentrics_Admin {
 	}
 
 	/**
-	 * The HTML field for the admin disable checkbox.
+	 * Generate the HTML for the integration support checkbox.
 	 *
 	 * @param array $args The arguments provided by the add_settings_field() method.
 	 * @return void
 	 */
-	public function divi_video_support( array $args ) {
+	public function integration_support( array $args ) {
 		$args['label'] = 'enabled';
-		self::generate_checkbox( 'divi_video', 'integration', $args );
-	}
-
-	/**
-	 * The HTML field for the admin disable checkbox.
-	 *
-	 * @param array $args The arguments provided by the add_settings_field() method.
-	 * @return void
-	 */
-	public function elementor_video_support( array $args ) {
-		$args['label'] = 'enabled';
-		self::generate_checkbox( 'elementor_video', 'integration', $args );
-	}
-
-	/**
-	 * The HTML field for the admin disable checkbox.
-	 *
-	 * @param array $args The arguments provided by the add_settings_field() method.
-	 * @return void
-	 */
-	public function presto_player_support( array $args ) {
-		$args['label'] = 'enabled';
-		self::generate_checkbox( 'presto_player', 'integration', $args );
+		self::generate_checkbox( $args['integration'], 'integration', $args );
 	}
 
 	/**
@@ -971,8 +1109,46 @@ class Termageddon_Usercentrics_Admin {
 	public function psl_alternate_implementation( array $args ) {
 		self::generate_checkbox( 'alternate', 'psl', $args );
 	}
+
 	/**
-	 * The HTML field for the disable troubleshooting checkbox.
+	 * Generate the conversion script.
+	 *
+	 * @return string
+	 */
+	public function generate_conversion_script() {
+		if ( Termageddon_Usercentrics::check_for_conversion_needed() ) {
+			return '
+			<div class="notice notice-warning is-dismissible">
+				<p><strong>' . esc_html__( 'Action Needed', 'termageddon-usercentrics' ) . '</strong></p>
+				<p>' . esc_html__( 'We are moving to using a Settings ID instead of an embed code format to allow for more features.', 'termageddon-usercentrics' ) . '<br><strong>' . esc_html__( 'This update will take a few seconds to complete.', 'termageddon-usercentrics' ) . '</strong></p>
+				<p><a href="?page=termageddon-usercentrics" class="button button-primary">' . esc_html__( 'Go to Configuration', 'termageddon-usercentrics' ) . '</a></p>
+			</div>
+			
+			<div class="description migration-message tu-alert-warning">
+				<p class="alert-title"><strong>' . esc_html__( 'Conversion Needed:', 'termageddon-usercentrics' ) . '</strong></p>
+				<p class="alert-description">' .
+					esc_html__( 'It looks like you are still using the old embed code (below) instead of the Settings ID. To automatically switch update your configuration, please click the button bellow.', 'termageddon-usercentrics' ) . '<br/><br/>' .
+					esc_html__( 'Behind the scenes, we will remove the Usercentrics embed code from the field below, ensuring custom scripts are maintained.', 'termageddon-usercentrics' ) . '<br/><br/>
+					<a href="#" class="button button-small button-warning" id="run_settings_migration">' . esc_html__( 'Convert', 'termageddon-usercentrics' ) . '</a>
+				</p>
+			</div>';
+		}
+	}
+	/**
+	 * The HTML field for the settings ID field.
+	 *
+	 * @param array $args The arguments provided by the add_settings_field() method.
+	 * @return void
+	 */
+	public function settings_id_html( array $args ) {
+		$args['default']     = '';
+		$args['placeholder'] = 'XXXXXXXXXXXXXX';
+		$args['type']        = 'text';
+
+		self::generate_input( 'settings_id', $args );
+	}
+	/**
+	 * The HTML field for the priority number field.
 	 *
 	 * @param array $args The arguments provided by the add_settings_field() method.
 	 * @return void
@@ -985,6 +1161,17 @@ class Termageddon_Usercentrics_Admin {
 
 		self::generate_input( 'embed_priority', $args );
 	}
+
+	/**
+	 * The HTML field for the embed implementation select.
+	 *
+	 * @param array $args The arguments provided by the add_settings_field() method.
+	 * @return void
+	 */
+	public function embed_implementation_html( array $args ) {
+		self::generate_select( 'embed_injection_method', $args );
+	}
+
 	/**
 	 * The HTML field for the disable troubleshooting checkbox.
 	 *
@@ -1019,22 +1206,33 @@ class Termageddon_Usercentrics_Admin {
 	/**
 	 * The embed code html for the text area field
 	 *
+	 * @param array $args The arguments provided by the add_settings_field() method.
 	 * @return void
 	 */
-	public function embed_code_html() {
+	public function embed_code_html( array $args ) {
+		$text = Termageddon_Usercentrics::get_embed_code();
 
-		$text = get_option( 'termageddon_usercentrics_embed_code' );
+		$description = ( isset( $args['description'] ) ? $args['description'] : null );
 
 		printf(
-			'<textarea class="termageddon-embed-code" type="text" id="termageddon_usercentrics_embed_code" name="termageddon_usercentrics_embed_code" placeholder="' . esc_attr( 'Your embed code should look similar to this', 'termageddon-usercentrics' ) . ':
-
-&lt;link rel=&quot;preconnect&quot; href=&quot;//privacy-proxy.usercentrics.eu&quot;&gt;
-&lt;link rel=&quot;preload&quot; href=&quot;//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js&quot; as=&quot;script&quot;&gt;
-&lt;script type=&quot;application/javascript&quot; src=&quot;https://privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js&quot;&gt;&lt;/script&gt;
-&lt;script id=&quot;usercentrics-cmp&quot; src=&quot;https://app.usercentrics.eu/browser-ui/latest/loader.js&quot; data-settings-id=&quot;XXXXXXXXX&quot; async&gt;&lt;/script&gt;">%s</textarea>',
+			'<textarea class="termageddon-embed-code" type="text" id="termageddon_usercentrics_embed_code" name="termageddon_usercentrics_embed_code" placeholder="' . esc_attr( 'This section can be used to add customizations to your Usercentrics embed code, such as event handling, and other customizations. Reach out to our support team for more information.', 'termageddon-usercentrics' ) . '">%s</textarea>',
 			esc_textarea( $text )
 		);
 
+		if ( $description ) {
+			echo '<p>' . wp_kses_post( $description ) . '</p>';
+		}
+
+	}
+
+	/**
+	 * The HTML field for the embed version select.
+	 *
+	 * @param array $args The arguments provided by the add_settings_field() method.
+	 * @return void
+	 */
+	public function embed_version_html( array $args ) {
+		self::generate_select( 'embed_version', $args );
 	}
 
 	/**
@@ -1065,7 +1263,6 @@ class Termageddon_Usercentrics_Admin {
 
 	}
 
-
 	/**
 	 * The embed code html for the text area field
 	 *
@@ -1095,7 +1292,7 @@ class Termageddon_Usercentrics_Admin {
 		echo '<p>' .
 		esc_html__( 'If you would like to remove Usercentrics for logged in users such as admins, you can do so below.', 'termageddon-usercentrics' ) .
 		' <strong>' . esc_html__( 'If you are using the Divi theme', 'termageddon-usercentrics' ) . '</strong>, ' .
-		esc_html__( 'you will need to enable at least one of the settings below to ensure logged in users/admins can properly use the “Enable Visual Builder” feature provided by Divi when editing the design of a webpage.', 'termageddon-usercentrics' ) . '
+		esc_html__( 'you will need to enable at least one of the settings below to ensure logged in users/admins can properly use the "Enable Visual Builder" feature provided by Divi when editing the design of a webpage.', 'termageddon-usercentrics' ) . '
 			</p>';
 
 			echo '
@@ -1144,8 +1341,5 @@ class Termageddon_Usercentrics_Admin {
 			<div class="tu-section">';
 
 	}
-
-
-
 
 }

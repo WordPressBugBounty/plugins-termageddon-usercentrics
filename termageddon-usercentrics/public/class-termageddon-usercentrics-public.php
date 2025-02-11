@@ -123,6 +123,17 @@ class Termageddon_Usercentrics_Public {
 	}
 
 	/**
+	 * Disable the termageddon enqueue if the psl should be hidden.
+	 *
+	 * @return void
+	 */
+	public function disable_termageddon_enqueue() {
+		if ( Termageddon_Usercentrics::should_hide_psl() ) {
+			wp_enqueue_style( $this->plugin_name . '_disable', plugin_dir_url( __FILE__ ) . 'public/css/termageddon-usercentrics-disable.min.css', array(), $this->version );
+		}
+	}
+
+	/**
 	 * Display debug information to console if applicable
 	 *
 	 * @return void
@@ -184,16 +195,12 @@ class Termageddon_Usercentrics_Public {
 	 * Dynamically hide or show the termageddon script based on settings. Outputs directly to script tag.
 	 */
 	public function build_termageddon_script() {
-		$script = get_option( 'termageddon_usercentrics_embed_code' );
-		if ( empty( $script ) ) {
-			return self::disable_termageddon_script();
-		}
 
 		// If forcibly enabled, bypass individual detections.
 		if ( ! Termageddon_Usercentrics::is_enabled_via_get_override() ) {
 			// Check for Disable for troubleshooting.
 			if ( Termageddon_Usercentrics::is_disabled_for_troubleshooting() ) {
-				return self::disable_termageddon_script();
+				return;
 			}
 
 			// Debug display to console if applicable.
@@ -202,66 +209,37 @@ class Termageddon_Usercentrics_Public {
 			// Check for individual disable detections.
 			$disable_on_logged_in = get_option( 'termageddon_usercentrics_disable_logged_in', false ) ? true : false;
 			if ( $disable_on_logged_in && is_user_logged_in() ) {
-				return self::disable_termageddon_script();
+				return;
 			}
 
 			$disable_on_editor = get_option( 'termageddon_usercentrics_disable_editor', false ) ? true : false;
 			if ( $disable_on_editor && current_user_can( 'editor' ) ) {
-				return self::disable_termageddon_script();
+				return;
 			}
 
 			$disable_on_admin = get_option( 'termageddon_usercentrics_disable_admin', false ) ? true : false;
 			if ( $disable_on_admin && current_user_can( 'administrator' ) ) {
-				return self::disable_termageddon_script();
+				return;
 			}
 
 			if ( Termageddon_Usercentrics::is_geoip_enabled() && ! Termageddon_Usercentrics::is_ajax_mode_enabled() && Termageddon_Usercentrics::should_hide_due_to_location() ) {
-				return self::disable_termageddon_script();
+				return;
 			}
 		} else {
 			// Debug display to console if applicable.
 			self::debug_display();
 		}
 
-		if ( Termageddon_Usercentrics::is_geoip_enabled() && Termageddon_Usercentrics::is_ajax_mode_enabled() ) {
-			$script .= '<script type="application/javascript">
-			var UC_UI_SUPPRESS_CMP_DISPLAY=true;
-		  </script>';
-		}
+		$should_append_settings_id_embed_code = ! empty( Termageddon_Usercentrics::get_settings_id() ) && Termageddon_Usercentrics::get_embed_injection_method() === 'wp_head' ? true : false;
 
-		// Divi Video Player Integration Javascript.
-		if ( Termageddon_Usercentrics::is_integration_enabled( 'divi_video' ) ) {
-			$script .= '<script type="application/javascript" id="uc-integration-divi-video">
-window.addEventListener(\'load\', function () {
-	jQuery(\'div.et_pb_video_overlay_hover\').on(\'click\', function(e) {
-		jQuery(this).closest(\'div.et_pb_video_overlay\').hide()
-	}).find(\'a.et_pb_video_play\').attr(\'href\', \'javascript:void(0)\')
-})
-</script>';
-		}
-
-		// Elementor Video Player Integration Javascript.
-		if ( Termageddon_Usercentrics::is_integration_enabled( 'elementor_video' ) ) {
-			$script .= '<script type="application/javascript" id="uc-integration-elementor-video">
-window.addEventListener(\'load\', function () {
-	jQuery(\'.pp-media-overlay\').on(\'click\', function(e) {
-		jQuery(this).hide()
-	})
-})
-</script>';
-		}
-
-		// Presto Player Integration Javascript.
-		if ( Termageddon_Usercentrics::is_integration_enabled( 'presto_player' ) ) {
-			$script .= '<script type="application/javascript" id="uc-integration-presto-player">
-	function uc_integration_setup(iID,service) {
-		uc.blockElements({[iID] : \'figure.presto-block-video.presto-provider-\'+service});
-		uc.reloadOnOptIn(iID);
-		uc.reloadOnOptOut(iID);
-	}
-	uc_integration_setup("BJz7qNsdj-7","youtube"); // Youtube
-	uc_integration_setup("HyEX5Nidi-m","vimeo"); // Vimeo
-</script>';
+		$script = Termageddon_Usercentrics::get_embed_code(
+			array(
+				'filter_standard_embed_code' => true,
+				'force_include_embed_code'   => $should_append_settings_id_embed_code,
+			)
+		);
+		if ( empty( $script ) ) {
+			return;
 		}
 
 		// Output to HTML HEAD.
@@ -269,6 +247,93 @@ window.addEventListener(\'load\', function () {
 		echo wp_kses( $script, Termageddon_Usercentrics::ALLOWED_HTML );
 		echo '<!-- END TERMAGEDDON + USERCENTRICS -->';
 
+	}
+	/**
+	 * Dynamically hide or show the termageddon script based on settings. Outputs directly to script tag.
+	 */
+	public function build_termageddon_enqueue() {
+		// If forcibly enabled, bypass individual detections.
+		if ( ! Termageddon_Usercentrics::is_enabled_via_get_override() ) {
+			// Check for Disable for troubleshooting.
+			if ( Termageddon_Usercentrics::is_disabled_for_troubleshooting() ) {
+				return self::disable_termageddon_enqueue();
+			}
+
+			// Check for individual disable detections.
+			$disable_on_logged_in = get_option( 'termageddon_usercentrics_disable_logged_in', false ) ? true : false;
+			if ( $disable_on_logged_in && is_user_logged_in() ) {
+				return self::disable_termageddon_enqueue();
+			}
+
+			$disable_on_editor = get_option( 'termageddon_usercentrics_disable_editor', false ) ? true : false;
+			if ( $disable_on_editor && current_user_can( 'editor' ) ) {
+				return self::disable_termageddon_enqueue();
+			}
+
+			$disable_on_admin = get_option( 'termageddon_usercentrics_disable_admin', false ) ? true : false;
+			if ( $disable_on_admin && current_user_can( 'administrator' ) ) {
+				return self::disable_termageddon_enqueue();
+			}
+
+			if ( Termageddon_Usercentrics::is_geoip_enabled() && ! Termageddon_Usercentrics::is_ajax_mode_enabled() && Termageddon_Usercentrics::should_hide_due_to_location() ) {
+				return self::disable_termageddon_enqueue();
+			}
+		}
+
+		$settings_id            = Termageddon_Usercentrics::get_settings_id();
+		$embed_version          = Termageddon_Usercentrics::get_embed_script_version();
+		$should_enqueue_scripts = Termageddon_Usercentrics::get_embed_injection_method() === 'wp_enqueue_scripts';
+
+		if ( $settings_id && $should_enqueue_scripts ) {
+			// Enqueue Embed Script.
+			wp_enqueue_script( $this->plugin_name . '-preconnect', '//privacy-proxy.usercentrics.eu', array(), $this->version, false );
+			wp_enqueue_script( $this->plugin_name . '-sdp', '//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js', array(), $this->version, false );
+			if ( 'v2' === $embed_version ) {
+				wp_enqueue_script( $this->plugin_name . '-cmp', '//app.usercentrics.eu/browser-ui/latest/loader.js', array(), $this->version, false );
+			} else {
+				wp_enqueue_script( $this->plugin_name . '-cmp', '//web.cmp.usercentrics.eu/ui/loader.js', array(), $this->version, false );
+			}
+			wp_enqueue_script( $this->plugin_name . '-translations', plugin_dir_url( __FILE__ ) . 'js/termageddon-usercentrics-translations.min.js', array(), $this->version, false );
+		}
+
+		if ( Termageddon_Usercentrics::is_geoip_enabled() && Termageddon_Usercentrics::is_ajax_mode_enabled() ) {
+			wp_enqueue_script( $this->plugin_name . '-geoip-disable', plugin_dir_url( __FILE__ ) . 'js/termageddon-usercentrics-geoip-disable.min.js', array(), $this->version, array() );
+		}
+
+		foreach ( array_keys( Termageddon_Usercentrics::get_integrations() ) as $integration ) {
+			if ( Termageddon_Usercentrics::is_integration_enabled( $integration ) ) {
+				$slug = str_replace( '_', '-', $integration );
+				wp_enqueue_script( $this->plugin_name . '-integration-' . $slug, plugin_dir_url( __FILE__ ) . 'js/termageddon-usercentrics-integration-' . $slug . '.min.js', array(), $this->version, array() );
+			}
+		}
+
+	}
+
+	/**
+	 * Filter the script loader tag to add the correct attributes to the script tags for Usercentrics.
+	 *
+	 * @param string $tag    The full HTML tag for the script.
+	 * @param string $handle The script handle/ID.
+	 * @param string $src    The script source URL.
+	 * @return string The modified script tag.
+	 */
+	public function filter_script_loader_tag( $tag, $handle, $src ) {
+		switch ( $handle ) {
+			case $this->plugin_name . '-preconnect':
+				$tag = '<link rel="preconnect" href="' . esc_url( $src ) . '">';
+				break;
+			case $this->plugin_name . '-preload':
+				$tag = '<link rel="preload" href="' . esc_url( $src ) . '" as="script">';
+				break;
+			case $this->plugin_name . '-cmp':
+				$tag = '<script type="text/javascript" id="usercentrics-cmp" data-cmp-version="' . esc_attr( Termageddon_Usercentrics::get_embed_script_version() ) . '" src="' . esc_url( $src ) . '" data-settings-id="' . esc_attr( Termageddon_Usercentrics::get_settings_id() ) . '" async></script>';
+				break;
+			case $this->plugin_name . '-translations':
+				$tag = '<script type="text/javascript" id="usercentrics-translations" src="' . esc_url( $src ) . '"></script>';
+				break;
+		}
+
+		return $tag;
 	}
 
 }

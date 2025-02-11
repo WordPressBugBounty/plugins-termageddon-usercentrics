@@ -14,6 +14,11 @@ textarea.termageddon-embed-code {
 	margin-top: 2rem;
 }
 
+/* Hide Extra spacing for the Integration section */
+.tu-settings-tab.tu-tab-integrations .tu-section {
+	display: none;
+}
+
 /* Titles */
 .tu-toggle-section .tu-section-title {
 	font-size: 125%;
@@ -184,4 +189,55 @@ input[type="checkbox"].wppd-ui-toggle.label-enabled:checked:after {
 .tu-settings-section label em {
 	font-size: 12px;
 	font-weight: 400;
+}
+
+.tu-alert-error {
+	color: #d63638;
+	background: #fcf0f1;
+	padding: 10px;
+	border-left: 4px solid #d63638;
+	margin: 10px 0;
+}
+
+.tu-alert-warning {
+	color: #856404;
+	background: #fff3cd;
+	padding: 10px;
+	border-left: 4px solid #ffc107;
+	margin: 10px 0;
+}
+
+.tu-alert-success {
+	color: #00a32a;
+	background: #edfaef;
+	padding: 10px;
+	border-left: 4px solid #00a32a;
+	margin: 10px 0;
+}
+
+.button-danger {
+	background: #d63638 !important;
+	border-color: #d63638 !important;
+	color: #fff !important;
+}
+
+.button-danger:hover,
+.button-danger:focus {
+	background: #b32d2e !important;
+	border-color: #b32d2e !important;
+	color: #fff !important;
+}
+
+.button-warning {
+	background: #ffc107 !important;
+	border-color: #ffc107 !important;
+	color: #333 !important;
+	font-weight: 700;
+}
+
+.button-warning:hover,
+.button-warning:focus {
+	background: #e0a800 !important;
+	border-color: #e0a800 !important;
+	color: black !important;
 }

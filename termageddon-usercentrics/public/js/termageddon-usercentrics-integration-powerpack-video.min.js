@@ -1,0 +1,1 @@
+window.addEventListener("uc_window",(function(e){e.detail&&"consent_status"==e.detail.event&&!0===e.detail["YouTube Video"]&&document.querySelectorAll("iframe.pp-video-iframe[data-src]").forEach(iframe=>{iframe.src=iframe.dataset.src})}));
