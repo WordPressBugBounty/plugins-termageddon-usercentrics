@@ -3,18 +3,16 @@ Contributors: dintriglia
 Donate link: https://termageddon.com
 Tags: termageddon, cookie, consent, embed, usercentrics
 Requires at least: 3.0.1
-Tested up to: 6.7.1
-Stable tag: 1.6.0
+Tested up to: 6.7.2
+Stable tag: 1.6.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Easily integrate the UserCentrics consent solution into your website while controlling visibility for logged in users and admins.
+Each Termageddon license includes a consent solution. This plugin helps you install the consent solution with ease, while offering additional features.
 
 == Description ==
 
-Easily integrate the UserCentrics consent solution into your website.
-
-This plugin also allows for hiding the consent solution if the user is logged in as an admin.
+Each Termageddon license includes a consent solution. This plugin helps you install the consent solution with ease, while offering additional features.
 
 As of v1.1.0, the plugin can use the [MaxMind GeoLite2](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data?lang=en) library to automatically estimate the location of your site's users. Based on that location, the consent solution can only be shown if necessary to that end-user.
 
@@ -25,6 +23,11 @@ If you wish to place a privacy settings link in the footer or anywhere else, you
 **Please note**: When GeoIP is enabled, you will be collecting IP addresses for the purposes of determining which cookie consent solution (or lack thereof) to provide to each website visitor (CPRA or CIPA cookie consent, GDPR cookie consent, UK DPA consent or none), based on their location. A cookie will then be placed on the user's browser to log their session, which helps improve page load speed when the user visits other pages on the website. You should ensure that you are in compliance with all applicable privacy laws prior to installing this plugin (or any other technologies on your website). To opt out of this feature, keep all GeoIP checkboxes unchecked (default).
 
 == Changelog ==
+
+= 1.6.1 =
+
+-   [ADD] Added support for Wordpress 6.7.2.
+-   [CHANGE] Updated the branding of the plugin to Termageddon specific.
 
 = 1.6.0 =
 
