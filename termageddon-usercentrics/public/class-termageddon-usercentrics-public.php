@@ -62,7 +62,7 @@ class Termageddon_Usercentrics_Public {
 
 		// Load AJAX Mode scripts.
 		if ( Termageddon_Usercentrics::is_ajax_mode_enabled() ) {
-			wp_enqueue_script( $this->plugin_name . '_ajax', plugin_dir_url( __FILE__ ) . 'js/termageddon-usercentrics-ajax.min.js', array( 'jquery' ), $this->version, false );
+			wp_enqueue_script( $this->plugin_name . '_ajax', TERMAGEDDON_COOKIE_URL . 'public/js/termageddon-usercentrics-ajax.min.js', array( 'jquery' ), $this->version, false );
 
 			// Load ajax params for nonce.
 			$nonce    = wp_create_nonce( $this->plugin_name . '_ajax_nonce' );
@@ -129,7 +129,7 @@ class Termageddon_Usercentrics_Public {
 	 */
 	public function disable_termageddon_enqueue() {
 		if ( Termageddon_Usercentrics::should_hide_psl() ) {
-			wp_enqueue_style( $this->plugin_name . '_disable', plugin_dir_url( __FILE__ ) . 'public/css/termageddon-usercentrics-disable.min.css', array(), $this->version );
+			wp_enqueue_style( $this->plugin_name . '_disable', TERMAGEDDON_COOKIE_URL . 'public/css/termageddon-usercentrics-disable.min.css', array(), $this->version );
 		}
 	}
 
@@ -293,17 +293,17 @@ class Termageddon_Usercentrics_Public {
 			} else {
 				wp_enqueue_script( $this->plugin_name . '-cmp', '//web.cmp.usercentrics.eu/ui/loader.js', array(), $this->version, false );
 			}
-			wp_enqueue_script( $this->plugin_name . '-translations', plugin_dir_url( __FILE__ ) . 'js/termageddon-usercentrics-translations.min.js', array(), $this->version, false );
+			wp_enqueue_script( $this->plugin_name . '-translations', TERMAGEDDON_COOKIE_URL . 'public/js/termageddon-usercentrics-translations.min.js', array(), $this->version, false );
 		}
 
 		if ( Termageddon_Usercentrics::is_geoip_enabled() && Termageddon_Usercentrics::is_ajax_mode_enabled() ) {
-			wp_enqueue_script( $this->plugin_name . '-geoip-disable', plugin_dir_url( __FILE__ ) . 'js/termageddon-usercentrics-geoip-disable.min.js', array(), $this->version, array() );
+			wp_enqueue_script( $this->plugin_name . '-geoip-disable', TERMAGEDDON_COOKIE_URL . 'public/js/termageddon-usercentrics-geoip-disable.min.js', array(), $this->version, array() );
 		}
 
 		foreach ( array_keys( Termageddon_Usercentrics::get_integrations() ) as $integration ) {
 			if ( Termageddon_Usercentrics::is_integration_enabled( $integration ) ) {
 				$slug = str_replace( '_', '-', $integration );
-				wp_enqueue_script( $this->plugin_name . '-integration-' . $slug, plugin_dir_url( __FILE__ ) . 'js/termageddon-usercentrics-integration-' . $slug . '.min.js', array(), $this->version, array() );
+				wp_enqueue_script( $this->plugin_name . '-integration-' . $slug, TERMAGEDDON_COOKIE_URL . 'public/js/termageddon-usercentrics-integration-' . $slug . '.min.js', array(), $this->version, array() );
 			}
 		}
 

@@ -211,30 +211,30 @@ class Termageddon_Usercentrics {
 		/**
 		* The external-dependencies allowing additional functionality such as GEOIP
 		*/
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'vendor/autoload.php';
+		require_once TERMAGEDDON_COOKIE_PATH . 'vendor/autoload.php';
 
 		/**
 		 * The class responsible for orchestrating the actions and filters of the
 		 * core plugin.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-termageddon-usercentrics-loader.php';
+		require_once TERMAGEDDON_COOKIE_PATH . 'includes/class-termageddon-usercentrics-loader.php';
 
 		/**
 		 * The class responsible for defining internationalization functionality
 		 * of the plugin.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-termageddon-usercentrics-i18n.php';
+		require_once TERMAGEDDON_COOKIE_PATH . 'includes/class-termageddon-usercentrics-i18n.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the admin area.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-termageddon-usercentrics-admin.php';
+		require_once TERMAGEDDON_COOKIE_PATH . 'admin/class-termageddon-usercentrics-admin.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the public-facing
 		 * side of the site.
 		 */
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-termageddon-usercentrics-public.php';
+		require_once TERMAGEDDON_COOKIE_PATH . 'public/class-termageddon-usercentrics-public.php';
 
 		$this->loader = new Termageddon_Usercentrics_Loader();
 
@@ -253,7 +253,7 @@ class Termageddon_Usercentrics {
 
 		$plugin_i18n = new Termageddon_Usercentrics_I18n();
 
-		$this->loader->add_action( 'plugins_loaded', $plugin_i18n, 'load_plugin_textdomain' );
+		$this->loader->add_action( 'init', $plugin_i18n, 'load_plugin_textdomain' );
 
 	}
 

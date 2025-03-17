@@ -14,7 +14,7 @@
  * @wordpress-plugin
  * Plugin Name:       Termageddon
  * Description:       Each Termageddon license includes a consent solution. This plugin helps you install the consent solution with ease, while offering additional features.
- * Version:           1.6.1
+ * Version:           1.6.2
  * Author:            Termageddon
  * Author URI:        https://termageddon.com
  * License:           GPL-2.0+
@@ -33,7 +33,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'TERMAGEDDON_COOKIE_VERSION', '1.6.1' );
+define( 'TERMAGEDDON_COOKIE_VERSION', '1.6.2' );
 
 define( 'TERMAGEDDON_COOKIE_PLUGIN_PATH', dirname( __FILE__ ) );// No trailing slash.
 
@@ -50,12 +50,15 @@ if ( ! file_exists( TERMAGEDDON_COOKIE_EXEC_PATH ) ) {
 $termageddon_path_info = pathinfo( TERMAGEDDON_COOKIE_EXEC_PATH );
 define( 'TERMAGEDDON_COOKIE_EXEC_RELATIVE_PATH', basename( $termageddon_path_info['dirname'] ) . '/' . $termageddon_path_info['basename'] );// No trailing slash.
 
+define( 'TERMAGEDDON_COOKIE_PATH', plugin_dir_path( __FILE__ ) );
+define( 'TERMAGEDDON_COOKIE_URL', plugin_dir_url( __FILE__ ) );
+
 /**
  * The code that runs during plugin activation.
  * This action is documented in includes/class-termageddon-usercentrics-activator.php
  */
 function activate_termageddon_cookie() {
-	include_once plugin_dir_path( __FILE__ ) . 'includes/class-termageddon-usercentrics-activator.php';
+	include_once TERMAGEDDON_COOKIE_PATH . 'includes/class-termageddon-usercentrics-activator.php';
 	Termageddon_Usercentrics_Activator::activate();
 }
 
@@ -64,7 +67,7 @@ function activate_termageddon_cookie() {
  * This action is documented in includes/class-termageddon-usercentrics-deactivator.php
  */
 function deactivate_termageddon_cookie() {
-	include_once plugin_dir_path( __FILE__ ) . 'includes/class-termageddon-usercentrics-deactivator.php';
+	include_once TERMAGEDDON_COOKIE_PATH . 'includes/class-termageddon-usercentrics-deactivator.php';
 	Termageddon_Usercentrics_Deactivator::deactivate();
 }
 
@@ -75,7 +78,7 @@ register_deactivation_hook( __FILE__, 'deactivate_termageddon_cookie' );
  * The core plugin class that is used to define internationalization,
  * admin-specific hooks, and public-facing site hooks.
  */
-require plugin_dir_path( __FILE__ ) . 'includes/class-termageddon-usercentrics.php';
+require TERMAGEDDON_COOKIE_PATH . 'includes/class-termageddon-usercentrics.php';
 
 
 /**

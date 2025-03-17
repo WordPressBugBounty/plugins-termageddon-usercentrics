@@ -20,6 +20,16 @@
 			"**/trunk/*": true,
 			"**/tags/**": true,
 			"*tags*": true
-		}
+		},
+		"php.stubs": [
+			"pcntl",
+			"wordpress",
+			"*"
+		]
+	},
+	"extensions": {
+		"recommendations": [
+			"olback.es6-css-minify"
+		]
 	}
 }

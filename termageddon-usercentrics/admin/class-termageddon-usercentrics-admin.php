@@ -110,7 +110,7 @@ class Termageddon_Usercentrics_Admin {
 	public function enqueue_styles() {
 
 		// Load CSS styles for admin use only.
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/termageddon-usercentrics-admin.min.css', array(), $this->version, 'all' );
+		wp_enqueue_style( $this->plugin_name, TERMAGEDDON_COOKIE_URL . 'admin/css/termageddon-usercentrics-admin.min.css', array(), $this->version, 'all' );
 
 	}
 
@@ -122,7 +122,7 @@ class Termageddon_Usercentrics_Admin {
 	public function enqueue_scripts() {
 
 		// Load JS styles for admin use only.
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/termageddon-usercentrics-admin.min.js', array( 'jquery-ui-core', 'jquery-ui-tabs' ), $this->version, false );
+		wp_enqueue_script( $this->plugin_name, TERMAGEDDON_COOKIE_URL . 'admin/js/termageddon-usercentrics-admin.min.js', array( 'jquery-ui-core', 'jquery-ui-tabs' ), $this->version, false );
 
 	}
 
