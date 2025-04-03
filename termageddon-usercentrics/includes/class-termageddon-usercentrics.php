@@ -1475,4 +1475,22 @@ class Termageddon_Usercentrics {
 
 	}
 
+	/**
+	 * Get the providers that should have blocking disabled
+	 *
+	 * @return array Array of provider IDs that should have blocking disabled
+	 */
+	public static function get_disabled_blocking_providers(): array {
+		return get_option( 'termageddon_usercentrics_disable_blocking_providers', array() );
+	}
+
+	/**
+	 * Get the providers that should trigger a page reload on opt-in
+	 *
+	 * @return array Array of provider IDs that should trigger a page reload on opt-in
+	 */
+	public static function get_auto_refresh_providers(): array {
+		return get_option( 'termageddon_usercentrics_auto_refresh_providers', array() );
+	}
+
 }

@@ -98,6 +98,29 @@ class Termageddon_Usercentrics_Public {
 		) {
 			wp_enqueue_script( 'jquery' );
 		}
+
+		// Load advanced configuration if needed
+		$disabled_blocking_providers = Termageddon_Usercentrics::get_disabled_blocking_providers();
+		$auto_refresh_providers = Termageddon_Usercentrics::get_auto_refresh_providers();
+
+		if ( ! empty( $disabled_blocking_providers ) || ! empty( $auto_refresh_providers ) ) {
+			wp_enqueue_script( 
+				$this->plugin_name . '-advanced-config', 
+				TERMAGEDDON_COOKIE_URL . 'public/js/termageddon-usercentrics-advanced-config.min.js', 
+				array(), 
+				$this->version, 
+				false 
+			);
+
+			wp_localize_script(
+				$this->plugin_name . '-advanced-config',
+				'termageddon_usercentrics_advanced_config',
+				array(
+					'disabledBlockingProviders' => $disabled_blocking_providers,
+					'autoRefreshProviders' => $auto_refresh_providers,
+				)
+			);
+		}
 	}
 
 

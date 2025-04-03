@@ -1,10 +1,9 @@
-=== Plugin Name ===
-Contributors: dintriglia
-Donate link: https://termageddon.com
-Tags: termageddon, cookie, consent, embed, usercentrics
-Requires at least: 3.0.1
+=== Termageddon + Usercentrics ===
+Contributors: termageddon, dintriglia
+Tags: termageddon, cookie, consent, embed, privacy, gdpr, ccpa, usercentrics
+Requires at least: 5.0
 Tested up to: 6.7.2
-Stable tag: 1.6.2
+Stable tag: 1.7.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,7 +21,23 @@ If you wish to place a privacy settings link in the footer or anywhere else, you
 
 **Please note**: When GeoIP is enabled, you will be collecting IP addresses for the purposes of determining which cookie consent solution (or lack thereof) to provide to each website visitor (CPRA or CIPA cookie consent, GDPR cookie consent, UK DPA consent or none), based on their location. A cookie will then be placed on the user's browser to log their session, which helps improve page load speed when the user visits other pages on the website. You should ensure that you are in compliance with all applicable privacy laws prior to installing this plugin (or any other technologies on your website). To opt out of this feature, keep all GeoIP checkboxes unchecked (default).
 
+== Installation ==
+
+1. Upload the plugin files to the `/wp-content/plugins/termageddon-usercentrics` directory, or install the plugin through the WordPress plugins screen directly.
+2. Activate the plugin through the 'Plugins' screen in WordPress.
+3. Use the Settings->Termageddon + Usercentrics screen to configure the plugin.
+
+== Support ==
+
+For support, please submit a ticket via our support panel via [https://termageddon.freshdesk.com/](https://termageddon.freshdesk.com/).
+
 == Changelog ==
+
+= 1.7.0 =
+-   [ADD] Added Advanced Configuration section in Integrations tab
+-   [ADD] Added support for easily setting up auto-refresh on consent for supported providers
+-   [ADD] Added support for easily setting up deactivating blocking for supported providers
+-   [CHANGE] Reordered admin tabs for better organization
 
 = 1.6.2 =
 

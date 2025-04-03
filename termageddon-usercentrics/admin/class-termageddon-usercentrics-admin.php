@@ -78,13 +78,13 @@ class Termageddon_Usercentrics_Admin {
 				'title' => __( 'Integrations', 'termageddon-usercentrics' ),
 				'url'   => '?page=termageddon-usercentrics&tab=integrations',
 			),
-			'settings'     => array(
-				'title' => __( 'Settings', 'termageddon-usercentrics' ),
-				'url'   => '?page=termageddon-usercentrics&tab=settings',
-			),
 			'geolocation'  => array(
 				'title' => __( 'Geo-Location', 'termageddon-usercentrics' ),
 				'url'   => '?page=termageddon-usercentrics&tab=geolocation',
+			),
+			'settings'     => array(
+				'title' => __( 'Settings', 'termageddon-usercentrics' ),
+				'url'   => '?page=termageddon-usercentrics&tab=settings',
 			),
 			'admin'        => array(
 				'title'  => __( 'Advanced Configuration & Troubleshooting', 'termageddon-usercentrics' ),
@@ -124,6 +124,20 @@ class Termageddon_Usercentrics_Admin {
 		// Load JS styles for admin use only.
 		wp_enqueue_script( $this->plugin_name, TERMAGEDDON_COOKIE_URL . 'admin/js/termageddon-usercentrics-admin.min.js', array( 'jquery-ui-core', 'jquery-ui-tabs' ), $this->version, false );
 
+		// Add select2 for multi-select fields
+		wp_enqueue_style( 'select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css', array(), '4.1.0' );
+		wp_enqueue_script( 'select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', array( 'jquery' ), '4.1.0', true );
+
+		// Initialize select2 for our multi-select fields
+		wp_add_inline_script( 'select2', '
+			jQuery(document).ready(function($) {
+				$(".termageddon-multiselect").select2({
+					width: "100%",
+					placeholder: "Select providers...",
+					allowClear: true
+				});
+			});
+		' );
 	}
 
 		/**
@@ -847,6 +861,65 @@ class Termageddon_Usercentrics_Admin {
 			);
 		}
 
+		// BREAK SECTION FOR ADVANCED CONFIGURATION.
+		$this->add_new_subsection(
+			'termageddon_usercentrics_section_integrations',
+			array(
+				'name'        => __( 'Advanced Configuration', 'termageddon-usercentrics' ),
+				'description' => __( 'Certain integrations may require a more custom approach to integrating with Usercentrics. To support these, we offer the following customization options:', 'termageddon-usercentrics' ),
+			)
+		);
+
+		// Import providers
+		$providers = include TERMAGEDDON_COOKIE_PATH . 'admin/usercentrics-providers.php';
+
+		// Auto-refresh on consent field
+		add_settings_field(
+			'termageddon_usercentrics_auto_refresh_providers',
+			__( 'Auto-refresh on consent', 'termageddon-usercentrics' ),
+			array( &$this, 'auto_refresh_providers_html' ),
+			'termageddon-usercentrics',
+			'termageddon_usercentrics_section_integrations',
+			array(
+				'label_for'   => 'termageddon_usercentrics_auto_refresh_providers',
+				'description' => __( 'Select providers that require a page refresh after consent is given. This is useful for integrations that need to reinitialize after consent.', 'termageddon-usercentrics' ),
+				'options'     => $providers,
+			)
+		);
+
+		register_setting(
+			'termageddon_usercentrics_settings',
+			'termageddon_usercentrics_auto_refresh_providers',
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => array( &$this, 'sanitize_array' ),
+				'default'           => array(),
+			)
+		);
+
+		// Disable blocking field
+		add_settings_field(
+			'termageddon_usercentrics_disable_blocking_providers',
+			__( 'Disable blocking for providers', 'termageddon-usercentrics' ),
+			array( &$this, 'disable_blocking_providers_html' ),
+			'termageddon-usercentrics',
+			'termageddon_usercentrics_section_integrations',
+			array(
+				'label_for'   => 'termageddon_usercentrics_disable_blocking_providers',
+				'description' => '⚠️ '.__( 'WARNING: By adding providers to this list, you are choosing for Usercentrics to no longer automatically block those third party technologies. This may be a privacy concern depending on applicable privacy laws.', 'termageddon-usercentrics' ),
+				'options'     => $providers,
+			)
+		);
+
+		register_setting(
+			'termageddon_usercentrics_settings',
+			'termageddon_usercentrics_disable_blocking_providers',
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => array( &$this, 'sanitize_array' ),
+				'default'           => array(),
+			)
+		);
 	}
 
 	/**
@@ -1340,6 +1413,65 @@ class Termageddon_Usercentrics_Admin {
 		<div class="tu-section-settings">
 			<div class="tu-section">';
 
+	}
+
+	/**
+	 * Sanitize array values
+	 *
+	 * @param array $value The array to sanitize.
+	 * @return array The sanitized array.
+	 */
+	public static function sanitize_array( $value ) {
+		if ( ! is_array( $value ) ) {
+			return array();
+		}
+		return array_map( 'sanitize_text_field', $value );
+	}
+
+	/**
+	 * The HTML field for the auto-refresh providers multi-select
+	 *
+	 * @param array $args The arguments provided by the add_settings_field() method.
+	 * @return void
+	 */
+	public function auto_refresh_providers_html( array $args ) {
+		$options = $args['options'];
+		$value = get_option( 'termageddon_usercentrics_auto_refresh_providers', array() );
+		?>
+		<select name="termageddon_usercentrics_auto_refresh_providers[]" id="termageddon_usercentrics_auto_refresh_providers" class="termageddon-multiselect" multiple="multiple" style="width: 100%;">
+			<?php foreach ( $options as $key => $label ) : ?>
+				<option value="<?php echo esc_attr( $key ); ?>" <?php echo in_array( $key, $value ) ? 'selected="selected"' : ''; ?>>
+					<?php echo esc_html( $label ); ?>
+				</option>
+			<?php endforeach; ?>
+		</select>
+		<?php
+		if ( isset( $args['description'] ) ) {
+			echo '<p class="description">' . wp_kses_post( $args['description'] ) . '</p>';
+		}
+	}
+
+	/**
+	 * The HTML field for the disable blocking providers multi-select
+	 *
+	 * @param array $args The arguments provided by the add_settings_field() method.
+	 * @return void
+	 */
+	public function disable_blocking_providers_html( array $args ) {
+		$options = $args['options'];
+		$value = get_option( 'termageddon_usercentrics_disable_blocking_providers', array() );
+		?>
+		<select name="termageddon_usercentrics_disable_blocking_providers[]" id="termageddon_usercentrics_disable_blocking_providers" class="termageddon-multiselect" multiple="multiple" style="width: 100%;">
+			<?php foreach ( $options as $key => $label ) : ?>
+				<option value="<?php echo esc_attr( $key ); ?>" <?php echo in_array( $key, $value ) ? 'selected="selected"' : ''; ?>>
+					<?php echo esc_html( $label ); ?>
+				</option>
+			<?php endforeach; ?>
+		</select>
+		<?php
+		if ( isset( $args['description'] ) ) {
+			echo '<p class="description">' . wp_kses_post( $args['description'] ) . '</p>';
+		}
 	}
 
 }

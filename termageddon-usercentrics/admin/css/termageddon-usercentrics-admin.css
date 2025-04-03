@@ -241,3 +241,7 @@ input[type="checkbox"].wppd-ui-toggle.label-enabled:checked:after {
 	border-color: #e0a800 !important;
 	color: black !important;
 }
+
+textarea.select2-search__field {
+	margin-bottom: 8px;
+}
