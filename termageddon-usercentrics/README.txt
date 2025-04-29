@@ -1,9 +1,9 @@
-=== Termageddon + Usercentrics ===
+=== Termageddon ===
 Contributors: termageddon, dintriglia
 Tags: termageddon, cookie, consent, embed, privacy, gdpr, ccpa, usercentrics
 Requires at least: 5.0
-Tested up to: 6.7.2
-Stable tag: 1.7.0
+Tested up to: 6.8
+Stable tag: 1.7.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -32,6 +32,14 @@ If you wish to place a privacy settings link in the footer or anywhere else, you
 For support, please submit a ticket via our support panel via [https://termageddon.freshdesk.com/](https://termageddon.freshdesk.com/).
 
 == Changelog ==
+
+= 1.7.1 =
+-   [ADD] Settings toggle for Disable CDN
+-   [ADD] Added data-no-optimize flag to all scripts for better compatibility with Litespeed caching systems
+-   [CHANGE] Expand the min/max allowed for Priority
+-   [CHANGE] Geo-location debug code always loads in the footer
+-   [FIX] Bugs with wp_enqueue_scripts injection method
+-   [FIX] Fixed a notice occurring on every page load related to load_plugin_textdomain.
 
 = 1.7.0 =
 -   [ADD] Added Advanced Configuration section in Integrations tab

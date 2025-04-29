@@ -31,8 +31,7 @@ class Termageddon_Usercentrics_I18n {
 	 *
 	 * @since    1.0.0
 	 */
-	public function load_plugin_textdomain() {
-
+	public static function load_plugin_textdomain() {
 		load_plugin_textdomain(
 			'termageddon-usercentrics',
 			false,

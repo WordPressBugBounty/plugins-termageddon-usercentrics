@@ -141,7 +141,7 @@ jQuery(function ($) {
 					""
 				)
 				.replace(
-					"<script>uc.setCustomTranslations('https://termageddon.ams3.cdn.digitaloceanspaces.com/translations/');</script>",
+					/<script>uc.setCustomTranslations.*<\/script>/g,
 					""
 				)
 				.trim();

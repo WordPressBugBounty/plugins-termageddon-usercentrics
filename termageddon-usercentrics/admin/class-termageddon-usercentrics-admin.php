@@ -397,7 +397,7 @@ class Termageddon_Usercentrics_Admin {
 	 **/
 	public static function sanitize_embed_priority( $value ) {
 		$priority = self::sanitize_integer( $value );
-		if ( $priority <= 10 && $priority >= 1 ) {
+		if ( $priority <= 9999 && $priority >= -9999 ) {
 			return intval( $value );
 		}
 		return 1;
@@ -600,7 +600,7 @@ class Termageddon_Usercentrics_Admin {
 			'termageddon_usercentrics_section_settings', // section ID.
 			array(
 				'label_for'   => 'termageddon_usercentrics_embed_priority',
-				'description' => __( 'Override the default priority of the embed code (Defaults to 1). By adjusting this value (number between 1 and 10), you can change the priority of the embed code. The higher the number, the sooner the embed code will be rendered in the source code.', 'termageddon-usercentrics' ),
+				'description' => __( 'Override the default priority of the embed code (Defaults to 1). By adjusting this value, you can change the priority of the embed code. The lower the number, the sooner the embed code will be rendered in the source code. Note that selecting the wp_enqueue_scripts injection method will limit where the code can be placed (after stylesheets), regardless of this number.', 'termageddon-usercentrics' ),
 			)
 		);
 
@@ -668,6 +668,25 @@ class Termageddon_Usercentrics_Admin {
 				'sanitize_callback' => array( &$this, 'sanitize_text' ),
 				'default'           => 'v2',
 			)
+		);
+
+		// Disable CDN for Translations Script
+		add_settings_field(
+			'termageddon_usercentrics_disable_cdn',
+			__( 'Disable CDN for Translations Script', 'termageddon-usercentrics' ),
+			array( &$this, 'disable_cdn_html' ), // function which prints the field.
+			'termageddon-usercentrics', // page slug.
+			'termageddon_usercentrics_section_settings', // section ID.
+			array(
+				'label_for'   => 'termageddon_usercentrics_disable_cdn',
+				'description' => __( 'This will switch the URL used for the Usercentrics translations script from our CDN provider to <code>app.termageddon.com</code>. If you are not sure what to do, please leave this off.', 'termageddon-usercentrics' ),
+			)
+		);
+
+		register_setting(
+			'termageddon_usercentrics_settings', // settings group name.
+			'termageddon_usercentrics_disable_cdn', // option name.
+			'' // sanitization function.
 		);
 
 		// Disable Troubleshooting.
@@ -1228,8 +1247,8 @@ class Termageddon_Usercentrics_Admin {
 	 */
 	public function embed_priority_html( array $args ) {
 		$args['default'] = 1;
-		$args['min']     = 1;
-		$args['max']     = 10;
+		$args['min']     = -9999;
+		$args['max']     = 9999;
 		$args['type']    = 'number';
 
 		self::generate_input( 'embed_priority', $args );
@@ -1243,6 +1262,16 @@ class Termageddon_Usercentrics_Admin {
 	 */
 	public function embed_implementation_html( array $args ) {
 		self::generate_select( 'embed_injection_method', $args );
+	}
+
+	/**
+	 * The HTML field for the disable CDN checkbox.
+	 *
+	 * @param array $args The arguments provided by the add_settings_field() method.
+	 * @return void
+	 */
+	public function disable_cdn_html( array $args ) {
+		self::generate_checkbox( 'cdn', 'disable', $args );
 	}
 
 	/**

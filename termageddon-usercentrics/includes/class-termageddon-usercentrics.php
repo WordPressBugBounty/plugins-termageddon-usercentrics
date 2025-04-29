@@ -74,7 +74,7 @@ class Termageddon_Usercentrics {
 		$this->plugin_name = 'termageddon-usercentrics';
 
 		$this->load_dependencies();
-		$this->set_locale();
+		$this->setup_translations();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
 		$this->define_extra_hooks();
@@ -249,11 +249,9 @@ class Termageddon_Usercentrics {
 	 * @since    1.0.0
 	 * @access   private
 	 */
-	private function set_locale() {
+	public static function setup_translations() {
 
-		$plugin_i18n = new Termageddon_Usercentrics_I18n();
-
-		$this->loader->add_action( 'init', $plugin_i18n, 'load_plugin_textdomain' );
+		Termageddon_Usercentrics_I18n::load_plugin_textdomain();
 
 	}
 
@@ -360,6 +358,14 @@ class Termageddon_Usercentrics {
 			$plugin_public,
 			'build_termageddon_script',
 			self::get_embed_priority()
+		);
+
+		// Put debug code in the footer
+		$this->loader->add_action(
+			'wp_footer',
+			$plugin_public,
+			'debug_display',
+			999
 		);
 
 		// Load the primary embed (or disabled) script in the head.
@@ -598,7 +604,7 @@ class Termageddon_Usercentrics {
 			$embed_code = preg_replace( '~<link rel="preload" href="//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js" as="script">~', '', $embed_code );
 			$embed_code = preg_replace( '~<script type="application/javascript" src="https:\/\/privacy-proxy.usercentrics.eu\/latest\/uc-block.bundle.js"><\/script>~', '', $embed_code );
 			$embed_code = preg_replace( '~<script id="usercentrics-cmp".*async>.*<\/script>~', '', $embed_code );
-			$embed_code = preg_replace( '~<script>uc.setCustomTranslations\(\'https://termageddon.ams3.cdn.digitaloceanspaces.com/translations/\'\);</script>~', '', $embed_code );
+			$embed_code = preg_replace( '~<script>uc.setCustomTranslations\(.*\);</script>~', '', $embed_code );
 		}
 
 		return trim( $embed_code );
@@ -614,14 +620,15 @@ class Termageddon_Usercentrics {
 			return $embed_code;
 		}
 
-		$embed_version = self::get_embed_script_version();
-		$loader_url    = ( 'v2' === $embed_version ) ? '//app.usercentrics.eu/browser-ui/latest/loader.js' : '//web.cmp.usercentrics.eu/ui/loader.js';
+		$embed_version   = self::get_embed_script_version();
+		$loader_url      = ( 'v2' === $embed_version ) ? '//app.usercentrics.eu/browser-ui/latest/loader.js' : '//web.cmp.usercentrics.eu/ui/loader.js';
+		$translations_url = self::get_translations_url();
 
 		$new_embed_code  = '<link rel="preconnect" href="//privacy-proxy.usercentrics.eu">' . PHP_EOL;
 		$new_embed_code .= '<link rel="preload" href="//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js" as="script">' . PHP_EOL;
-		$new_embed_code .= '<script type="application/javascript" src="//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js"></script>' . PHP_EOL;
-		$new_embed_code .= '<script id="usercentrics-cmp" data-cmp-version="' . esc_attr( self::get_embed_script_version() ) . '" src="' . esc_url( $loader_url ) . '" data-settings-id="' . self::get_settings_id() . '"  async></script>' . PHP_EOL;
-		$new_embed_code .= '<script>uc.setCustomTranslations(\'https://termageddon.ams3.cdn.digitaloceanspaces.com/translations/\');</script>' . PHP_EOL;
+		$new_embed_code .= '<script type="application/javascript" src="//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js" data-no-optimize="1" data-no-defer="1"></script>' . PHP_EOL;
+		$new_embed_code .= '<script id="usercentrics-cmp" data-cmp-version="' . esc_attr( self::get_embed_script_version() ) . '" src="' . esc_url( $loader_url ) . '" data-settings-id="' . self::get_settings_id() . '" data-no-optimize="1" data-no-defer="1" async></script>' . PHP_EOL;
+		$new_embed_code .= '<script data-no-optimize="1" data-no-defer="1">uc.setCustomTranslations(\'' . $translations_url . '\');</script>' . PHP_EOL;
 		$new_embed_code .= self::filter_out_standard_embed_code( $embed_code );
 
 		return $new_embed_code;
@@ -968,6 +975,29 @@ class Termageddon_Usercentrics {
 
 	}
 
+	/**
+	 * Returns whether Disable CDN for Translations Script is set to Yes in the query params
+	 *
+	 * @return bool
+	 */
+	public static function is_cdn_disabled() {
+		return ( get_option( 'termageddon_usercentrics_disable_cdn', false ) ? true : false );
+
+	}
+
+	/**
+	 * Returns the translations URL for the Usercentrics script.
+	 *
+	 * @return string
+	 */
+	public static function get_translations_url() {
+		$translations_url = 'https://termageddon.ams3.cdn.digitaloceanspaces.com/translations/';
+		if ( self::is_cdn_disabled() ) {
+			$translations_url = 'https://app.termageddon.com/js/uc/translations/';
+		}
+		return $translations_url;
+	}
+
 
 	/**
 	 * Returns whether disabled for troubleshooting mode is enabled and not in the query params
@@ -1168,7 +1198,7 @@ class Termageddon_Usercentrics {
 	public static function get_embed_priority(): int {
 		$priority = get_option( 'termageddon_usercentrics_embed_priority', 1 );
 		$priority = intval( $priority );
-		if ( $priority <= 10 && $priority >= 1 ) {
+		if ( $priority <= 9999 && $priority >= -9999 ) {
 			return $priority;
 		}
 		return 1;

@@ -162,31 +162,32 @@ class Termageddon_Usercentrics_Public {
 	 * @return void
 	 */
 	public function debug_display() {
-		if ( ( Termageddon_Usercentrics::is_geoip_enabled() || Termageddon_Usercentrics::is_debug_mode_enabled() )
-			&&
+		if (
+			Termageddon_Usercentrics::is_geoip_enabled() &&
+			Termageddon_Usercentrics::is_debug_mode_enabled() &&
 			! Termageddon_Usercentrics::is_ajax_mode_enabled()
-			) {
-				list('city' => $city, 'state' => $state, 'country' => $country) = Termageddon_Usercentrics::lookup_ip_address();
+		) {
+			list('city' => $city, 'state' => $state, 'country' => $country) = Termageddon_Usercentrics::lookup_ip_address();
 
-				// Iterate through locations.
-				$locations = array();
+			// Iterate through locations.
+			$locations = array();
 			foreach ( Termageddon_Usercentrics::get_geolocation_locations() as $loc_key => $loc ) {
 				list ( 'title' => $loc_name ) = $loc;
 				$locations[]                  = 'Located in ' . $loc_name . ': ' . ( Termageddon_Usercentrics::is_located_in( $loc_key ) ? 'Yes' : 'No' );
 			}
 
-				// Output debug message to console.
-				Termageddon_Usercentrics::debug(
-					'IP Address: ' . Termageddon_Usercentrics::get_processed_ip_address(),
-					'City: ' . ( $city ?? 'Unknown' ),
-					'State: ' . ( $state ?? 'Unknown' ),
-					'Country: ' . ( $country ?? 'Unknown' ),
-					'--',
-					$locations,
-					'--',
-					'Geo-Location Mode?: ' . ( Termageddon_Usercentrics::is_geoip_enabled() ? 'Yes' : 'No' ),
-					'AJAX Mode?: ' . ( Termageddon_Usercentrics::is_ajax_mode_enabled() ? 'Yes' : 'No' ),
-				);
+			// Output debug message to console.
+			Termageddon_Usercentrics::debug(
+				'IP Address: ' . Termageddon_Usercentrics::get_processed_ip_address(),
+				'City: ' . ( $city ?? 'Unknown' ),
+				'State: ' . ( $state ?? 'Unknown' ),
+				'Country: ' . ( $country ?? 'Unknown' ),
+				'--',
+				$locations,
+				'--',
+				'Geo-Location Mode?: ' . ( Termageddon_Usercentrics::is_geoip_enabled() ? 'Yes' : 'No' ),
+				'AJAX Mode?: ' . ( Termageddon_Usercentrics::is_ajax_mode_enabled() ? 'Yes' : 'No' ),
+			);
 		}
 	}
 
@@ -217,7 +218,7 @@ class Termageddon_Usercentrics_Public {
 	/**
 	 * Dynamically hide or show the termageddon script based on settings. Outputs directly to script tag.
 	 */
-	public function build_termageddon_script() {
+	public function build_termageddon_script( $is_enqueue = false ) {
 
 		// If forcibly enabled, bypass individual detections.
 		if ( ! Termageddon_Usercentrics::is_enabled_via_get_override() ) {
@@ -225,9 +226,6 @@ class Termageddon_Usercentrics_Public {
 			if ( Termageddon_Usercentrics::is_disabled_for_troubleshooting() ) {
 				return;
 			}
-
-			// Debug display to console if applicable.
-			self::debug_display();
 
 			// Check for individual disable detections.
 			$disable_on_logged_in = get_option( 'termageddon_usercentrics_disable_logged_in', false ) ? true : false;
@@ -248,12 +246,15 @@ class Termageddon_Usercentrics_Public {
 			if ( Termageddon_Usercentrics::is_geoip_enabled() && ! Termageddon_Usercentrics::is_ajax_mode_enabled() && Termageddon_Usercentrics::should_hide_due_to_location() ) {
 				return;
 			}
-		} else {
-			// Debug display to console if applicable.
-			self::debug_display();
+
+			// don't double output in enqueue mode
+			$should_enqueue_scripts = Termageddon_Usercentrics::get_embed_injection_method() === 'wp_enqueue_scripts';
+			if ( $should_enqueue_scripts && ! $is_enqueue ) {
+				return;
+			}
 		}
 
-		$should_append_settings_id_embed_code = ! empty( Termageddon_Usercentrics::get_settings_id() ) && Termageddon_Usercentrics::get_embed_injection_method() === 'wp_head' ? true : false;
+		$should_append_settings_id_embed_code = ! empty( Termageddon_Usercentrics::get_settings_id() ) ? true : false;
 
 		$script = Termageddon_Usercentrics::get_embed_code(
 			array(
@@ -266,57 +267,31 @@ class Termageddon_Usercentrics_Public {
 		}
 
 		// Output to HTML HEAD.
-		echo '<!-- TERMAGEDDON + USERCENTRICS -->';
-		echo wp_kses( $script, Termageddon_Usercentrics::ALLOWED_HTML );
-		echo '<!-- END TERMAGEDDON + USERCENTRICS -->';
+		$output  = '<!-- TERMAGEDDON + USERCENTRICS -->' . PHP_EOL;
+		$output .= wp_kses( $script, Termageddon_Usercentrics::ALLOWED_HTML );
+		$output .= '<!-- END TERMAGEDDON + USERCENTRICS -->' . PHP_EOL;
+
+		if ( $is_enqueue ) {
+			return $output;
+		} else {
+			
+			echo $output;
+		}
 
 	}
 	/**
 	 * Dynamically hide or show the termageddon script based on settings. Outputs directly to script tag.
 	 */
 	public function build_termageddon_enqueue() {
-		// If forcibly enabled, bypass individual detections.
-		if ( ! Termageddon_Usercentrics::is_enabled_via_get_override() ) {
-			// Check for Disable for troubleshooting.
-			if ( Termageddon_Usercentrics::is_disabled_for_troubleshooting() ) {
-				return self::disable_termageddon_enqueue();
-			}
-
-			// Check for individual disable detections.
-			$disable_on_logged_in = get_option( 'termageddon_usercentrics_disable_logged_in', false ) ? true : false;
-			if ( $disable_on_logged_in && is_user_logged_in() ) {
-				return self::disable_termageddon_enqueue();
-			}
-
-			$disable_on_editor = get_option( 'termageddon_usercentrics_disable_editor', false ) ? true : false;
-			if ( $disable_on_editor && current_user_can( 'editor' ) ) {
-				return self::disable_termageddon_enqueue();
-			}
-
-			$disable_on_admin = get_option( 'termageddon_usercentrics_disable_admin', false ) ? true : false;
-			if ( $disable_on_admin && current_user_can( 'administrator' ) ) {
-				return self::disable_termageddon_enqueue();
-			}
-
-			if ( Termageddon_Usercentrics::is_geoip_enabled() && ! Termageddon_Usercentrics::is_ajax_mode_enabled() && Termageddon_Usercentrics::should_hide_due_to_location() ) {
-				return self::disable_termageddon_enqueue();
-			}
-		}
-
+		
 		$settings_id            = Termageddon_Usercentrics::get_settings_id();
-		$embed_version          = Termageddon_Usercentrics::get_embed_script_version();
 		$should_enqueue_scripts = Termageddon_Usercentrics::get_embed_injection_method() === 'wp_enqueue_scripts';
 
 		if ( $settings_id && $should_enqueue_scripts ) {
 			// Enqueue Embed Script.
-			wp_enqueue_script( $this->plugin_name . '-preconnect', '//privacy-proxy.usercentrics.eu', array(), $this->version, false );
-			wp_enqueue_script( $this->plugin_name . '-sdp', '//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js', array(), $this->version, false );
-			if ( 'v2' === $embed_version ) {
-				wp_enqueue_script( $this->plugin_name . '-cmp', '//app.usercentrics.eu/browser-ui/latest/loader.js', array(), $this->version, false );
-			} else {
-				wp_enqueue_script( $this->plugin_name . '-cmp', '//web.cmp.usercentrics.eu/ui/loader.js', array(), $this->version, false );
-			}
-			wp_enqueue_script( $this->plugin_name . '-translations', TERMAGEDDON_COOKIE_URL . 'public/js/termageddon-usercentrics-translations.min.js', array(), $this->version, false );
+			wp_enqueue_script( $this->plugin_name . '-scripts', '//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js', array(), $this->version, false );
+			// note: this URL is placed here to "play by the rules"... but it doesn't actually do anything.
+			// the whole thing will be overwritten by the script_loader_tag filter.
 		}
 
 		if ( Termageddon_Usercentrics::is_geoip_enabled() && Termageddon_Usercentrics::is_ajax_mode_enabled() ) {
@@ -341,21 +316,9 @@ class Termageddon_Usercentrics_Public {
 	 * @return string The modified script tag.
 	 */
 	public function filter_script_loader_tag( $tag, $handle, $src ) {
-		switch ( $handle ) {
-			case $this->plugin_name . '-preconnect':
-				$tag = '<link rel="preconnect" href="' . esc_url( $src ) . '">';
-				break;
-			case $this->plugin_name . '-preload':
-				$tag = '<link rel="preload" href="' . esc_url( $src ) . '" as="script">';
-				break;
-			case $this->plugin_name . '-cmp':
-				$tag = '<script type="text/javascript" id="usercentrics-cmp" data-cmp-version="' . esc_attr( Termageddon_Usercentrics::get_embed_script_version() ) . '" src="' . esc_url( $src ) . '" data-settings-id="' . esc_attr( Termageddon_Usercentrics::get_settings_id() ) . '" async></script>';
-				break;
-			case $this->plugin_name . '-translations':
-				$tag = '<script type="text/javascript" id="usercentrics-translations" src="' . esc_url( $src ) . '"></script>';
-				break;
+		if ( $this->plugin_name . '-scripts' === $handle ) {
+			$tag = self::build_termageddon_script( true );
 		}
-
 		return $tag;
 	}
 
