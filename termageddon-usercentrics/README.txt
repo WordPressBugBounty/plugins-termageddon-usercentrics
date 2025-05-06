@@ -3,7 +3,7 @@ Contributors: termageddon, dintriglia
 Tags: termageddon, cookie, consent, embed, privacy, gdpr, ccpa, usercentrics
 Requires at least: 5.0
 Tested up to: 6.8
-Stable tag: 1.7.1
+Stable tag: 1.7.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -32,6 +32,9 @@ If you wish to place a privacy settings link in the footer or anywhere else, you
 For support, please submit a ticket via our support panel via [https://termageddon.freshdesk.com/](https://termageddon.freshdesk.com/).
 
 == Changelog ==
+
+= 1.7.2 =
+-   [FIX] Fixed a bug in which consent soultion would flash when using geolocation.
 
 = 1.7.1 =
 -   [ADD] Settings toggle for Disable CDN

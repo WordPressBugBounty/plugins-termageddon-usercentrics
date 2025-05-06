@@ -262,6 +262,12 @@ class Termageddon_Usercentrics_Public {
 				'force_include_embed_code'   => $should_append_settings_id_embed_code,
 			)
 		);
+
+		//Append a disabling script if geoip is enabled and ajax mode is enabled to disable flashing.
+		if ( Termageddon_Usercentrics::is_geoip_enabled() && Termageddon_Usercentrics::is_ajax_mode_enabled() ) {
+			$script .= '<script type="application/javascript">var UC_UI_SUPPRESS_CMP_DISPLAY = true;</script>';
+		}
+
 		if ( empty( $script ) ) {
 			return;
 		}
@@ -292,10 +298,6 @@ class Termageddon_Usercentrics_Public {
 			wp_enqueue_script( $this->plugin_name . '-scripts', '//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js', array(), $this->version, false );
 			// note: this URL is placed here to "play by the rules"... but it doesn't actually do anything.
 			// the whole thing will be overwritten by the script_loader_tag filter.
-		}
-
-		if ( Termageddon_Usercentrics::is_geoip_enabled() && Termageddon_Usercentrics::is_ajax_mode_enabled() ) {
-			wp_enqueue_script( $this->plugin_name . '-geoip-disable', TERMAGEDDON_COOKIE_URL . 'public/js/termageddon-usercentrics-geoip-disable.min.js', array(), $this->version, array() );
 		}
 
 		foreach ( array_keys( Termageddon_Usercentrics::get_integrations() ) as $integration ) {

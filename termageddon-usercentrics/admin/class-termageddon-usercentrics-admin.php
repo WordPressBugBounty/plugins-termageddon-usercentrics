@@ -901,7 +901,7 @@ class Termageddon_Usercentrics_Admin {
 			'termageddon_usercentrics_section_integrations',
 			array(
 				'label_for'   => 'termageddon_usercentrics_auto_refresh_providers',
-				'description' => __( 'Select providers that require a page refresh after consent is given. This is useful for integrations that need to reinitialize after consent.', 'termageddon-usercentrics' ),
+				'description' => __( 'This particular feature is not needed for most websites. This feature is only needed if you notice issues with the Usercentrics\' auto-blocker (where user clicks \'accept\' in an embedded feature such as google map, but the blocker message does not go away due to a third party plugin/theme interference). This feature will refresh the page after a user clicks accept for the respected Service(s) listed above.', 'termageddon-usercentrics' ),
 				'options'     => $providers,
 			)
 		);
