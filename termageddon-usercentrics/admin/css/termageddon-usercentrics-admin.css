@@ -35,7 +35,8 @@ textarea.termageddon-embed-code {
 	opacity: 50%;
 	pointer-events: none;
 }
-.tu-toggle-section .form-table {
+.tu-toggle-section .form-table,
+.tu-tab-integrations .tu-settings-section .form-table {
 	margin-left: 2rem;
 }
 .tu-toggle-section .form-table th,
@@ -52,6 +53,10 @@ textarea.termageddon-embed-code {
 /* Settings Section */
 .tu-settings-section .form-table th {
 	width: 300px;
+}
+
+.tu-tab-integrations .tu-settings-section .form-table th {
+	width: 500px;
 }
 
 .tu-section-hidden {

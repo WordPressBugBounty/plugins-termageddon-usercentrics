@@ -282,11 +282,18 @@ class Termageddon_Usercentrics {
 				$a = shortcode_atts(
 					array(
 						'text' => 'Privacy Settings',
+						'type' => 'a',
 					),
 					$atts
 				);
 
-				return '<a href="javascript:void(0)" onclick="(function(){var r=document.querySelector(\'div#usercentrics-root\'),c=document.querySelector(\'aside#usercentrics-cmp-ui\');if(r)r.style.display=\'block\';if(c)c.style.display=\'block\';if(typeof UC_UI!==\'undefined\')UC_UI.showSecondLayer()})()" id="usercentrics-psl">' . $a['text'] . '</a>';
+				$onclick = '(function(){var r=document.querySelector(\'div#usercentrics-root\'),c=document.querySelector(\'aside#usercentrics-cmp-ui\');if(r)r.style.display=\'block\';if(c)c.style.display=\'block\';if(typeof UC_UI!==\'undefined\')UC_UI.showSecondLayer()})()';
+
+				if ( 'button' === $a['type'] ) {
+					return '<button type="button" onclick="' . $onclick . '" id="usercentrics-psl">' . $a['text'] . '</button>';
+				} else {
+					return '<a role="button" href="javascript:void(0)" onclick="' . $onclick . '" id="usercentrics-psl">' . $a['text'] . '</a>';
+				}
 			}
 		);
 
@@ -743,7 +750,9 @@ class Termageddon_Usercentrics {
 		}
 
 		// No errors, continue.
-		require_once ABSPATH . 'wp-admin/includes/file.php';
+		if ( ! defined( 'PHPUNIT_RUNNING' ) && file_exists( ABSPATH . 'wp-admin/includes/file.php' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/file.php';
+		}
 		$path = self::get_maxmind_db_path();
 
 		// Get Signed URL.
@@ -841,7 +850,7 @@ class Termageddon_Usercentrics {
 		// '::1' === $ip_address.
 		switch ( strtolower( get_query_var( 'termageddon-usercentrics-debug' ) ) ) {
 			case 'colorado':
-				$ip_address = '198.255.11.211'; // Colorado.
+				$ip_address = '73.14.194.136'; // Colorado.
 				break;
 
 			case 'california':
@@ -1191,6 +1200,38 @@ class Termageddon_Usercentrics {
 	}
 
 	/**
+	 * Processes the embed code to ensure it is safe to use while preserving script contents.
+	 *
+	 * @param string $embed_code The embed code to process.
+	 * @return string The processed embed code.
+	 */
+	public static function processEmbedCode( string $embed_code ): string {
+		// Extract script tags and their contents
+		$scripts = array();
+		$pattern = '/<script[^>]*>(?!\s*<\/script>)([\s\S]*?)<\/script>/ms';
+
+		// Replace scripts with placeholders so bypass wp_kses validation.
+		$embed_code = preg_replace_callback($pattern, function($matches) use (&$scripts) {
+			if (strpos($matches[0], 'termageddon.ams3.cdn.digitaloceanspaces.com') !== false) {
+				return $matches[0];
+			}
+			$placeholder = '<!--SCRIPT_' . count($scripts) . '-->';
+			$scripts[] = $matches[0];
+			return $placeholder;
+		},  $embed_code);
+
+		// Filter remaining HTML with wp_kses.
+		$filtered_code = wp_kses($embed_code, self::ALLOWED_HTML);
+
+		// Restore script tags
+		foreach ($scripts as $i => $script) {
+			$filtered_code = str_replace("<!--SCRIPT_$i-->", $script, $filtered_code);
+		}
+
+		return $filtered_code;
+	}
+
+	/**
 	 * Returns the script priority from 1-10.
 	 *
 	 * @return int
@@ -1259,26 +1300,31 @@ class Termageddon_Usercentrics {
 				'name'        => __( 'Divi Video', 'termageddon-usercentrics' ),
 				'description' => __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the Divi video embed.', 'termageddon-usercentrics' ),
 				'beta'        => false,
+				'default'     => false,
 			),
 			'elementor_video' => array(
 				'name'        => __( 'Elementor Video', 'termageddon-usercentrics' ),
 				'description' => __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the Elementor video embed.', 'termageddon-usercentrics' ),
 				'beta'        => false,
+				'default'     => false,
 			),
 			'powerpack_video' => array(
 				'name'        => __( 'PowerPack Video', 'termageddon-usercentrics' ),
 				'description' => __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the PowerPack for BeaverBuilder video embed. This requires window events to be enabled in your Usercentrics settings. Please reach out to support if needed.', 'termageddon-usercentrics' ),
 				'beta'        => true,
+				'default'     => false,
 			),
 			'presto_player'   => array(
 				'name'        => __( 'Presto Player', 'termageddon-usercentrics' ),
 				'description' => __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the Presto Player video embed.', 'termageddon-usercentrics' ),
 				'beta'        => false,
+				'default'     => false,
 			),
 			'uabb_video'      => array(
 				'name'        => __( 'Ultimate Addons for Beaver Builder Video', 'termageddon-usercentrics' ),
 				'description' => __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the Ultimate Addons for Beaver Builder video embed.', 'termageddon-usercentrics' ),
 				'beta'        => false,
+				'default'     => false,
 			),
 		);
 	}
@@ -1290,8 +1336,8 @@ class Termageddon_Usercentrics {
 	 * @param string $integration The slug of the integration to check.
 	 * @return bool
 	 */
-	public static function is_integration_enabled( string $integration ): bool {
-		return get_option( 'termageddon_usercentrics_integration_' . $integration, false ) ? true : false;
+	public static function is_integration_enabled( string $integration, bool $default = false ): bool {
+		return get_option( 'termageddon_usercentrics_integration_' . $integration, $default ) ? true : false;
 	}
 
 	/**
@@ -1467,9 +1513,11 @@ class Termageddon_Usercentrics {
 	 *
 	 * @return void  */
 	public function geolocation_lookup_ajax() {
-		header( 'Content-Type: application/json; charset=utf-8' );
+		if ( ! headers_sent() ) {
+			header( 'Content-Type: application/json; charset=utf-8' );
+		}
 
-		$result = function( bool $success, string $message = '', array $data = null ) {
+		$result = function( bool $success, string $message = '', ?array $data = null ) {
 			$result_array = array(
 				'success' => $success,
 			);

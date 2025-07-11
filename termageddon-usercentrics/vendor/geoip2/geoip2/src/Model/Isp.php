@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace GeoIp2\Model;
 
 use GeoIp2\Util;
@@ -14,6 +16,12 @@ use GeoIp2\Util;
  *     address.
  * @property-read string|null $isp The name of the ISP associated with the IP
  *     address.
+ * @property-read string|null $mobileCountryCode The [mobile country code
+ *     (MCC)](https://en.wikipedia.org/wiki/Mobile_country_code) associated with
+ *     the IP address and ISP.
+ * @property-read string|null $mobileNetworkCode The [mobile network code
+ *     (MNC)](https://en.wikipedia.org/wiki/Mobile_country_code) associated with
+ *     the IP address and ISP.
  * @property-read string|null $organization The name of the organization associated
  *     with the IP address.
  * @property-read string $ipAddress The IP address that the data in the model is
@@ -22,30 +30,64 @@ use GeoIp2\Util;
  *      the record. In particular, this is the largest network where all of the
  *      fields besides $ipAddress have the same value.
  */
-class Isp extends AbstractModel {
+class Isp extends AbstractModel
+{
+    /**
+     * @var int|null
+     */
+    protected $autonomousSystemNumber;
 
-	protected $autonomousSystemNumber;
-	protected $autonomousSystemOrganization;
-	protected $isp;
-	protected $organization;
-	protected $ipAddress;
-	protected $network;
+    /**
+     * @var string|null
+     */
+    protected $autonomousSystemOrganization;
 
-	/**
-	 * @ignore
-	 *
-	 * @param mixed $raw
-	 */
-	public function __construct( $raw ) {
-		parent::__construct( $raw );
-		$this->autonomousSystemNumber       = $this->get( 'autonomous_system_number' );
-		$this->autonomousSystemOrganization =
-			$this->get( 'autonomous_system_organization' );
-		$this->isp                          = $this->get( 'isp' );
-		$this->organization                 = $this->get( 'organization' );
+    /**
+     * @var string|null
+     */
+    protected $isp;
 
-		$ipAddress       = $this->get( 'ip_address' );
-		$this->ipAddress = $ipAddress;
-		$this->network   = Util::cidr( $ipAddress, $this->get( 'prefix_len' ) );
-	}
+    /**
+     * @var string|null
+     */
+    protected $mobileCountryCode;
+
+    /**
+     * @var string|null
+     */
+    protected $mobileNetworkCode;
+
+    /**
+     * @var string|null
+     */
+    protected $organization;
+
+    /**
+     * @var string
+     */
+    protected $ipAddress;
+
+    /**
+     * @var string
+     */
+    protected $network;
+
+    /**
+     * @ignore
+     */
+    public function __construct(array $raw)
+    {
+        parent::__construct($raw);
+        $this->autonomousSystemNumber = $this->get('autonomous_system_number');
+        $this->autonomousSystemOrganization =
+            $this->get('autonomous_system_organization');
+        $this->isp = $this->get('isp');
+        $this->mobileCountryCode = $this->get('mobile_country_code');
+        $this->mobileNetworkCode = $this->get('mobile_network_code');
+        $this->organization = $this->get('organization');
+
+        $ipAddress = $this->get('ip_address');
+        $this->ipAddress = $ipAddress;
+        $this->network = Util::cidr($ipAddress, $this->get('prefix_len'));
+    }
 }

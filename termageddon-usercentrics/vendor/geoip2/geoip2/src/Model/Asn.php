@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace GeoIp2\Model;
 
 use GeoIp2\Util;
@@ -18,25 +20,39 @@ use GeoIp2\Util;
  *      the record. In particular, this is the largest network where all of the
  *      fields besides $ipAddress have the same value.
  */
-class Asn extends AbstractModel {
+class Asn extends AbstractModel
+{
+    /**
+     * @var int|null
+     */
+    protected $autonomousSystemNumber;
 
-	protected $autonomousSystemNumber;
-	protected $autonomousSystemOrganization;
-	protected $ipAddress;
-	protected $network;
+    /**
+     * @var string|null
+     */
+    protected $autonomousSystemOrganization;
 
-	/**
-	 * @ignore
-	 *
-	 * @param mixed $raw
-	 */
-	public function __construct( $raw ) {
-		parent::__construct( $raw );
-		$this->autonomousSystemNumber       = $this->get( 'autonomous_system_number' );
-		$this->autonomousSystemOrganization =
-			$this->get( 'autonomous_system_organization' );
-		$ipAddress                          = $this->get( 'ip_address' );
-		$this->ipAddress                    = $ipAddress;
-		$this->network                      = Util::cidr( $ipAddress, $this->get( 'prefix_len' ) );
-	}
+    /**
+     * @var string
+     */
+    protected $ipAddress;
+
+    /**
+     * @var string
+     */
+    protected $network;
+
+    /**
+     * @ignore
+     */
+    public function __construct(array $raw)
+    {
+        parent::__construct($raw);
+        $this->autonomousSystemNumber = $this->get('autonomous_system_number');
+        $this->autonomousSystemOrganization =
+            $this->get('autonomous_system_organization');
+        $ipAddress = $this->get('ip_address');
+        $this->ipAddress = $ipAddress;
+        $this->network = Util::cidr($ipAddress, $this->get('prefix_len'));
+    }
 }

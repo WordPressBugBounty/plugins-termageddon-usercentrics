@@ -858,7 +858,7 @@ class Termageddon_Usercentrics_Admin {
 
 		// Add settings fields for all integrations.
 		foreach ( Termageddon_Usercentrics::get_integrations() as $integration => $integration_config ) {
-			list( 'name' => $display_name, 'description' => $description, 'beta' => $beta ) = $integration_config;
+			list( 'name' => $display_name, 'description' => $description, 'beta' => $beta, 'default' => $default ) = $integration_config;
 
 			add_settings_field(
 				'termageddon_usercentrics_integration_' . $integration,
@@ -870,6 +870,7 @@ class Termageddon_Usercentrics_Admin {
 				array(
 					'label_for'   => 'termageddon_usercentrics_integration_' . $integration,
 					'integration' => $integration,
+					'default'     => $default,
 				)
 			);
 

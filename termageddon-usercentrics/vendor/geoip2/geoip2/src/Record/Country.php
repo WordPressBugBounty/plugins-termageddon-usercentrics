@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace GeoIp2\Record;
 
 /**
@@ -25,16 +27,18 @@ namespace GeoIp2\Record;
  * and the values are names. This attribute is returned by all location
  * services and databases.
  */
-class Country extends AbstractPlaceRecord {
-
-	/**
-	 * @ignore
-	 */
-	protected $validAttributes = array(
-		'confidence',
-		'geonameId',
-		'isInEuropeanUnion',
-		'isoCode',
-		'names',
-	);
+class Country extends AbstractPlaceRecord
+{
+    /**
+     * @ignore
+     *
+     * @var array<string>
+     */
+    protected $validAttributes = [
+        'confidence',
+        'geonameId',
+        'isInEuropeanUnion',
+        'isoCode',
+        'names',
+    ];
 }

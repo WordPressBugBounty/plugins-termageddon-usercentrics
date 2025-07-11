@@ -1,210 +1,563 @@
-=== Termageddon ===
+=== Termageddon: Cookie Consent & Privacy Compliance ===
 Contributors: termageddon, dintriglia
-Tags: termageddon, cookie, consent, embed, privacy, gdpr, ccpa, usercentrics
+Tags: cookie consent, privacy, GDPR, CCPA, CPRA, CIPA, usercentrics, geolocation, compliance
 Requires at least: 5.0
-Tested up to: 6.8
-Stable tag: 1.7.2
+Tested up to: 6.8.1
+Requires PHP: 7.2
+Stable tag: 1.8.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Each Termageddon license includes a consent solution. This plugin helps you install the consent solution with ease, while offering additional features.
+The most comprehensive cookie consent solution for WordPress. Automatically show consent banners based on visitor location with smart geolocation targeting.
 
 == Description ==
 
-Each Termageddon license includes a consent solution. This plugin helps you install the consent solution with ease, while offering additional features.
+## TERMAGEDDON: CONSENT SOLUTION
 
-As of v1.1.0, the plugin can use the [MaxMind GeoLite2](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data?lang=en) library to automatically estimate the location of your site's users. Based on that location, the consent solution can only be shown if necessary to that end-user.
+This plugin is designed to help WordPress website owners quickly install the Termageddon consent solution onto their website. 
 
-As of v1.2.0, the plugin can check the visitor's location via AJAX to allow the website to still be cached for speed, while also ensuring accurate results for displaying the consent widget.
+**Why choose Termageddon Cookie Consent?**
 
-If you wish to place a privacy settings link in the footer or anywhere else, you can use the [uc-privacysettings] shortcode.
+* **Smart Geolocation**: Automatically detect visitor locations and show consent banners only when required
+* **More coverage than any other provider**: Termageddon covers privacy laws such as GDPR, CPRA, UK DPA, PIPEDA (Canada), Quebec 25, VCDPA, Australia Privacy Act, CIPA, and many, many more laws.
+* **Lightning Fast**: AJAX-powered location detection maintains site speed and caching compatibility
+* **Divi support**: Ensure the consent loads for end users, while preventing loading for logged in admins (to ensure Divi’s Visual Builder is unaffected).
+* **Professional Support**: Dedicated support team ready to help
 
-**Please note**: When GeoIP is enabled, you will be collecting IP addresses for the purposes of determining which cookie consent solution (or lack thereof) to provide to each website visitor (CPRA or CIPA cookie consent, GDPR cookie consent, UK DPA consent or none), based on their location. A cookie will then be placed on the user's browser to log their session, which helps improve page load speed when the user visits other pages on the website. You should ensure that you are in compliance with all applicable privacy laws prior to installing this plugin (or any other technologies on your website). To opt out of this feature, keep all GeoIP checkboxes unchecked (default).
+### 🌍 Global Privacy Law Support
+
+Termageddon’s Auto-updating website policies and consent solution supports major privacy regulations worldwide:
+
+* **🇪🇺 European Union & EEA** - GDPR
+* **🇬🇧 United Kingdom** - UK DPA
+* **🇨🇦 Canada** - PIPEDA & Quebec Law 25
+* **🇺🇸 United States** - State-specific regulations:
+  * California - CPRA, CalOPPA & CIPA
+  * Colorado - CPA
+  * Connecticut - CTDPA
+  * Oregon - OCPA
+  * Texas - TDPSA
+  * Utah - UCPA
+  * Virginia - VCDPA
+  * And more.
+
+### 🚀 Key Features
+
+#### Smart Geolocation Targeting
+* **MaxMind GeoLite2 Integration**: Accurate IP-based location detection
+* **AJAX Mode**: Maintain site caching while ensuring accurate geolocation
+* **Cookie Optimization**: Reduce server load with intelligent cookie-based location caching
+* **Debug Mode**: Test and troubleshoot geolocation with built-in debugging tools
+
+#### Seamless Integration
+* **WordPress Integration**: Works with any WordPress theme and popular page builders
+* **Usercentrics Powered**: Built on the industry-leading Usercentrics consent platform
+* **Developer Friendly**: Extensive hooks, filters, and customization options
+* **Performance Optimized**: Minimal impact on site speed and Core Web Vitals
+
+#### Advanced Video Integrations
+* **Divi Video**: Enhanced image overlay placeholder handling
+* **Elementor Video**: Seamless consent integration with Elementor video widgets
+* **PowerPack Video**: Support for BeaverBuilder PowerPack video embeds
+* **Presto Player**: Optimized consent handling for Presto Player
+* **Ultimate Addons**: Support for Beaver Builder Ultimate Addons
+
+#### Privacy Settings Management
+* **Flexible Shortcode**: `[uc-privacysettings]` with extensive customization options
+* **Button & Link Support**: Choose between button or anchor elements
+* **Custom Styling**: Full control over appearance with CSS targeting
+* **Automatic Replacement**: Intelligent detection and replacement of privacy settings elements
+
+### 📋 Shortcode Usage
+
+Place privacy settings links anywhere on your site with the powerful shortcode:
+
+```
+[uc-privacysettings]
+[uc-privacysettings text="Privacy Preferences"]
+[uc-privacysettings type="button" text="Manage Cookies"]
+```
+
+**Supported Parameters:**
+* `type` - Element type: "a" (default) or "button"
+* `text` - Display text (default: "Privacy Settings")
+* Styling via `#usercentrics-psl` CSS ID
+
+### 🔧 Advanced Configuration
+
+#### Provider Management
+* **Disable Blocking**: Selectively disable cookie blocking for specific providers
+* **Auto-Refresh**: Configure automatic page reload on consent for supported providers
+* **Custom Integrations**: Extend functionality with custom provider configurations
+
+#### Performance Optimization
+* **CDN Configuration**: Optional CDN bypass for translations
+* **Priority Control**: Adjust script loading priority for optimal performance
+* **Cache Compatibility**: Full support for popular caching plugins
+* **Troubleshooting Mode**: Disable for all users except when using `?enable-usercentrics`
+
+### 🛡️ Privacy & Data Protection
+
+**Important Privacy Notice**: When GeoIP is enabled, IP addresses are collected solely for determining appropriate consent requirements based on visitor location. A session cookie is created to improve performance on subsequent page loads. 
+
+**Data Minimization**: All location data is processed temporarily and not stored permanently. Users can opt out by keeping all GeoIP checkboxes unchecked (default setting).
+
+**Compliance First**: Ensure you are in compliance with all applicable privacy laws before installing this plugin or any tracking technologies.
 
 == Installation ==
 
-1. Upload the plugin files to the `/wp-content/plugins/termageddon-usercentrics` directory, or install the plugin through the WordPress plugins screen directly.
-2. Activate the plugin through the 'Plugins' screen in WordPress.
-3. Use the Settings->Termageddon + Usercentrics screen to configure the plugin.
+### Automatic Installation
+
+1. Log in to your WordPress admin dashboard
+2. Navigate to **Plugins → Add New**
+3. Search for "Termageddon"
+4. Click **Install Now** and then **Activate**
+5. Go to **Tools → Termageddon + Usercentrics** to configure
+
+### Manual Installation
+
+1. Download the plugin files
+2. Upload to `/wp-content/plugins/termageddon-usercentrics/` directory
+3. Activate the plugin through the **Plugins** menu in WordPress
+4. Configure via **Tools → Termageddon + Usercentrics**
+
+### Quick Setup
+
+After activation, follow these steps:
+
+1. **Get Your Embed Code**: Log in to your Termageddon account, click into your license and click Embed Codes. Copy the Usercentrics SettingsID
+2. **Paste & Configure**: Add the SettingsID into the plugin settings
+3. **Enable Geolocation**: Choose which regions should see the consent banner
+4. **Test & Go Live**: Use debug mode to test, then activate for all visitors
+
+== Frequently Asked Questions ==
+
+= Do I need a Termageddon account to use this plugin? =
+
+Yes, this plugin requires a Termageddon license which includes the consent solution. The plugin helps you implement and optimize the consent solution with advanced features like geolocation targeting.
+
+= How does geolocation work? =
+
+The plugin uses MaxMind's GeoLite2 database to detect visitor locations based on IP addresses. Consent banners are shown only to visitors in jurisdictions that require them, improving user experience for others.
+
+= Can I customize the appearance of the consent banner? =
+
+Yes, the consent banner appearance is controlled through your Termageddon account settings. The plugin focuses on smart delivery and integration features. Setting the Banner to V3 (in the Settings area) offers full CSS control.
+
+= Is this plugin compatible with caching plugins? =
+
+Yes, the plugin includes AJAX mode specifically designed to work with caching plugins like WP Rocket, W3 Total Cache, WP Super Cache, and others. You may need to exclude usercentrics from JS modifications (available in [support article](https://termageddon.freshdesk.com/support/solutions/articles/66000503921-using-the-consent-solution-with-caching-optimization-tools-perfmatters-wp-rocket-nitropack-sg-siteground-optimizer-litespeed)).
+
+= How do I add privacy settings links to my site? =
+
+Use the `[uc-privacysettings]` shortcode anywhere on your site. You can customize the text and choose between button or link elements.
+
+= What happens if I disable the plugin? =
+
+The consent solution will stop loading, and privacy settings links will be hidden. Your site will no longer show consent banners to visitors.
+
+= Can I test the geolocation features? =
+
+Yes, enable debug mode in the plugin settings and use URL parameters like `?termageddon-usercentrics-debug=california` to test different locations.
+
+= Is customer support available? =
+
+Yes, comprehensive support is available through our dedicated support portal at [https://termageddon.freshdesk.com/](https://termageddon.freshdesk.com/).
+
+== Screenshots ==
+
+1. **Plugin Settings Dashboard** - Clean, intuitive interface for managing all consent settings
+2. **Geolocation Configuration** - Easy setup for region-specific consent requirements  
+3. **Integration Settings** - Advanced options for video players and third-party integrations
+4. **Debug Mode** - Built-in testing tools for troubleshooting geolocation
+5. **Privacy Settings Shortcode** - Flexible shortcode options for privacy settings links
+6. **Performance Optimization** - Advanced settings for caching and performance tuning
 
 == Support ==
 
-For support, please submit a ticket via our support panel via [https://termageddon.freshdesk.com/](https://termageddon.freshdesk.com/).
+For comprehensive support and assistance:
+
+* **Help Center**: Visit our [support portal](https://termageddon.freshdesk.com/) for detailed documentation
+* **Community Forum**: Get help from other users on WordPress.org support forums
+* **Priority Support**: Termageddon customers receive priority email support
+* **Developer Resources**: Access our developer documentation for advanced customizations
 
 == Changelog ==
 
+= 1.8.0 =
+
+**✨ New Features:**
+* Added `type="button"` variant for privacy settings shortcode
+
+**🔧 Improvements:**
+* Upgraded GeoIP library. Minimum PHP version is now 7.2.
+* Enhanced script processing for complex embed codes
+* Enhanced accessibility for privacy settings links
+* Improved script tag filtering for better embed code compatibility
+
+**🐛 Bug Fixes:**
+* Fixed issue where certain `<script>` tags were filtered from embed code
+* Resolved consent solution flashing with geolocation enabled
+
 = 1.7.2 =
--   [FIX] Fixed a bug in which consent soultion would flash when using geolocation.
+
+**🐛 Bug Fixes:**
+* Fixed consent solution flashing when using geolocation targeting
+* Improved smooth loading experience for geo-targeted consent
 
 = 1.7.1 =
--   [ADD] Settings toggle for Disable CDN
--   [ADD] Added data-no-optimize flag to all scripts for better compatibility with Litespeed caching systems
--   [CHANGE] Expand the min/max allowed for Priority
--   [CHANGE] Geo-location debug code always loads in the footer
--   [FIX] Bugs with wp_enqueue_scripts injection method
--   [FIX] Fixed a notice occurring on every page load related to load_plugin_textdomain.
+
+**✨ New Features:**
+* Added CDN disable toggle for translations
+* Enhanced compatibility with LiteSpeed caching systems
+* Expanded priority range for embed script positioning
+
+**🔧 Improvements:**
+* Added `data-no-optimize` flags for better caching plugin compatibility
+* Geo-location debug code now consistently loads in footer
+* Enhanced error handling for `load_plugin_textdomain` function
+
+**🐛 Bug Fixes:**
+* Fixed issues with `wp_enqueue_scripts` injection method
+* Resolved deprecation notice for `load_plugin_textdomain`
 
 = 1.7.0 =
--   [ADD] Added Advanced Configuration section in Integrations tab
--   [ADD] Added support for easily setting up auto-refresh on consent for supported providers
--   [ADD] Added support for easily setting up deactivating blocking for supported providers
--   [CHANGE] Reordered admin tabs for better organization
+
+**✨ New Features:**
+* Advanced Configuration section in Integrations tab
+* Auto-refresh on consent for supported providers
+* Deactivate blocking for specific providers
+* Reorganized admin interface for better user experience
+
+**🔧 Improvements:**
+* Enhanced provider management capabilities
+* Streamlined admin tab organization
+* Better workflow for advanced users
 
 = 1.6.2 =
 
--   [FIX] Fixed an issue related to Wordpress 6.7+ that was causing a deprecation notice to be output to logs.
+**🐛 Bug Fixes:**
+* Fixed WordPress 6.7+ compatibility issue causing deprecation notices
+* Improved error handling for newer WordPress versions
 
 = 1.6.1 =
 
--   [ADD] Added support for Wordpress 6.7.2.
--   [CHANGE] Updated the branding of the plugin to Termageddon specific.
+**🔧 Improvements:**
+* Added WordPress 6.7.2 compatibility
+* Updated plugin branding to Termageddon-specific styling
+* Enhanced overall plugin presentation
 
 = 1.6.0 =
 
--   [ADD] Added Usercentrics Consent API V3 with new and improved embed code.
--   [ADD] Added alternative injection method for alternate implementation of Usercentrics.
--   [CHANGE] Switch to using Settings ID instead of an embed code. Plugin will prompt for one-click conversion on visiting the settings page.
--   [ADD] Added support for new integrations: PowerPack Video, Ultimate Addons for Beaver Builder Video.
+**✨ New Features:**
+* Usercentrics Consent API V3 support with improved embed code
+* Alternative injection method for enhanced implementation flexibility
+* Settings ID implementation replacing traditional embed code approach
+* One-click conversion tool for existing installations
+* PowerPack Video integration for BeaverBuilder
+* Ultimate Addons for Beaver Builder Video support
+
+**🔧 Improvements:**
+* Modernized consent implementation architecture
+* Enhanced compatibility with various WordPress setups
+* Streamlined configuration process
 
 = 1.5.4 =
 
--   [FIX] Fixed an issue in which older sites were not compatible with the composer autoloader.
+**🐛 Bug Fixes:**
+* Fixed composer autoloader compatibility issues for older WordPress installations
+* Improved backward compatibility for legacy sites
 
 = 1.5.2 =
 
--   [FIX] Fixed an issue in which a syntax error would occur with the Elementor compatibility toggle.
+**🐛 Bug Fixes:**
+* Resolved Elementor compatibility toggle syntax error
+* Enhanced error handling for integration settings
 
 = 1.5.1 =
 
--   [FIX] Fixed an issue in which the plugin would present a fatal error when Geolocation was disabled.
+**🐛 Bug Fixes:**
+* Fixed fatal error when Geolocation features were disabled
+* Improved error handling for geolocation-dependent functionality
 
 = 1.5.0 =
 
--   [ADD] New states are now requiring cookie consent forms. The plugin now supports additional locations: Colorado, Virginia, Connecticut, Oregon, Texas, Utah
+**✨ New Features:**
+* Expanded US state support for new privacy laws:
+  * Colorado Consumer Privacy Act (CPA)
+  * Virginia Consumer Data Protection Act (VCDPA)  
+  * Connecticut Data Privacy Act (CTDPA)
+  * Oregon Consumer Privacy Act (OCPA)
+  * Texas Data Privacy and Security Act (TDPSA)
+  * Utah Consumer Privacy Act (UCPA)
+
+**🔧 Improvements:**
+* Enhanced geolocation targeting for US state-specific regulations
+* Updated compliance framework for emerging privacy laws
 
 = 1.4.5 =
 
--   [ADD] Added support for using menus with the `usercentrics-psl` class that will be converted to privacy settings links.
+**✨ New Features:**
+* Menu integration support with `usercentrics-psl` class
+* Automatic conversion of menu items to privacy settings links
+
+**🔧 Improvements:**
+* Enhanced flexibility for privacy settings link placement
+* Better integration with WordPress menu systems
 
 = 1.4.4 =
 
--   [FIX] Bug fixes
+**🐛 Bug Fixes:**
+* General bug fixes and stability improvements
+* Enhanced error handling and performance optimizations
 
 = 1.4.3 =
 
--   [ADD] Added Custom Embed Code Priority (Under Settings) option to allow for more control over the priority of the embed script. 
--   [FIX] Fixed a rare issue where crash on enabling geolocation.
+**✨ New Features:**
+* Custom embed code priority control
+* Enhanced script loading order management
+
+**🐛 Bug Fixes:**
+* Fixed rare geolocation activation crash
+* Improved error handling for edge cases
 
 = 1.4.2 =
 
--   [ADD] Added Elementor Video Integration Support to improve image overlay placeholder handling when consent is required. 
+**✨ New Features:**
+* Elementor Video integration support
+* Enhanced image overlay placeholder handling for Elementor video widgets
+
+**🔧 Improvements:**
+* Better third-party page builder compatibility
+* Enhanced consent handling for video content
 
 = 1.4.1 =
 
--   [FIX] Fixed an issue where the plugin with Ajax Mode would bust cache for every request for some providers such as Pressable.
+**🐛 Bug Fixes:**
+* Fixed AJAX mode cache busting issue with Pressable and similar providers
+* Improved caching compatibility for managed WordPress hosting
 
 = 1.4.0 =
 
--   [ADD] Added ability to turn off plugin for troubleshooting to all visitors unless ?enable-usercentrics is added as a query parameter to the URL.
+**✨ New Features:**
+* Troubleshooting mode for debugging consent issues
+* Plugin disable functionality with `?enable-usercentrics` override
+* Enhanced debugging capabilities for complex setups
+
+**🔧 Improvements:**
+* Better troubleshooting workflow for administrators
+* Enhanced debugging tools for consent delivery issues
 
 = 1.3.9 =
 
--   [CHANGE] Removed jQuery as requirement for privacy settings link.
--   [Change] Enqueued jQuery where required for other implementations to avoid a missing dependency.
+**🔧 Improvements:**
+* Removed jQuery dependency for privacy settings links
+* Enhanced performance by reducing JavaScript dependencies
+* Better compatibility with jQuery-free WordPress themes
 
 = 1.3.8 =
 
--   [ADD] Added support for CIPA in California.
--   [ADD] Added Divi Video Integration Support to improve image overlay placeholder handling when consent is required.
--   [ADD] Added documentation link for Geo-Location.
+**✨ New Features:**
+* California Consumer Privacy Act (CIPA) support
+* Divi Video integration for enhanced video consent handling
+* Comprehensive geolocation documentation
+
+**🔧 Improvements:**
+* Enhanced California privacy law compliance
+* Better video player integration capabilities
 
 = 1.3.7 =
 
--   [ADD] Added support for WordPress v6.4.2
--   [ADD] Added support for usercentrics data-version attribute in embed code.
+**✨ New Features:**
+* WordPress 6.4.2 compatibility
+* Usercentrics `data-version` attribute support in embed codes
+
+**🔧 Improvements:**
+* Enhanced embed code flexibility
+* Better version management for Usercentrics integrations
 
 = 1.3.6 =
 
--   [CHANGE] Improved support for data-usercentrics attributes in the Embed Code textarea field.
--   [FIX] Fixed a fatal error that occurs if other plugins are using MaxMind Geoip2 library.
+**🔧 Improvements:**
+* Enhanced `data-usercentrics` attribute support in embed codes
+* Better compatibility with complex embed configurations
+
+**🐛 Bug Fixes:**
+* Fixed MaxMind GeoIP2 library conflict with other plugins
+* Improved library loading and conflict resolution
 
 = 1.3.5 =
 
--   [ADD] When disabling geolocation, and then re-enabling it in the future, it will now keep your settings so you do not have to reset it up each time.
--   [FIX] Fixed a Deprectated PHP warning being thrown for PHP8.
+**✨ New Features:**
+* Persistent geolocation settings when toggling features
+* Enhanced user experience for geolocation management
+
+**🐛 Bug Fixes:**
+* Fixed PHP 8 deprecation warning
+* Improved PHP version compatibility
 
 = 1.3.4 =
 
--   [ADD] Added alternate privacy settings link embed as an alternative for shortcodes (Divi Support).
--   [ADD] Added settings section to showcase privacy settings link settings.
--   [CHANGE] Moved Hide Privacy Settings Link option to Settings page instead of geolocation page.
--   [FIX] Improved handling for WP_CLI actions and error logging.
+**✨ New Features:**
+* Alternative privacy settings link implementation (Divi support)
+* Dedicated privacy settings link configuration section
+* Enhanced element hiding with `usercentrics-psl` class
+
+**🔧 Improvements:**
+* Moved privacy settings options to dedicated Settings page
+* Enhanced WP_CLI compatibility and error handling
 
 = 1.3.3 =
 
--   [ADD] Added integration to improve support with Presto Player.
+**✨ New Features:**
+* Presto Player integration for enhanced video consent handling
+
+**🔧 Improvements:**
+* Better video player compatibility across different platforms
+* Enhanced consent handling for embedded video content
 
 = 1.3.2 =
 
--   [ADD] Added geolocation opt-in support for Virginia to allow for compliance with VCDPA.
+**✨ New Features:**
+* Virginia Consumer Data Protection Act (VCDPA) geolocation support
+
+**🔧 Improvements:**
+* Enhanced US state-specific privacy law compliance
+* Better regional targeting for consent requirements
 
 = 1.3.1 =
 
--   [FIX] Fixed potential issue with wp_cron that could an issue downloading geolocation database.
+**🐛 Bug Fixes:**
+* Fixed potential wp_cron geolocation database download issue
+* Improved scheduled task reliability
 
 = 1.3.0 =
 
--   [CHANGE] Updated geolocation database for improved error handling.
--   [FIX] Fixed an issue causing duplicate geolocation database update scheduling on re-activation of plugin.
+**🔧 Improvements:**
+* Enhanced geolocation database error handling
+* Better reliability for location-based consent delivery
+
+**🐛 Bug Fixes:**
+* Fixed duplicate geolocation database update scheduling
+* Improved plugin reactivation handling
 
 = 1.2.4 =
 
--   [CHANGE] Updated verbiage from CCPA to CPRA.
--   [CHANGE] WordPress compatibility for 6.1.1.
+**🔧 Improvements:**
+* Updated terminology from CCPA to CPRA for accuracy
+* WordPress 6.1.1 compatibility verification
 
 = 1.2.3 =
 
--   [FIX] Fixed an issue in which users could not save default wordpress settings when using the plugin.
--   [ADD] Add quick “Settings” link on the plugins page to quickly jump to the settings panel for the plugin.
+**✨ New Features:**
+* Quick Settings link on plugins page for easier access
+
+**🐛 Bug Fixes:**
+* Fixed WordPress default settings saving conflict
+* Improved plugin settings isolation
 
 = 1.2.2 =
 
--   [FIX] Fixed Privacy Settings Link to force show widget even if hidden via geo-location
+**🐛 Bug Fixes:**
+* Fixed privacy settings link to force-show consent widget
+* Improved widget visibility handling with geolocation
 
 = 1.2.1 =
 
--   [ADD] Added Privacy Settings Link shortcode and toggleability to ensure it does not dissapear unless you want it to.
--   [CHANGE] Implemented tabs to improve usability and cleanliness of the dashboard.
--   [CHANGE] Implemented new UI to allow easier navigation and understanding how the options work.
--   [CHANGE] Improved frontend to ensure incompatible options are automatically updated.
+**✨ New Features:**
+* Privacy Settings Link shortcode with toggle controls
+* Tabbed admin interface for better organization
+* Enhanced frontend UI for incompatible option handling
+
+**🔧 Improvements:**
+* Streamlined admin dashboard design
+* Better user experience for configuration management
+* Automatic option compatibility checking
 
 = 1.2.0 =
 
--   Implemented AJAX caching method for geolocation to allow support for various website caching systems.
+**✨ New Features:**
+* AJAX caching method for geolocation compatibility
+* Enhanced support for website caching systems
+* Better performance with cached websites
+
+**🔧 Improvements:**
+* Significant performance improvements for cached sites
+* Better compatibility with popular caching plugins
 
 = 1.1.4 =
 
--   Allow admins to enable location logging to troubleshoot and test the geo-location options. When enabled, the current location extrapolated via the plugin will be shown in the browser console.
+**✨ New Features:**
+* Admin location logging toggle for geolocation troubleshooting
+* Browser console location display for debugging
+* Enhanced testing capabilities for administrators
 
 = 1.1.3 =
 
--   Fix an issue in which disable for admin users was not working
+**🐛 Bug Fixes:**
+* Fixed "disable for admin users" functionality
+* Improved administrator experience during development
 
 = 1.1.2 =
 
--   Added support for link instead of button display option. If termageddon disabled, the link will also automatically be hidden via CSS.
--   Added support for elements to be hidden automatically when usercentrics is disabled using the "usercentrics-psl" class. If termageddon is disabled, anything tagged with that class will also be hidden.
+**✨ New Features:**
+* Link display option as alternative to button format
+* Automatic element hiding with `usercentrics-psl` class
+* Enhanced privacy settings link management
+
+**🔧 Improvements:**
+* Better CSS-based element visibility control
+* Enhanced integration with theme designs
 
 = 1.1.1 =
 
--   Fixed Fatal error affecting some sites.
+**🐛 Bug Fixes:**
+* Fixed fatal error affecting certain WordPress installations
+* Improved plugin compatibility and stability
 
 = 1.1.0 =
 
--   Added Geo-location options. Added support for contingently showing the consent banner if the user is located in a location that REQUIRES the banner to be shown. If not, cookie consent is bypassed.
--   Added geo-location options for toggleability based on user location. If disabled, geoIP is disabled.
+**✨ New Features:**
+* Advanced geolocation targeting system
+* Location-based consent banner display
+* MaxMind GeoLite2 database integration
+* Regional compliance automation
 
-= 1.0 =
+**🔧 Improvements:**
+* Intelligent consent delivery based on visitor location
+* Enhanced user experience for non-regulated regions
+* Comprehensive geolocation management interface
 
--   Initial Integration
--   Added options for embed script compatibility and toggleability for if a user is logged in.
+= 1.0.0 =
+
+**✨ Initial Release:**
+* Core Termageddon + Usercentrics integration
+* Basic embed script compatibility
+* User authentication toggles
+* Foundation for advanced geolocation features
+
+**🔧 Core Features:**
+* Seamless WordPress integration
+* Usercentrics consent platform integration
+* Administrative control panel
+* Basic consent delivery system
+
+== Upgrade Notice ==
+
+= 1.7.0 =
+Significant update with advanced configuration options for provider management and auto-refresh capabilities. Enhanced admin interface organization.
+
+= 1.6.0 =
+Major update introducing Usercentrics Consent API V3 support, Settings ID implementation, and new video integration options. One-click conversion available for existing installations.
+
+= 1.5.0 =
+Important update adding support for new US state privacy laws including Colorado, Virginia, Connecticut, Oregon, Texas, and Utah. Enhanced geolocation targeting capabilities.
+
+= 1.2.0 =
+Major performance update introducing AJAX caching method for improved compatibility with caching plugins and better site performance.
+
+= 1.1.0 =
+Significant update adding advanced geolocation features with MaxMind GeoLite2 integration for location-based consent delivery.
+
+= 1.0.0 =
+Initial release of the Termageddon Cookie Consent plugin with core Usercentrics integration and WordPress compatibility.

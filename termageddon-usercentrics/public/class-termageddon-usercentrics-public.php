@@ -186,7 +186,7 @@ class Termageddon_Usercentrics_Public {
 				$locations,
 				'--',
 				'Geo-Location Mode?: ' . ( Termageddon_Usercentrics::is_geoip_enabled() ? 'Yes' : 'No' ),
-				'AJAX Mode?: ' . ( Termageddon_Usercentrics::is_ajax_mode_enabled() ? 'Yes' : 'No' ),
+				'AJAX Mode?: ' . ( Termageddon_Usercentrics::is_ajax_mode_enabled() ? 'Yes' : 'No' )
 			);
 		}
 	}
@@ -204,6 +204,11 @@ class Termageddon_Usercentrics_Public {
 				$(document).ready(function() {
 					jQuery('a#usercentrics-psl,.usercentrics-psl a').each(function() {
 						let newElem = jQuery(`<?php echo do_shortcode( '[uc-privacysettings]' ); ?>`);
+						if (!["","Privacy Settings"].includes(jQuery(this).text())) newElem.text(jQuery(this).text())
+						jQuery(this).replaceWith(newElem);
+					})
+					jQuery('button#usercentrics-psl,.usercentrics-psl button').each(function() {
+						let newElem = jQuery(`<?php echo do_shortcode( '[uc-privacysettings type="button"]' ); ?>`);
 						if (!["","Privacy Settings"].includes(jQuery(this).text())) newElem.text(jQuery(this).text())
 						jQuery(this).replaceWith(newElem);
 					})
@@ -274,7 +279,7 @@ class Termageddon_Usercentrics_Public {
 
 		// Output to HTML HEAD.
 		$output  = '<!-- TERMAGEDDON + USERCENTRICS -->' . PHP_EOL;
-		$output .= wp_kses( $script, Termageddon_Usercentrics::ALLOWED_HTML );
+		$output .= Termageddon_Usercentrics::processEmbedCode( $script );
 		$output .= '<!-- END TERMAGEDDON + USERCENTRICS -->' . PHP_EOL;
 
 		if ( $is_enqueue ) {
@@ -300,8 +305,8 @@ class Termageddon_Usercentrics_Public {
 			// the whole thing will be overwritten by the script_loader_tag filter.
 		}
 
-		foreach ( array_keys( Termageddon_Usercentrics::get_integrations() ) as $integration ) {
-			if ( Termageddon_Usercentrics::is_integration_enabled( $integration ) ) {
+		foreach ( Termageddon_Usercentrics::get_integrations() as $integration => $integration_config ) {
+			if ( Termageddon_Usercentrics::is_integration_enabled( $integration, $integration_config['default'] ) ) {
 				$slug = str_replace( '_', '-', $integration );
 				wp_enqueue_script( $this->plugin_name . '-integration-' . $slug, TERMAGEDDON_COOKIE_URL . 'public/js/termageddon-usercentrics-integration-' . $slug . '.min.js', array(), $this->version, array() );
 			}
