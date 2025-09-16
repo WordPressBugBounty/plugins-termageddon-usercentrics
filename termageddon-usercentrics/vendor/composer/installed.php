@@ -3,7 +3,7 @@
         'name' => 'termageddon/termageddon-usercentrics',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '5a50ce6804172b076871d242e65335587ce3144d',
+        'reference' => '24e892ca12076a7ddbe324d42cda3ec850a446e1',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -49,7 +49,7 @@
         'termageddon/termageddon-usercentrics' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '5a50ce6804172b076871d242e65335587ce3144d',
+            'reference' => '24e892ca12076a7ddbe324d42cda3ec850a446e1',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

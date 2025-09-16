@@ -539,8 +539,9 @@ class Termageddon_Usercentrics_Admin {
 			'termageddon_usercentrics_section_settings',
 			array(
 				'name'        => 'Privacy Settings Link',
-				'description' => 'Giving users the ability to change their privacy/consent settings is a requirement under several privacy laws. Within your Termageddon account, if you selected (on page 1 of the Cookie Policy and Consent Tool questionnaire) to use the Privacy Settings hyperlink (instead of the \'fingerprint icon\'), you will see an additional script in the \'view embed code\' page that will need to be added to your website.</p>
-				<p>As an alternative to that additional script, you can simply use the [uc-privacysettings] shortcode, which will embed the privacy settings link. This is an easy way to add the Privacy Settings link within your global footer, for example. You can also pass in a text parameter to change the text of the link (for example, <code>[uc-privacysettings text="Change Privacy Settings"]</code>).',
+				'description' => __('Giving users the ability to change their privacy/consent settings is a requirement under several privacy laws. Within your Termageddon account, if you selected (on page 1 of the Cookie Policy and Consent Tool questionnaire) to use the Privacy Settings hyperlink (instead of the \'fingerprint icon\'), you will see an additional script in the \'view embed code\' page that will need to be added to your website.', 'termageddon-usercentrics') . '</p>
+				<p>'.__('As an alternative to that additional script, you can simply use the [uc-privacysettings] shortcode, which will embed the privacy settings link. This is an easy way to add the Privacy Settings link within your global footer, for example. You can also pass in a text parameter to change the text of the link as seen here:', 'termageddon-usercentrics') . ' <code>[uc-privacysettings text="Change Privacy Settings"]</code>.</p>
+				<p>'.__('We also offer a button version of the Privacy Settings link, which can be better for accessibility. To use the button version, use this shortcode: <code>[uc-privacysettings type="button" text="Manage Cookies"]</code>. For CSS styling, you can use this selector', 'termageddon-usercentrics') . ': <code>button#usercentrics-psl</code>.</p>',
 			)
 		);
 
