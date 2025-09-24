@@ -276,26 +276,7 @@ class Termageddon_Usercentrics {
 		$this->loader->add_action( 'termageddon_usercentrics_maxmind_download', $this, 'verify_maxmind_database' );
 
 		// Add PSL shortcode.
-		add_shortcode(
-			'uc-privacysettings',
-			function( $atts ) {
-				$a = shortcode_atts(
-					array(
-						'text' => 'Privacy Settings',
-						'type' => 'a',
-					),
-					$atts
-				);
-
-				$onclick = '(function(){var r=document.querySelector(\'div#usercentrics-root\'),c=document.querySelector(\'aside#usercentrics-cmp-ui\');if(r)r.style.display=\'block\';if(c)c.style.display=\'block\';if(typeof UC_UI!==\'undefined\')UC_UI.showSecondLayer()})()';
-
-				if ( 'button' === $a['type'] ) {
-					return '<button type="button" onclick="' . $onclick . '" id="usercentrics-psl">' . $a['text'] . '</button>';
-				} else {
-					return '<a role="button" href="javascript:void(0)" onclick="' . $onclick . '" id="usercentrics-psl">' . $a['text'] . '</a>';
-				}
-			}
-		);
+		add_shortcode( 'uc-privacysettings', array( $this, 'privacy_settings_shortcode' ) );
 
 	}
 
@@ -314,6 +295,30 @@ class Termageddon_Usercentrics {
 		return $schedules;
 	}
 
+	/**
+	 * Handle the uc-privacysettings shortcode
+	 *
+	 * @since    1.8.2
+	 * @param    array $atts Shortcode attributes.
+	 * @return   string The shortcode output.
+	 */
+	public function privacy_settings_shortcode( $atts ) {
+		$a = shortcode_atts(
+			array(
+				'text' => 'Privacy Settings',
+				'type' => 'a',
+			),
+			$atts
+		);
+
+		$onclick = '(function(){var r=document.querySelector(\'div#usercentrics-root\'),c=document.querySelector(\'aside#usercentrics-cmp-ui\');if(r)r.style.display=\'block\';if(c)c.style.display=\'block\';if(typeof UC_UI!==\'undefined\')UC_UI.showSecondLayer()})()';
+
+		if ( 'button' === $a['type'] ) {
+			return '<button type="button" onclick="' . $onclick . '" id="usercentrics-psl">' . esc_html( $a['text'] ) . '</button>';
+		} else {
+			return '<a role="button" href="javascript:void(0)" onclick="' . $onclick . '" id="usercentrics-psl">' . esc_html( $a['text'] ) . '</a>';
+		}
+	}
 
 	/**
 	 * Register all of the hooks related to the admin area functionality

@@ -14,7 +14,7 @@
  * @wordpress-plugin
  * Plugin Name:       Termageddon
  * Description:       Each Termageddon license includes a consent solution. This plugin helps you install the consent solution with ease, while offering additional features.
- * Version:           1.8.1
+ * Version:           1.8.2
  * Author:            Termageddon
  * Author URI:        https://termageddon.com
  * License:           GPL-2.0+
@@ -33,7 +33,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'TERMAGEDDON_COOKIE_VERSION', '1.8.1' );
+define( 'TERMAGEDDON_COOKIE_VERSION', '1.8.2' );
 
 define( 'TERMAGEDDON_COOKIE_PLUGIN_PATH', dirname( __FILE__ ) );// No trailing slash.
 
