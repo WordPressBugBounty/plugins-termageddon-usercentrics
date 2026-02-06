@@ -221,6 +221,43 @@ class Termageddon_Usercentrics_Public {
 
 
 	/**
+	 * Get augmented script snippets for output
+	 *
+	 * Retrieves script snippets from database, augments them with Usercentrics attributes,
+	 * and returns the concatenated result.
+	 *
+	 * @return string The concatenated augmented script snippets.
+	 */
+	public function get_augmented_script_snippets(): string {
+		$snippets = Termageddon_Usercentrics::get_script_snippets();
+		if ( empty( $snippets ) || ! is_array( $snippets ) ) {
+			return '';
+		}
+
+		$augmented_scripts = array();
+		foreach ( $snippets as $snippet ) {
+			// Validate snippet structure
+			if ( ! is_array( $snippet ) || ! isset( $snippet['script'], $snippet['service_id'] ) ) {
+				continue;
+			}
+
+			$script     = trim( $snippet['script'] );
+			$service_id = $snippet['service_id'];
+
+			// Skip empty scripts
+			if ( empty( $script ) ) {
+				continue;
+			}
+
+			// Augment the script with Usercentrics attributes
+			$augmented = Termageddon_Usercentrics::augment_script_for_usercentrics( $script, $service_id );
+			$augmented_scripts[] = $augmented;
+		}
+
+		return ! empty( $augmented_scripts ) ? implode( PHP_EOL, $augmented_scripts ) : '';
+	}
+
+	/**
 	 * Dynamically hide or show the termageddon script based on settings. Outputs directly to script tag.
 	 */
 	public function build_termageddon_script( $is_enqueue = false ) {
@@ -273,6 +310,12 @@ class Termageddon_Usercentrics_Public {
 			$script .= '<script type="application/javascript">var UC_UI_SUPPRESS_CMP_DISPLAY = true;</script>';
 		}
 
+		// Append augmented script snippets
+		$augmented_snippets = $this->get_augmented_script_snippets();
+		if ( ! empty( $augmented_snippets ) ) {
+			$script .= PHP_EOL . $augmented_snippets;
+		}
+
 		if ( empty( $script ) ) {
 			return;
 		}
@@ -299,10 +342,12 @@ class Termageddon_Usercentrics_Public {
 		$should_enqueue_scripts = Termageddon_Usercentrics::get_embed_injection_method() === 'wp_enqueue_scripts';
 
 		if ( $settings_id && $should_enqueue_scripts ) {
-			// Enqueue Embed Script.
-			wp_enqueue_script( $this->plugin_name . '-scripts', '//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js', array(), $this->version, false );
-			// note: this URL is placed here to "play by the rules"... but it doesn't actually do anything.
-			// the whole thing will be overwritten by the script_loader_tag filter.
+			// Only enqueue the auto-blocking script if manual control is disabled
+			if ( ! Termageddon_Usercentrics::is_auto_blocker_disabled() ) {
+				wp_enqueue_script( $this->plugin_name . '-scripts', '//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js', array(), $this->version, false );
+				// note: this URL is placed here to "play by the rules"... but it doesn't actually do anything.
+				// the whole thing will be overwritten by the script_loader_tag filter.
+			}
 		}
 
 		foreach ( Termageddon_Usercentrics::get_integrations() as $integration => $integration_config ) {

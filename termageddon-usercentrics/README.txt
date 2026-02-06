@@ -2,9 +2,9 @@
 Contributors: termageddon, dintriglia
 Tags: cookie consent, privacy, GDPR, CCPA, CPRA, CIPA, usercentrics, geolocation, compliance
 Requires at least: 5.0
-Tested up to: 6.8.1
+Tested up to: 6.9
 Requires PHP: 7.2
-Stable tag: 1.8.2
+Stable tag: 1.9.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -187,6 +187,25 @@ For comprehensive support and assistance:
 * **Developer Resources**: Access our developer documentation for advanced customizations
 
 == Changelog ==
+
+= 1.9.2 =
+
+**🔧 Improvements:**
+* Minor performance optimizations and code refinements
+
+= 1.9.1 =
+
+**🔧 Improvements:**
+* Enhanced compatibility: Tested up to WordPress 6.9
+
+= 1.9.0 =
+
+**✨ New Features:**
+* Added "Manual Script Controller" allowing users to add any script and have it automatically be configured for Cookie Consent with automatic privacy blocking in mind.
+
+**🔧 Improvements:**
+* Updated list of supported Smart Data Protector technologies for use with Advanced Configurations under Integrations.
+* Added support for Delaware (DPDPA) & Indiana (ICDPA) for Geolocation.
 
 = 1.8.2 =
 

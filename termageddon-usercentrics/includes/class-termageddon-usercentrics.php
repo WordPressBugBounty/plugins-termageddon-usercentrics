@@ -145,6 +145,14 @@ class Termageddon_Usercentrics {
 				'title'   => __( 'Connecticut (CTDPA)', 'termageddon-usercentrics' ),
 				'popular' => false,
 			),
+			'delaware'    => array(
+				'title'   => __( 'Delaware (DPDPA)', 'termageddon-usercentrics' ),
+				'popular' => false,
+			),
+			'indiana'     => array(
+				'title'   => __( 'Indiana (ICDPA)', 'termageddon-usercentrics' ),
+				'popular' => false,
+			),
 			'oregon'      => array(
 				'title'   => __( 'Oregon (OCPA)', 'termageddon-usercentrics' ),
 				'popular' => false,
@@ -188,6 +196,8 @@ class Termageddon_Usercentrics {
 		'texas'       => 'Texas',
 		'utah'        => 'Utah',
 		'virginia'    => 'Virginia',
+		'delaware'    => 'Delaware',
+		'indiana'     => 'Indiana',
 	);
 
 	/**
@@ -632,13 +642,19 @@ class Termageddon_Usercentrics {
 			return $embed_code;
 		}
 
-		$embed_version   = self::get_embed_script_version();
-		$loader_url      = ( 'v2' === $embed_version ) ? '//app.usercentrics.eu/browser-ui/latest/loader.js' : '//web.cmp.usercentrics.eu/ui/loader.js';
-		$translations_url = self::get_translations_url();
+		$embed_version        = self::get_embed_script_version();
+		$loader_url           = ( 'v2' === $embed_version ) ? '//app.usercentrics.eu/browser-ui/latest/loader.js' : '//web.cmp.usercentrics.eu/ui/loader.js';
+		$translations_url     = self::get_translations_url();
+		$use_manual_control   = self::is_auto_blocker_disabled();
 
 		$new_embed_code  = '<link rel="preconnect" href="//privacy-proxy.usercentrics.eu">' . PHP_EOL;
-		$new_embed_code .= '<link rel="preload" href="//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js" as="script">' . PHP_EOL;
-		$new_embed_code .= '<script type="application/javascript" src="//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js" data-no-optimize="1" data-no-defer="1"></script>' . PHP_EOL;
+		
+		// Only include the auto-blocking script if manual control is disabled
+		if ( ! $use_manual_control ) {
+			$new_embed_code .= '<link rel="preload" href="//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js" as="script">' . PHP_EOL;
+			$new_embed_code .= '<script type="application/javascript" src="//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js" data-no-optimize="1" data-no-defer="1"></script>' . PHP_EOL;
+		}
+		
 		$new_embed_code .= '<script id="usercentrics-cmp" data-cmp-version="' . esc_attr( self::get_embed_script_version() ) . '" src="' . esc_url( $loader_url ) . '" data-settings-id="' . self::get_settings_id() . '" data-no-optimize="1" data-no-defer="1" async></script>' . PHP_EOL;
 		$new_embed_code .= '<script data-no-optimize="1" data-no-defer="1">uc.setCustomTranslations(\'' . $translations_url . '\');</script>' . PHP_EOL;
 		$new_embed_code .= self::filter_out_standard_embed_code( $embed_code );
@@ -1574,6 +1590,105 @@ class Termageddon_Usercentrics {
 	 */
 	public static function get_auto_refresh_providers(): array {
 		return get_option( 'termageddon_usercentrics_auto_refresh_providers', array() );
+	}
+
+	/**
+	 * Check if manual script control is enabled (disables auto-blocking)
+	 *
+	 * @return bool True if manual script control should be used, false otherwise
+	 */
+	public static function is_auto_blocker_disabled(): bool {
+		return get_option( 'termageddon_usercentrics_disable_auto_blocker', false ) ? true : false;
+	}
+
+	/**
+	 * Get the script snippets from the database
+	 *
+	 * @return array Array of snippet objects, each containing 'script' and 'service_id'
+	 */
+	public static function get_script_snippets(): array {
+		return get_option( 'termageddon_usercentrics_script_snippets', array() );
+	}
+
+	/**
+	 * Get the provider name by ID from the providers list
+	 *
+	 * @param string $service_id The provider ID to look up.
+	 * @return string The provider name, or empty string if not found.
+	 */
+	public static function get_provider_name_by_id( string $service_id ): string {
+		// Use cached providers from admin class to avoid duplicate loading
+		if ( ! class_exists( 'Termageddon_Usercentrics_Admin' ) ) {
+			require_once TERMAGEDDON_COOKIE_PATH . 'admin/class-termageddon-usercentrics-admin.php';
+		}
+		$providers = Termageddon_Usercentrics_Admin::get_usercentrics_providers();
+		return $providers[ $service_id ] ?? '';
+	}
+
+	/**
+	 * Augment script tags with Usercentrics blocking attributes
+	 *
+	 * Takes script HTML and augments all <script> tags with type="text/plain"
+	 * and data-usercentrics attributes for cookie consent blocking.
+	 *
+	 * @param string $script_html The raw script HTML to augment.
+	 * @param string $service_id  The provider ID to look up the service name.
+	 * @return string The augmented script HTML, or original if service not found.
+	 */
+	public static function augment_script_for_usercentrics( string $script_html, string $service_id ): string {
+		// Get service name from service_id
+		$service_name = self::get_provider_name_by_id( $service_id );
+		if ( empty( $service_name ) ) {
+			// Log warning if service not found
+			if ( function_exists( 'error_log' ) ) {
+				error_log( sprintf( 'Termageddon Usercentrics: Invalid service_id "%s" provided to augment_script_for_usercentrics', $service_id ) );
+			}
+			return $script_html; // Return original if service not found
+		}
+
+		// Pattern to match script tags (both with src and inline)
+		$pattern = '/<script([^>]*)>([\s\S]*?)<\/script>/i';
+
+		$augmented = preg_replace_callback(
+			$pattern,
+			function( $matches ) use ( $service_name ) {
+				$attributes = trim( $matches[1] );
+				$content    = $matches[2];
+
+				// Replace or add type="text/plain"
+				if ( preg_match( '/type\s*=\s*["\'][^"\']*["\']/i', $attributes ) ) {
+					// Replace existing type attribute
+					$attributes = preg_replace(
+						'/type\s*=\s*["\'][^"\']*["\']/i',
+						'type="text/plain"',
+						$attributes
+					);
+				} else {
+					// Add type="text/plain" attribute
+					$attributes = ( $attributes ? $attributes . ' ' : '' ) . 'type="text/plain"';
+				}
+
+				// Add or update data-usercentrics attribute
+				$usercentrics_attr = 'data-usercentrics="' . esc_attr( $service_name ) . '"';
+				if ( preg_match( '/data-usercentrics\s*=\s*["\'][^"\']*["\']/i', $attributes ) ) {
+					// Replace existing data-usercentrics
+					$attributes = preg_replace(
+						'/data-usercentrics\s*=\s*["\'][^"\']*["\']/i',
+						$usercentrics_attr,
+						$attributes
+					);
+				} else {
+					// Add data-usercentrics attribute
+					$attributes .= ' ' . $usercentrics_attr;
+				}
+
+				return '<script' . ( $attributes ? ' ' . $attributes : '' ) . '>' . $content . '</script>';
+			},
+			$script_html
+		);
+
+		$service_name_upper = strtoupper( $service_name );
+		return PHP_EOL . '<!-- ' . esc_html( $service_name_upper ) . ' SCRIPT -->' . PHP_EOL . ( $augmented ?? $script_html ) . PHP_EOL;
 	}
 
 }

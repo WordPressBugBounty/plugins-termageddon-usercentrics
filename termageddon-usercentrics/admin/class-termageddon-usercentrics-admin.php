@@ -128,12 +128,17 @@ class Termageddon_Usercentrics_Admin {
 		wp_enqueue_style( 'select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css', array(), '4.1.0' );
 		wp_enqueue_script( 'select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', array( 'jquery' ), '4.1.0', true );
 
-		// Initialize select2 for our multi-select fields
+		// Initialize select2 for our multi-select and single-select fields
 		wp_add_inline_script( 'select2', '
 			jQuery(document).ready(function($) {
 				$(".termageddon-multiselect").select2({
 					width: "100%",
 					placeholder: "Select providers...",
+					allowClear: true
+				});
+				$(".termageddon-singleselect").select2({
+					width: "100%",
+					placeholder: "Select a service...",
 					allowClear: true
 				});
 			});
@@ -288,24 +293,25 @@ class Termageddon_Usercentrics_Admin {
 	 */
 	public function add_new_subsection( string $section, array $options = array() ) {
 
-		$name        = ( isset( $options['name'] ) ? $options['name'] : false );
-		$description = ( isset( $options['description'] ) ? $options['description'] : false );
+		$name        = $options['name'] ?? false;
+		$tags        = isset( $options['tags'] ) ? ' ' . $options['tags'] : '';
+		$description = $options['description'] ?? false;
 		// Indent specifies whether or not the subsection should be indented.
-		$indent = ( isset( $options['indent'] ) ? true === $options['indent'] : false );
+		$indent = ( $options['indent'] ?? false ) === true;
 
 		// Slim slims down the column width for the initial options.
-		$slim = ( isset( $options['slim'] ) ? true === $options['slim'] : false );
+		$slim = ( $options['slim'] ?? false ) === true;
 
 		// Helper slims down the divider and displays a helper text by itself.
-		$helper = ( isset( $options['helper'] ) ? true === $options['helper'] : false );
+		$helper = ( $options['helper'] ?? false ) === true;
 
 		$section_contents = $helper ?
 		'
-					<span class="tu-section-title-helper">' . esc_html( $name ) . ':</span>
+					<span class="tu-section-title-helper">' . esc_html( $name ) . ':' . $tags . '</span>
 					' . ( empty( $description ) ? '' : '<p>' . wp_kses_post( $description ) . '</p>' )
 		: ' </div>
 				<div class="tu-toggle-section">
-					<span class="tu-section-title">' . esc_html( $name ) . ':</span>
+					<span class="tu-section-title">' . esc_html( $name ) . ':' . $tags . '</span>
 					' . ( empty( $description ) ? '' : '<p>' . wp_kses_post( $description ) . '</p>' ) . '
 				</div>
 			<div class="' . ( $indent ? 'tu-toggle-section' : 'tu-settings-section' ) . ( $slim ? ' slim-section' : '' ) . '">';
@@ -338,6 +344,24 @@ class Termageddon_Usercentrics_Admin {
 	 *  @return string  */
 	public static function mark_as_beta() {
 		return ' <span class="tu-label-warning">BETA</span>';
+	}
+
+
+	/**
+	 * Gets the Usercentrics providers array.
+	 *
+	 * Caches the result to avoid multiple file includes.
+	 *
+	 * @return array Array of provider IDs and names.
+	 */
+	public static function get_usercentrics_providers(): array {
+		static $providers = null;
+
+		if ( null === $providers ) {
+			$providers = include TERMAGEDDON_COOKIE_PATH . 'admin/usercentrics-providers.php';
+		}
+
+		return $providers;
 	}
 
 
@@ -460,6 +484,54 @@ class Termageddon_Usercentrics_Admin {
 			'termageddon_usercentrics_settings', // settings group name.
 			'termageddon_usercentrics_embed_code', // option name.
 			'' // sanitization function.
+		);
+
+		// BREAK SECTION FOR MANUAL SCRIPT CONTROLLER.
+		$this->add_new_subsection(
+			'termageddon_usercentrics_section_embed',
+			array(
+				'name'        => __( 'Manual Script Controller', 'termageddon-usercentrics' ),
+				'tags' => $this->mark_as_beta(),
+				'description' => '<a href="https://termageddon.freshdesk.com/support/solutions/articles/66000533992-manual-script-controller-feature-wordpress-plugin-" target="_blank">'.__( 'See video documentation here', 'termageddon-usercentrics' ). '</a> ' .
+				__( 'on how to use this feature. ', 'termageddon-usercentrics' ) . 
+				__( 'This feature helps add the', 'termageddon-usercentrics' )
+				.' <a href="https://termageddon.freshdesk.com/support/solutions/articles/66000529802-embedding-the-cookie-consent-solution-and-cookie-policy#:~:text=for%20simplicity%20purposes.-,Manual%20script%20control,-%2D%20You%20can%20also" target="_blank">'.__( 'manual control snippet', 'termageddon-usercentrics' ).'</a> '
+				.__( 'into third party scripts (Google Analytics, Facebook Pixel, LinkedIn Insights Tag, etc.), which can help ensure that consent is obtained first prior to the script loading.', 'termageddon-usercentrics' )
+				.'<br/><br/>'
+				.__( 'Simply add a new snippet, enter the Service name (same name as the Service you listed in your Cookie Policy and Consent Tool questionnaire), and paste your embed code into the provided field. The plugin will then set up manual control of the script, helping ensure that it is blocked until consent is obtained by the user.', 'termageddon-usercentrics' )
+				.'<br/><br/><em>'
+				.__( 'Very important: be sure to', 'termageddon-usercentrics' )
+				.' <a href="https://termageddon.freshdesk.com/support/solutions/articles/66000529802-embedding-the-cookie-consent-solution-and-cookie-policy" target="_blank">'.__( 'test the consent solution', 'termageddon-usercentrics' ).'</a> '
+				.__( 'just in general, but also after making this update to ensure that scripts do not fire until consent is provided.', 'termageddon-usercentrics' )
+				.'</em>',
+			)
+		);
+
+		// Import providers for script snippets
+		$providers = self::get_usercentrics_providers();
+
+		// Script snippets field (full width, no label)
+		add_settings_field(
+			'termageddon_usercentrics_script_snippets',
+			'',
+			array( &$this, 'script_snippets_html' ),
+			'termageddon-usercentrics',
+			'termageddon_usercentrics_section_embed',
+			array(
+				'label_for'   => 'termageddon_usercentrics_script_snippets',
+				'options'     => $providers,
+				'class'       => 'tu-table-full-width',
+			)
+		);
+
+		register_setting(
+			'termageddon_usercentrics_settings',
+			'termageddon_usercentrics_script_snippets',
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => array( &$this, 'sanitize_script_snippets' ),
+				'default'           => array(),
+			)
 		);
 
 	}
@@ -669,6 +741,25 @@ class Termageddon_Usercentrics_Admin {
 				'sanitize_callback' => array( &$this, 'sanitize_text' ),
 				'default'           => 'v2',
 			)
+		);
+
+		// Disable Usercentrics Auto-blocking script
+		add_settings_field(
+			'termageddon_usercentrics_disable_auto_blocker',
+			__( 'Disable Usercentrics Auto-blocking script', 'termageddon-usercentrics' ).$this->mark_as_beta(),
+			array( &$this, 'auto_blocker_html' ), // function which prints the field.
+			'termageddon-usercentrics', // page slug.
+			'termageddon_usercentrics_section_settings', // section ID.
+			array(
+				'label_for'   => 'termageddon_usercentrics_disable_auto_blocker',
+				'description' => __( 'By updating all external scripts to use the <a href="https://termageddon.freshdesk.com/support/solutions/articles/66000529802-embedding-the-cookie-consent-solution-and-cookie-policy#:~:text=for%20simplicity%20purposes.-,Manual%20script%20control,-%2D%20You%20can%20also" target="_blank">manual script controller</a>, you can disable usercentrics block script which will improve site-loading performance and improve reliability. Once enabled, please ensure you <a href="https://termageddon.freshdesk.com/support/solutions/articles/66000529802-embedding-the-cookie-consent-solution-and-cookie-policy" target="_blank">validate</a> that any external services are working as expected.', 'termageddon-usercentrics' ),
+			)
+		);
+
+		register_setting(
+			'termageddon_usercentrics_settings', // settings group name.
+			'termageddon_usercentrics_disable_auto_blocker', // option name.
+			'' // sanitization function.
 		);
 
 		// Disable CDN for Translations Script
@@ -892,7 +983,7 @@ class Termageddon_Usercentrics_Admin {
 		);
 
 		// Import providers
-		$providers = include TERMAGEDDON_COOKIE_PATH . 'admin/usercentrics-providers.php';
+		$providers = self::get_usercentrics_providers();
 
 		// Auto-refresh on consent field
 		add_settings_field(
@@ -1267,6 +1358,16 @@ class Termageddon_Usercentrics_Admin {
 	}
 
 	/**
+	 * The HTML field for the manual script control checkbox.
+	 *
+	 * @param array $args The arguments provided by the add_settings_field() method.
+	 * @return void
+	 */
+	public function auto_blocker_html( array $args ) {
+		self::generate_checkbox( 'auto_blocker', 'disable', $args );
+	}
+
+	/**
 	 * The HTML field for the disable CDN checkbox.
 	 *
 	 * @param array $args The arguments provided by the add_settings_field() method.
@@ -1381,8 +1482,8 @@ class Termageddon_Usercentrics_Admin {
 			esc_html__( 'within your Termageddon account, you will be brought to the "View embed code" page.  Copy the embed code listed under "Usercentrics cookie consent tool embedding instructions" and paste it below:', 'termageddon-usercentrics' ) . '</p>';
 
 		echo '
-		<div class="tu-section-settings">
-			<div class="tu-section">';
+		<div class="tu-settings-section">
+			<div class="tu-toggle-section">';
 
 	}
 
@@ -1417,7 +1518,7 @@ class Termageddon_Usercentrics_Admin {
 		'</p>';
 
 		echo '<p>' .
-			esc_html__( 'Not sure what to select? Review', 'termageddon-usercentrics' ) . ' <a href="https://termageddon.freshdesk.com/support/solutions/articles/66000503289-how-to-activate-a-cookie-policy-and-cookie-consent-solution" target="_blank">' . esc_html__( 'this article', 'termageddon-usercentrics' ) . '</a> ' . esc_html__( 'along with page 1 of your Privacy Policy questionnaire within ', 'termageddon-usercentrics' ) . '<a href="https://app.termageddon.com/home" target="_blank">app.termageddon.com</a>.' .
+			esc_html__( 'Not sure what to select? Review', 'termageddon-usercentrics' ) . ' <a href="https://termageddon.freshdesk.com/support/solutions/articles/66000530091-how-to-activate-the-cookie-policy-and-consent-solution" target="_blank">' . esc_html__( 'this article', 'termageddon-usercentrics' ) . '</a> ' . esc_html__( 'along with page 1 of your Privacy Policy questionnaire within ', 'termageddon-usercentrics' ) . '<a href="https://policies.termageddon.com/" target="_blank">policies.termageddon.com</a>.' .
 		'</p>';
 
 			echo '
@@ -1457,6 +1558,110 @@ class Termageddon_Usercentrics_Admin {
 			return array();
 		}
 		return array_map( 'sanitize_text_field', $value );
+	}
+
+	/**
+	 * Sanitize script snippets array
+	 *
+	 * Validates each snippet for proper service ID and script tag presence.
+	 * Invalid snippets are skipped with appropriate error messages.
+	 *
+	 * @param mixed $value The script snippets array to sanitize.
+	 * @return array The sanitized script snippets array.
+	 */
+	public function sanitize_script_snippets( $value ): array {
+		if ( ! is_array( $value ) ) {
+			return array();
+		}
+
+		$providers = self::get_usercentrics_providers();
+		$sanitized = array();
+
+		foreach ( $value as $index => $snippet ) {
+			if ( ! is_array( $snippet ) ) {
+				continue;
+			}
+
+			// Validate and sanitize service_id
+			$service_id = sanitize_text_field( $snippet['service_id'] ?? '' );
+			if ( empty( $service_id ) || ! isset( $providers[ $service_id ] ) ) {
+				$this->add_snippet_error(
+					'invalid_service_' . $index,
+					sprintf(
+						/* translators: %d: snippet index number */
+						__( 'Script snippet #%d was not saved: Please select a valid service.', 'termageddon-usercentrics' ),
+						$index + 1
+					)
+				);
+				continue;
+			}
+
+			// Get script content - don't sanitize here, will be processed via augment_script_for_usercentrics on output
+			// Similar to how embed_code is handled (no sanitization callback)
+			$script = trim( $snippet['script'] ?? '' );
+
+			// Validate that the script is not empty
+			if ( empty( $script ) ) {
+				$this->add_snippet_error(
+					'empty_script_' . $index,
+					sprintf(
+						/* translators: %1$s: service name, %2$d: snippet index number */
+						__( 'Script snippet for "%1$s" (#%2$d) was not saved: The script code field cannot be empty.', 'termageddon-usercentrics' ),
+						$providers[ $service_id ],
+						$index + 1
+					)
+				);
+				continue;
+			}
+
+			// Check if content contains script tags
+			if ( ! preg_match( '/<script[^>]*>/i', $script ) ) {
+				$service_name = $providers[ $service_id ];
+
+				// Check if it contains other HTML tags (like div, span, etc.)
+				if ( preg_match( '/<(div|span|p|a|img|iframe|button|input|form|table|ul|ol|li|h[1-6])[^>]*>/i', $script ) ) {
+					$error_message = sprintf(
+						/* translators: %1$s: service name, %2$d: snippet index number */
+						__( 'Script snippet for "%1$s" (#%2$d) was not saved: Only script tags are allowed. Please remove any HTML elements (div, span, etc.) and use only &lt;script&gt; tags.', 'termageddon-usercentrics' ),
+						$service_name,
+						$index + 1
+					);
+				} else {
+					$error_message = sprintf(
+						/* translators: %1$s: service name, %2$d: snippet index number */
+						__( 'Script snippet for "%1$s" (#%2$d) was not saved: The script code must contain at least one &lt;script&gt; tag.', 'termageddon-usercentrics' ),
+						$service_name,
+						$index + 1
+					);
+				}
+
+				$this->add_snippet_error( 'invalid_content_' . $index, $error_message );
+				continue;
+			}
+
+			$sanitized[] = array(
+				'script'     => $script,
+				'service_id' => $service_id,
+			);
+		}
+
+		return $sanitized;
+	}
+
+	/**
+	 * Helper method to add settings errors for script snippets
+	 *
+	 * @param string $code    Error code.
+	 * @param string $message Error message.
+	 * @return void
+	 */
+	private function add_snippet_error( string $code, string $message ): void {
+		add_settings_error(
+			'termageddon_usercentrics_script_snippets',
+			$code,
+			$message,
+			'error'
+		);
 	}
 
 	/**
@@ -1503,6 +1708,143 @@ class Termageddon_Usercentrics_Admin {
 		if ( isset( $args['description'] ) ) {
 			echo '<p class="description">' . wp_kses_post( $args['description'] ) . '</p>';
 		}
+	}
+
+	/**
+	 * The HTML field for the script snippets repeater
+	 *
+	 * @param array $args The arguments provided by the add_settings_field() method.
+	 * @return void
+	 */
+	public function script_snippets_html( array $args ) {
+		$options = $args['options'];
+		$snippets = get_option( 'termageddon_usercentrics_script_snippets', array() );
+
+		// Ensure snippets is an array
+		if ( ! is_array( $snippets ) ) {
+			$snippets = array();
+		}
+		?>
+		<div id="termageddon-script-snippets-container">
+			<?php if ( ! empty( $snippets ) ) : ?>
+				<?php foreach ( $snippets as $index => $snippet ) : ?>
+					<?php
+					// Get service name for header
+					$service_id = isset( $snippet['service_id'] ) ? $snippet['service_id'] : '';
+					$service_name = '';
+					if ( ! empty( $service_id ) && isset( $options[ $service_id ] ) ) {
+						$service_name = $options[ $service_id ];
+					} else {
+						$service_name = __( 'New Script Snippet', 'termageddon-usercentrics' );
+					}
+
+					// Count script tags
+					$script_content = isset( $snippet['script'] ) ? $snippet['script'] : '';
+					$script_count = preg_match_all( '/<script/i', $script_content );
+					?>
+					<div class="termageddon-script-snippet-row" data-index="<?php echo esc_attr( $index ); ?>">
+						<div class="termageddon-snippet-accordion-item" style="margin-bottom: 15px; border: 1px solid #ddd; background: #f9f9f9;">
+							<div class="termageddon-snippet-accordion-header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; cursor: pointer; user-select: none;">
+								<div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+									<span class="termageddon-snippet-service-name"><?php echo esc_html( $service_name ); ?></span>
+									<span class="termageddon-snippet-badge<?php echo $script_count > 0 ? ' termageddon-snippet-badge-success' : ''; ?>"><?php echo esc_html( $script_count . ' script' . ( $script_count !== 1 ? 's' : '' ) . ' identified' ); ?></span>
+								</div>
+								<div style="display: flex; align-items: center; gap: 10px;">
+									<span class="termageddon-snippet-caret dashicons dashicons-arrow-down-alt2" style="transition: transform 0.3s ease;"></span>
+									<button type="button" class="button termageddon-remove-snippet" style="color: #dc3232; margin: 0;"><?php esc_html_e( 'Remove', 'termageddon-usercentrics' ); ?></button>
+								</div>
+							</div>
+							<div class="termageddon-snippet-accordion-content collapsed" style="padding: 0 15px 15px 15px; display: none;">
+								<div style="margin-top: 15px; margin-bottom: 10px;">
+									<label for="termageddon_usercentrics_script_snippets_<?php echo esc_attr( $index ); ?>_service_id">
+										<strong><?php esc_html_e( 'Service', 'termageddon-usercentrics' ); ?></strong>
+									</label>
+									<select 
+										name="termageddon_usercentrics_script_snippets[<?php echo esc_attr( $index ); ?>][service_id]" 
+										id="termageddon_usercentrics_script_snippets_<?php echo esc_attr( $index ); ?>_service_id" 
+										class="termageddon-singleselect" 
+										style="width: 100%;"
+									>
+										<option value=""><?php esc_html_e( 'Select a service...', 'termageddon-usercentrics' ); ?></option>
+										<?php foreach ( $options as $key => $label ) : ?>
+											<option value="<?php echo esc_attr( $key ); ?>" <?php selected( $service_id, $key ); ?>>
+												<?php echo esc_html( $label ); ?>
+											</option>
+										<?php endforeach; ?>
+									</select>
+								</div>
+								<div>
+									<label for="termageddon_usercentrics_script_snippets_<?php echo esc_attr( $index ); ?>_script">
+										<strong><?php esc_html_e( 'Script Code', 'termageddon-usercentrics' ); ?></strong>
+									</label>
+									<textarea 
+										class="termageddon-embed-code termageddon-script-textarea" 
+										name="termageddon_usercentrics_script_snippets[<?php echo esc_attr( $index ); ?>][script]" 
+										id="termageddon_usercentrics_script_snippets_<?php echo esc_attr( $index ); ?>_script" 
+										rows="7" 
+										style="width: 100%;"
+										placeholder="Both external and inline scripts are supported.&#10;&#10;External Script:&#10;&lt;script src=&quot;https://example.com/script.js&quot;&gt;&lt;/script&gt;&#10;&#10;Inline script:&#10;&lt;script&gt;console.log(&quot;Loaded&quot;)&lt;/script&gt;"
+									><?php echo esc_textarea( $script_content ); ?></textarea>
+								</div>
+							</div>
+						</div>
+					</div>
+				<?php endforeach; ?>
+			<?php endif; ?>
+		</div>
+		<button type="button" class="button termageddon-add-snippet" style="margin-top: 10px;"><?php esc_html_e( '+ Add Script Snippet', 'termageddon-usercentrics' ); ?></button>
+		<?php
+		// Generate options HTML for template
+		$options_html = '<option value="">' . esc_html__( 'Select a service...', 'termageddon-usercentrics' ) . '</option>';
+		foreach ( $options as $key => $label ) {
+			$options_html .= '<option value="' . esc_attr( $key ) . '">' . esc_html( $label ) . '</option>';
+		}
+		?>
+		<script type="text/template" id="termageddon-script-snippet-template" data-options="<?php echo esc_attr( $options_html ); ?>">
+			<div class="termageddon-script-snippet-row" data-index="{{INDEX}}">
+				<div class="termageddon-snippet-accordion-item" style="margin-bottom: 15px; border: 1px solid #ddd; background: #f9f9f9;">
+					<div class="termageddon-snippet-accordion-header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px; cursor: pointer; user-select: none;">
+						<div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+							<span class="termageddon-snippet-service-name"><?php echo esc_html__( 'New Script Snippet', 'termageddon-usercentrics' ); ?></span>
+							<span class="termageddon-snippet-badge">0 scripts identified</span>
+						</div>
+						<div style="display: flex; align-items: center; gap: 10px;">
+							<span class="termageddon-snippet-caret dashicons dashicons-arrow-down-alt2" style="transition: transform 0.3s ease;"></span>
+							<button type="button" class="button termageddon-remove-snippet" style="color: #dc3232; margin: 0;"><?php echo esc_html__( 'Remove', 'termageddon-usercentrics' ); ?></button>
+						</div>
+					</div>
+					<div class="termageddon-snippet-accordion-content" style="padding: 0 15px 15px 15px;">
+						<div style="margin-top: 15px; margin-bottom: 10px;">
+							<label for="termageddon_usercentrics_script_snippets_{{INDEX}}_service_id">
+								<strong><?php echo esc_html__( 'Service', 'termageddon-usercentrics' ); ?></strong>
+							</label>
+							<select 
+								name="termageddon_usercentrics_script_snippets[{{INDEX}}][service_id]" 
+								id="termageddon_usercentrics_script_snippets_{{INDEX}}_service_id" 
+								class="termageddon-singleselect" 
+								style="width: 100%;"
+							>
+								<?php echo $options_html; ?>
+							</select>
+						</div>
+						<div>
+							<label for="termageddon_usercentrics_script_snippets_{{INDEX}}_script">
+								<strong><?php echo esc_html__( 'Script Code', 'termageddon-usercentrics' ); ?></strong>
+							</label>
+							<textarea 
+								class="termageddon-embed-code termageddon-script-textarea" 
+								name="termageddon_usercentrics_script_snippets[{{INDEX}}][script]" 
+								id="termageddon_usercentrics_script_snippets_{{INDEX}}_script" 
+								rows="7"
+								style="width: 100%;"
+								placeholder="Both external and inline scripts are supported.&#10;&#10;External Script:&#10;&lt;script src=&quot;https://example.com/script.js&quot;&gt;&lt;/script&gt;&#10;&#10;Inline script:&#10;&lt;script&gt;console.log(&quot;Loaded&quot;)&lt;/script&gt;"
+							></textarea>
+						</div>
+					</div>
+				</div>
+			</div>
+		</script>
+		<?php
 	}
 
 }
