@@ -4,7 +4,7 @@ Tags: cookie consent, privacy, GDPR, CCPA, CPRA, CIPA, usercentrics, geolocation
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.2
-Stable tag: 1.9.2
+Stable tag: 1.9.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -187,6 +187,13 @@ For comprehensive support and assistance:
 * **Developer Resources**: Access our developer documentation for advanced customizations
 
 == Changelog ==
+
+= 1.9.3 =
+
+**🚀 Performance:**
+* Removed jQuery dependency from all frontend scripts, significantly reducing page weight and improving performance scores
+* AJAX geo-location, Divi video, Elementor video, and PSL alternate logic now use vanilla JavaScript
+* The plugin no longer enqueues jQuery on the frontend under any configuration
 
 = 1.9.2 =
 

@@ -62,7 +62,7 @@ class Termageddon_Usercentrics_Public {
 
 		// Load AJAX Mode scripts.
 		if ( Termageddon_Usercentrics::is_ajax_mode_enabled() ) {
-			wp_enqueue_script( $this->plugin_name . '_ajax', TERMAGEDDON_COOKIE_URL . 'public/js/termageddon-usercentrics-ajax.min.js', array( 'jquery' ), $this->version, false );
+			wp_enqueue_script( $this->plugin_name . '_ajax', TERMAGEDDON_COOKIE_URL . 'public/js/termageddon-usercentrics-ajax.min.js', array(), $this->version, false );
 
 			// Load ajax params for nonce.
 			$nonce    = wp_create_nonce( $this->plugin_name . '_ajax_nonce' );
@@ -91,13 +91,9 @@ class Termageddon_Usercentrics_Public {
 			add_action( 'wp_footer', array( $this, 'replace_usercentrics_psl_with_shortcode' ) );
 		}
 
-		// Check for requirement of needing jQuery.
-		if ( Termageddon_Usercentrics::is_integration_enabled( 'divi_video' )
-		  || Termageddon_Usercentrics::is_integration_enabled( 'elementor_video' )
-		  || Termageddon_Usercentrics::should_use_alternate_psl()
-		) {
-			wp_enqueue_script( 'jquery' );
-		}
+		// Note: jQuery dependency has been removed from all frontend scripts.
+		// divi_video, elementor_video, AJAX geo-location, and PSL alternate
+		// all use vanilla JS.
 
 		// Load advanced configuration if needed
 		$disabled_blocking_providers = Termageddon_Usercentrics::get_disabled_blocking_providers();
@@ -200,20 +196,39 @@ class Termageddon_Usercentrics_Public {
 		ob_start();
 		?>
 		<script id="termageddon-psl-alternate-js">
-			(function($) {
-				$(document).ready(function() {
-					jQuery('a#usercentrics-psl,.usercentrics-psl a').each(function() {
-						let newElem = jQuery(`<?php echo do_shortcode( '[uc-privacysettings]' ); ?>`);
-						if (!["","Privacy Settings"].includes(jQuery(this).text())) newElem.text(jQuery(this).text())
-						jQuery(this).replaceWith(newElem);
-					})
-					jQuery('button#usercentrics-psl,.usercentrics-psl button').each(function() {
-						let newElem = jQuery(`<?php echo do_shortcode( '[uc-privacysettings type="button"]' ); ?>`);
-						if (!["","Privacy Settings"].includes(jQuery(this).text())) newElem.text(jQuery(this).text())
-						jQuery(this).replaceWith(newElem);
-					})
-				})
-			})(jQuery);
+			(function() {
+				function replacePSL() {
+					var linkTemplate = document.createElement('template');
+					linkTemplate.innerHTML = <?php echo wp_json_encode( do_shortcode( '[uc-privacysettings]' ) ); ?>;
+					var buttonTemplate = document.createElement('template');
+					buttonTemplate.innerHTML = <?php echo wp_json_encode( do_shortcode( '[uc-privacysettings type="button"]' ) ); ?>;
+
+					var linkSource = linkTemplate.content.firstElementChild;
+					var buttonSource = buttonTemplate.content.firstElementChild;
+
+					if (linkSource) {
+						document.querySelectorAll('a#usercentrics-psl, .usercentrics-psl a').forEach(function(el) {
+							var newElem = linkSource.cloneNode(true);
+							var text = el.textContent.trim();
+							if (text !== '' && text !== 'Privacy Settings') newElem.textContent = text;
+							el.replaceWith(newElem);
+						});
+					}
+					if (buttonSource) {
+						document.querySelectorAll('button#usercentrics-psl, .usercentrics-psl button').forEach(function(el) {
+							var newElem = buttonSource.cloneNode(true);
+							var text = el.textContent.trim();
+							if (text !== '' && text !== 'Privacy Settings') newElem.textContent = text;
+							el.replaceWith(newElem);
+						});
+					}
+				}
+				if (document.readyState === 'loading') {
+					document.addEventListener('DOMContentLoaded', replacePSL);
+				} else {
+					replacePSL();
+				}
+			})();
 		</script>
 		<?php
 		ob_end_flush();

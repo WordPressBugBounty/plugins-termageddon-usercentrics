@@ -30,14 +30,22 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 		document.cookie = name + "=" + (value || "") + expires + "; path=/";
 	};
 
+	const showElements = (selector) => {
+		document.querySelectorAll(selector).forEach((el) => el.style.display = "");
+	};
+
+	const hideElements = (selector) => {
+		document.querySelectorAll(selector).forEach((el) => el.style.display = "none");
+	};
+
 	const updateCookieConsent = (hide) => {
 		if (!hide) {
 			if (tuDebug) console.log("UC: Showing consent widget");
 			//Show Consent Options
 			if (tuPSLHide)
-				jQuery("#usercentrics-psl, .usercentrics-psl").show();
+				showElements("#usercentrics-psl, .usercentrics-psl");
 
-			jQuery(tuToggle).show();
+			showElements(tuToggle);
 
 			if (!UC_UI.isConsentRequired()) return UC_UI.closeCMP();
 			return UC_UI.showFirstLayer();
@@ -45,9 +53,9 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 			if (tuDebug) console.log("UC: Hiding consent widget");
 			//Hide Consent Options
 			if (tuPSLHide)
-				jQuery("#usercentrics-psl, .usercentrics-psl").hide();
+				hideElements("#usercentrics-psl, .usercentrics-psl");
 
-			jQuery(tuToggle).hide();
+			hideElements(tuToggle);
 
 			//Check for already acceptance.
 			if (UC_UI.areAllConsentsAccepted()) return;
@@ -82,19 +90,24 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 	} else {
 		if (tuDebug) console.log("UC: Making AJAX Call");
 
-		// Build Ajax Query.
-		var data = {
-			action: "uc_geolocation_lookup",
-			nonce: termageddon_usercentrics_obj.nonce, // We pass php values differently!
-		};
+		// Build form data for POST request.
+		var formData = new FormData();
+		formData.append("action", "uc_geolocation_lookup");
+		formData.append("nonce", termageddon_usercentrics_obj.nonce);
 
 		if (typeof termageddon_usercentrics_obj.location !== "undefined")
-			data["location"] = termageddon_usercentrics_obj.location;
+			formData.append("location", termageddon_usercentrics_obj.location);
 
-		// We can also pass the url value separately from ajaxurl for front end AJAX implementations
-		jQuery
-			.post(termageddon_usercentrics_obj.ajax_url, data)
-			.done(function (response) {
+		fetch(termageddon_usercentrics_obj.ajax_url, {
+			method: "POST",
+			credentials: "same-origin",
+			body: formData,
+		})
+			.then(function (res) {
+				if (!res.ok) throw new Error("HTTP " + res.status);
+				return res.json();
+			})
+			.then(function (response) {
 				if (!response.success)
 					return console.error(
 						"Unable to lookup location.",
@@ -145,10 +158,10 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 
 				updateCookieConsent(data.hide);
 			})
-			.fail(function (response) {
+			.catch(function (err) {
 				console.error(
 					"Usercentrics: Invalid response returned. Showing widget as a default.",
-					response
+					err
 				);
 
 				updateCookieConsent(false);

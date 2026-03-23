@@ -1,5 +1,7 @@
 window.addEventListener("load", function () {
-	jQuery(".pp-media-overlay").on("click", function (e) {
-		jQuery(this).hide();
+	document.querySelectorAll(".pp-media-overlay").forEach(function (el) {
+		el.addEventListener("click", function (e) {
+			this.style.display = "none";
+		});
 	});
 });
