@@ -95,7 +95,9 @@ class Termageddon_Usercentrics_Public {
 		// divi_video, elementor_video, AJAX geo-location, and PSL alternate
 		// all use vanilla JS.
 
-		// Load advanced configuration if needed
+		// Load advanced configuration if needed.
+		// Note: UC now loads for all visitors (including out-of-region with auto-accept),
+		// so `uc` will always be defined. The JS-side typeof guard remains as defense-in-depth.
 		$disabled_blocking_providers = Termageddon_Usercentrics::get_disabled_blocking_providers();
 		$auto_refresh_providers = Termageddon_Usercentrics::get_auto_refresh_providers();
 
@@ -277,6 +279,8 @@ class Termageddon_Usercentrics_Public {
 	 */
 	public function build_termageddon_script( $is_enqueue = false ) {
 
+		$geo_auto_accept = false;
+
 		// If forcibly enabled, bypass individual detections.
 		if ( ! Termageddon_Usercentrics::is_enabled_via_get_override() ) {
 			// Check for Disable for troubleshooting.
@@ -300,9 +304,14 @@ class Termageddon_Usercentrics_Public {
 				return;
 			}
 
-			if ( Termageddon_Usercentrics::is_geoip_enabled() && ! Termageddon_Usercentrics::is_ajax_mode_enabled() && Termageddon_Usercentrics::should_hide_due_to_location() ) {
-				return;
-			}
+			// Track whether the visitor is outside all configured geo-location regions
+			// (non-AJAX mode only). Instead of killing UC entirely (which causes a
+			// script blackout — the auto-blocker blocks 3rd-party scripts but without
+			// the CMP, nothing ever releases them), we let UC load and auto-accept
+			// all consents so scripts still fire and the banner stays hidden.
+			$geo_auto_accept = Termageddon_Usercentrics::is_geoip_enabled()
+				&& ! Termageddon_Usercentrics::is_ajax_mode_enabled()
+				&& Termageddon_Usercentrics::should_hide_due_to_location();
 
 			// don't double output in enqueue mode
 			$should_enqueue_scripts = Termageddon_Usercentrics::get_embed_injection_method() === 'wp_enqueue_scripts';
@@ -320,9 +329,20 @@ class Termageddon_Usercentrics_Public {
 			)
 		);
 
-		//Append a disabling script if geoip is enabled and ajax mode is enabled to disable flashing.
+		// Suppress the consent banner when geo-location determines the visitor doesn't need it.
+		// AJAX mode: suppress initially, then the AJAX script decides whether to show/accept.
+		// Non-AJAX auto-accept: suppress and auto-accept all consents inline so UC-managed
+		// scripts still fire without showing the banner (fixes script blackout for
+		// out-of-region visitors when AJAX mode is off).
 		if ( Termageddon_Usercentrics::is_geoip_enabled() && Termageddon_Usercentrics::is_ajax_mode_enabled() ) {
 			$script .= '<script type="application/javascript">var UC_UI_SUPPRESS_CMP_DISPLAY = true;</script>';
+		} elseif ( ! empty( $geo_auto_accept ) ) {
+			$script .= '<script type="application/javascript">var UC_UI_SUPPRESS_CMP_DISPLAY = true;</script>';
+			$script .= '<script type="application/javascript">window.addEventListener("UC_UI_INITIALIZED", function() {'
+				. 'if (typeof UC_UI !== "undefined" && !UC_UI.areAllConsentsAccepted()) {'
+				. 'UC_UI.acceptAllConsents().then(function() { UC_UI.closeCMP(); });'
+				. '} else if (typeof UC_UI !== "undefined") { UC_UI.closeCMP(); }'
+				. '});</script>';
 		}
 
 		// Append augmented script snippets
@@ -384,7 +404,12 @@ class Termageddon_Usercentrics_Public {
 	 */
 	public function filter_script_loader_tag( $tag, $handle, $src ) {
 		if ( $this->plugin_name . '-scripts' === $handle ) {
-			$tag = self::build_termageddon_script( true );
+			$result = self::build_termageddon_script( true );
+			// build_termageddon_script may return null (bare return) when disabled.
+			// WordPress expects this filter to return a string; null would cause the
+			// original tag to be replaced with nothing (which is correct for disabled
+			// state), but we should be explicit about it.
+			$tag = ( null !== $result ) ? $result : '';
 		}
 		return $tag;
 	}

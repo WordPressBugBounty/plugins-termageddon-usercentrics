@@ -4,7 +4,7 @@ Tags: cookie consent, privacy, GDPR, CCPA, CPRA, CIPA, usercentrics, geolocation
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.2
-Stable tag: 1.9.3
+Stable tag: 1.9.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -187,6 +187,14 @@ For comprehensive support and assistance:
 * **Developer Resources**: Access our developer documentation for advanced customizations
 
 == Changelog ==
+
+= 1.9.4 =
+
+**🐛 Bug Fixes:**
+* Fixed script blackout for out-of-region visitors when Geo-Location is enabled and AJAX mode is off — UC now loads with auto-accept instead of being suppressed entirely
+* Fixed `uc is not defined` ReferenceError in advanced configuration script
+* Fixed unguarded `uc` references in Presto Player integration script
+* Improved null safety in script loader tag filter
 
 = 1.9.3 =
 
