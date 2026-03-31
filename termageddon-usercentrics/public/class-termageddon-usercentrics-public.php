@@ -386,7 +386,9 @@ class Termageddon_Usercentrics_Public {
 		}
 
 		foreach ( Termageddon_Usercentrics::get_integrations() as $integration => $integration_config ) {
-			if ( Termageddon_Usercentrics::is_integration_enabled( $integration, $integration_config['default'] ) ) {
+			$should_enqueue_script = ! isset( $integration_config['enqueue_script'] ) || $integration_config['enqueue_script'];
+
+			if ( $should_enqueue_script && Termageddon_Usercentrics::is_integration_enabled( $integration, $integration_config['default'] ) ) {
 				$slug = str_replace( '_', '-', $integration );
 				wp_enqueue_script( $this->plugin_name . '-integration-' . $slug, TERMAGEDDON_COOKIE_URL . 'public/js/termageddon-usercentrics-integration-' . $slug . '.min.js', array(), $this->version, array() );
 			}
@@ -412,6 +414,27 @@ class Termageddon_Usercentrics_Public {
 			$tag = ( null !== $result ) ? $result : '';
 		}
 		return $tag;
+	}
+
+	/**
+	 * Set Meta for WooCommerce pixel script attributes for Usercentrics compatibility.
+	 *
+	 * @param array $attrs The existing script attributes.
+	 * @return array
+	 */
+	public function filter_meta_for_woocommerce_pixel_script_attributes( $attrs ) {
+		if ( ! Termageddon_Usercentrics::is_integration_enabled( 'meta_for_woocommerce' ) ) {
+			return $attrs;
+		}
+
+		if ( ! is_array( $attrs ) ) {
+			$attrs = array();
+		}
+
+		$attrs['type'] = 'text/plain';
+		$attrs['data-usercentrics'] = 'Facebook Pixel';
+
+		return $attrs;
 	}
 
 }

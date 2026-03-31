@@ -406,6 +406,12 @@ class Termageddon_Usercentrics {
 			3
 		);
 
+		$this->loader->add_filter(
+			'wc_facebook_pixel_script_attributes',
+			$plugin_public,
+			'filter_meta_for_woocommerce_pixel_script_attributes'
+		);
+
 	}
 
 	/**
@@ -1340,6 +1346,13 @@ class Termageddon_Usercentrics {
 				'description' => __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the Presto Player video embed.', 'termageddon-usercentrics' ),
 				'beta'        => false,
 				'default'     => false,
+			),
+			'meta_for_woocommerce' => array(
+				'name'          => __( 'Meta for WooCommerce plugin compatibility', 'termageddon-usercentrics' ),
+				'description'   => __( 'Enable this feature if you are utilizing the Meta for WooCommerce plugin.  This helps set up manual control of the Facebook Pixel script, ensuring data is not sent to Facebook until after consent is obtained. Note: the facebook pixel cookie (_fbp) will still load (due to how this plugin was written), however data will not be sent to Facebook until after consent is obtained. This can be tested via the Networks tab.', 'termageddon-usercentrics' ),
+				'beta'          => false,
+				'default'       => false,
+				'enqueue_script' => false,
 			),
 			'uabb_video'      => array(
 				'name'        => __( 'Ultimate Addons for Beaver Builder Video', 'termageddon-usercentrics' ),

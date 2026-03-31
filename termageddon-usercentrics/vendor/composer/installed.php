@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'termageddon/termageddon-usercentrics',
-        'pretty_version' => '1.9.4',
-        'version' => '1.9.4.0',
-        'reference' => '8d974a84fef0a83d133e71dfd4efa9f4c0cc13ac',
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => '7109a6313e09480f36f9995412a8a9324f5bbcdd',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -47,9 +47,9 @@
             'dev_requirement' => false,
         ),
         'termageddon/termageddon-usercentrics' => array(
-            'pretty_version' => '1.9.4',
-            'version' => '1.9.4.0',
-            'reference' => '8d974a84fef0a83d133e71dfd4efa9f4c0cc13ac',
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '7109a6313e09480f36f9995412a8a9324f5bbcdd',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

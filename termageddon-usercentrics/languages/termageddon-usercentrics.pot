@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Termageddon + Usercentrics\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-14 17:24+0000\n"
+"POT-Creation-Date: 2026-03-31 06:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: \n"
@@ -153,7 +153,7 @@ msgstr ""
 msgid "Disable Usercentrics Auto-blocking script"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:1321
+#: includes/class-termageddon-usercentrics.php:1327
 msgid "Divi Video"
 msgstr ""
 
@@ -167,7 +167,7 @@ msgstr ""
 msgid "Editors"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:1327
+#: includes/class-termageddon-usercentrics.php:1333
 msgid "Elementor Video"
 msgstr ""
 
@@ -193,6 +193,16 @@ msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:910
 msgid "Enable page caching support via AJAX"
+msgstr ""
+
+#: includes/class-termageddon-usercentrics.php:1352
+msgid ""
+"Enable this feature if you are utilizing the Meta for WooCommerce plugin.  "
+"This helps set up manual control of the Facebook Pixel script, ensuring data "
+"is not sent to Facebook until after consent is obtained. Note: the facebook "
+"pixel cookie (_fbp) will still load (due to how this plugin was written), "
+"however data will not be sent to Facebook until after consent is obtained. "
+"This can be tested via the Networks tab."
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:455
@@ -359,6 +369,10 @@ msgstr ""
 msgid "Manual Script Controller"
 msgstr ""
 
+#: includes/class-termageddon-usercentrics.php:1351
+msgid "Meta for WooCommerce plugin compatibility"
+msgstr ""
+
 #: admin/class-termageddon-usercentrics-admin.php:1738
 #: admin/class-termageddon-usercentrics-admin.php:1808
 msgid "New Script Snippet"
@@ -405,11 +419,11 @@ msgstr ""
 msgid "Plugin & Theme Integrations"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:1333
+#: includes/class-termageddon-usercentrics.php:1339
 msgid "PowerPack Video"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:1339
+#: includes/class-termageddon-usercentrics.php:1345
 msgid "Presto Player"
 msgstr ""
 
@@ -477,7 +491,7 @@ msgid "Service"
 msgstr ""
 
 #. section ID.
-#: includes/class-termageddon-usercentrics.php:536
+#: includes/class-termageddon-usercentrics.php:542
 #: admin/class-termageddon-usercentrics-admin.php:86
 #: admin/class-termageddon-usercentrics-admin.php:549
 msgid "Settings"
@@ -553,19 +567,19 @@ msgid ""
 "for the respected Service(s) listed above."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:1322
+#: includes/class-termageddon-usercentrics.php:1328
 msgid ""
 "This resolves and improves the cookie-consent implementation when using an "
 "image placeholder overlay for the Divi video embed."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:1328
+#: includes/class-termageddon-usercentrics.php:1334
 msgid ""
 "This resolves and improves the cookie-consent implementation when using an "
 "image placeholder overlay for the Elementor video embed."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:1334
+#: includes/class-termageddon-usercentrics.php:1340
 msgid ""
 "This resolves and improves the cookie-consent implementation when using an "
 "image placeholder overlay for the PowerPack for BeaverBuilder video embed. "
@@ -573,13 +587,13 @@ msgid ""
 "Please reach out to support if needed."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:1340
+#: includes/class-termageddon-usercentrics.php:1346
 msgid ""
 "This resolves and improves the cookie-consent implementation when using an "
 "image placeholder overlay for the Presto Player video embed."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:1346
+#: includes/class-termageddon-usercentrics.php:1359
 msgid ""
 "This resolves and improves the cookie-consent implementation when using an "
 "image placeholder overlay for the Ultimate Addons for Beaver Builder video "
@@ -617,7 +631,7 @@ msgid ""
 "changes."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:1345
+#: includes/class-termageddon-usercentrics.php:1358
 msgid "Ultimate Addons for Beaver Builder Video"
 msgstr ""
 
