@@ -659,10 +659,10 @@ class Termageddon_Usercentrics {
 		if ( ! $use_manual_control ) {
 			$new_embed_code .= '<link rel="preload" href="//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js" as="script">' . PHP_EOL;
 			$new_embed_code .= '<script type="application/javascript" src="//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js" data-no-optimize="1" data-no-defer="1"></script>' . PHP_EOL;
+			$new_embed_code .= '<script data-no-optimize="1" data-no-defer="1">uc.setCustomTranslations(\'' . $translations_url . '\');</script>' . PHP_EOL;
 		}
 		
 		$new_embed_code .= '<script id="usercentrics-cmp" data-cmp-version="' . esc_attr( self::get_embed_script_version() ) . '" src="' . esc_url( $loader_url ) . '" data-settings-id="' . self::get_settings_id() . '" data-no-optimize="1" data-no-defer="1" async></script>' . PHP_EOL;
-		$new_embed_code .= '<script data-no-optimize="1" data-no-defer="1">uc.setCustomTranslations(\'' . $translations_url . '\');</script>' . PHP_EOL;
 		$new_embed_code .= self::filter_out_standard_embed_code( $embed_code );
 
 		return $new_embed_code;

@@ -192,7 +192,7 @@ msgid "Enable location logging"
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:910
-msgid "Enable page caching support via AJAX"
+msgid "Check visitor location after the page loads (recommended)"
 msgstr ""
 
 #: includes/class-termageddon-usercentrics.php:1352
@@ -720,8 +720,11 @@ msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:916
 msgid ""
-"When enabled, the visitor's location is checked via javascript to allow "
-"support for page caching."
+"Runs the location check in the visitor's browser after the page loads, "
+"instead of while the server generates the page. Full-page HTML can stay "
+"cacheable (hosting, CDN, browser). Recommended for accuracy and "
+"compatibility with full-page caching—disable only if support asks you to "
+"for troubleshooting."
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:793

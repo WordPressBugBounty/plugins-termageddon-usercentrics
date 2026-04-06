@@ -4,7 +4,7 @@ Tags: cookie consent, privacy, GDPR, CCPA, CPRA, CIPA, usercentrics, geolocation
 Requires at least: 5.0
 Tested up to: 6.9.4
 Requires PHP: 7.2
-Stable tag: 1.9.5
+Stable tag: 1.9.6
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -188,7 +188,13 @@ For comprehensive support and assistance:
 
 == Changelog ==
 
-= 1.9.5
+= 1.9.6 =
+
+**🔧 Improvements:**
+* Clarified labels and help text for the geolocation option that runs after the page loads (formerly “page caching via AJAX”), so it is easier to understand browser-side timing and why the setting should usually stay enabled.
+* Updated the Usercentrics translations script so it only runs when Smart Data Protector is active, preventing a `uc is not defined error` in console when using "Disable Usercentrics Auto-blocking script."
+
+= 1.9.5 =
 
 **✨ New Features:**
 * Added integration to allow for improved facebook pixel support for "Meta for WooCommerce" plugin.

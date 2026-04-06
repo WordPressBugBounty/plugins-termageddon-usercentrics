@@ -907,13 +907,13 @@ class Termageddon_Usercentrics_Admin {
 		// Enable Geolocation AJAX Mode.
 		add_settings_field(
 			'termageddon_usercentrics_location_ajax',
-			__( 'Enable page caching support via AJAX', 'termageddon-usercentrics' ),
+			__( 'Check visitor location after the page loads (recommended)', 'termageddon-usercentrics' ),
 			array( &$this, 'location_ajax_html' ), // function which prints the field.
 			'termageddon-usercentrics', // page slug.
 			'termageddon_usercentrics_section_geolocation', // section ID.
 			array(
 				'label_for'   => 'termageddon_usercentrics_location_ajax',
-				'description' => __( 'When enabled, the visitor\'s location is checked via javascript to allow support for page caching.', 'termageddon-usercentrics' ),
+				'description' => __( 'Runs the location check in the visitor\'s browser after the page loads, instead of while the server generates the page. Full-page HTML can stay cacheable (hosting, CDN, browser). Recommended for accuracy and compatibility with full-page caching—disable only if support asks you to for troubleshooting.', 'termageddon-usercentrics' ),
 			)
 		);
 
