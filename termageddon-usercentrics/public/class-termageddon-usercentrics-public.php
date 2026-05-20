@@ -79,6 +79,13 @@ class Termageddon_Usercentrics_Public {
 				$data['location'] = $location;
 			}
 
+			// New hosted geolocation service: localize the API URL/key, region-matching rules,
+			// and any debug override. JS uses these to fetch geo, decide hide/show, and cache —
+			// no admin-ajax round-trip needed.
+			if ( Termageddon_Usercentrics_Geo_Api::is_enabled() ) {
+				$data = array_merge( $data, Termageddon_Usercentrics_Geo_Api::build_localization_payload() );
+			}
+
 			wp_localize_script(
 				$this->plugin_name . '_ajax',
 				'termageddon_usercentrics_obj',

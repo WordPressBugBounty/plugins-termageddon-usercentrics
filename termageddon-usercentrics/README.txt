@@ -4,7 +4,7 @@ Tags: cookie consent, privacy, GDPR, CCPA, CPRA, CIPA, usercentrics, geolocation
 Requires at least: 5.0
 Tested up to: 6.9.4
 Requires PHP: 7.2
-Stable tag: 1.9.6
+Stable tag: 1.10.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -187,6 +187,12 @@ For comprehensive support and assistance:
 * **Developer Resources**: Access our developer documentation for advanced customizations
 
 == Changelog ==
+
+= 1.10.0 =
+
+**✨ New Features:**
+* **Termageddon Hosted Geolocation** — You can now opt-in to resolve visitor location through Termageddon’s hosted service (`geo.termageddon.com`) instead of maintaining the MaxMind database on your server. Region rules work the same; the lookup runs in the visitor’s browser with local caching for a simpler, more reliable setup on many hosts.
+  * This new feature is in the Geolocation tab of the plugin and will make the plugin a lot more lightweight. You can opt-out at any time.
 
 = 1.9.6 =
 

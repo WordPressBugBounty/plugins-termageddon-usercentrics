@@ -182,8 +182,9 @@ class Termageddon_Usercentrics_Admin {
 			return;
 		}
 
-		// Display Error if geolocation failed.
-		if ( Termageddon_Usercentrics::is_geoip_enabled() && Termageddon_Usercentrics::check_for_download_errors() ) {
+		// Display Error if geolocation failed. Only relevant for the legacy on-device MaxMind path —
+		// the hosted geolocation service has no local database to download.
+		if ( Termageddon_Usercentrics::is_geoip_enabled() && ! Termageddon_Usercentrics_Geo_Api::is_enabled() && Termageddon_Usercentrics::check_for_download_errors() ) {
 			echo '<div class="notice notice-error">
 				<p><strong>' . esc_html__( 'We were unable to download the database necessary for geolocation to your website. If you would like to use geolocation, please contact support for assistance and troubleshooting.', 'termageddon-usercentrics' ) . '</strong></p>
 			</div>';
@@ -199,9 +200,18 @@ class Termageddon_Usercentrics_Admin {
 
 		// Display Estimated Location.
 		if ( Termageddon_Usercentrics::is_geoip_enabled() && Termageddon_Usercentrics::is_debug_mode_enabled() ) {
-			echo '<div class="notice notice-info">
-				<p><strong>' . esc_html__( 'Location logging is enabled.', 'termageddon-usercentrics' ) . '</strong><br><br><strong>' . esc_html__( 'Your location', 'termageddon-usercentrics' ) . ':</strong><br> <em>' . esc_html( Termageddon_Usercentrics::get_location_displayname() ) . '</em> ' . esc_html__( 'with the IP Address of', 'termageddon-usercentrics' ) . ' <em>' . esc_html( Termageddon_Usercentrics::get_processed_ip_address() ) . '</em></p>
-			</div>';
+			if ( Termageddon_Usercentrics_Geo_Api::is_enabled() ) {
+				// Hosted geolocation runs entirely in the visitor's browser, so location data is
+				// not available on the server. Direct the user to the public-facing site's console
+				// and remind them to disable logging once done — it logs location for every visitor.
+				echo '<div class="notice notice-info">
+					<p><strong>' . esc_html__( 'Location logging is enabled.', 'termageddon-usercentrics' ) . '</strong><br><br>' . esc_html__( 'To view the detected location, open your browser\'s developer console on the public-facing site (not in this admin panel) — geolocation runs in the visitor\'s browser and is not available server-side. Remember to disable this once you\'ve finished testing, as it logs location data in every visitor\'s browser console while enabled.', 'termageddon-usercentrics' ) . '</p>
+				</div>';
+			} else {
+				echo '<div class="notice notice-info">
+					<p><strong>' . esc_html__( 'Location logging is enabled.', 'termageddon-usercentrics' ) . '</strong><br><br><strong>' . esc_html__( 'Your location', 'termageddon-usercentrics' ) . ':</strong><br> <em>' . esc_html( Termageddon_Usercentrics::get_location_displayname() ) . '</em> ' . esc_html__( 'with the IP Address of', 'termageddon-usercentrics' ) . ' <em>' . esc_html( Termageddon_Usercentrics::get_processed_ip_address() ) . '</em></p>
+				</div>';
+			}
 		}
 
 		echo '<div class="wrap">
@@ -235,16 +245,21 @@ class Termageddon_Usercentrics_Admin {
 
 			echo '<h3>' . esc_html__( 'Debug Information', 'termageddon-usercentrics' ) . '</h3>';
 			$message_list   = array();
-			$message_list[] = esc_html__( 'Geolocation Database Path', 'termageddon-usercentrics' ) . ':' . PHP_EOL . Termageddon_Usercentrics::get_maxmind_db_path();
-			$message_list[] = esc_html__( 'Geolocation Database Exists', 'termageddon-usercentrics' ) . ':' . PHP_EOL . ( file_exists( Termageddon_Usercentrics::get_maxmind_db_path() ) ? 'true' : 'false' );
-			$message_list[] = esc_html__( 'Geolocation Database Readable', 'termageddon-usercentrics' ) . ':' . PHP_EOL . ( is_readable( Termageddon_Usercentrics::get_maxmind_db_path() ) ? 'true' : 'false' );
-			$message_list[] = esc_html__( 'Geolocation Database Directory Writable', 'termageddon-usercentrics' ) . ':' . PHP_EOL . ( is_writable( dirname( Termageddon_Usercentrics::get_maxmind_db_path() ) ) ? 'true' : 'false' );
-			$message_list[] = esc_html__( 'Geolocation Database Last Updated', 'termageddon-usercentrics' ) . ': ' . PHP_EOL . Termageddon_Usercentrics::get_maxmind_db_last_updated();
-			$message_list[] = esc_html__( 'Geolocation Database Next Update', 'termageddon-usercentrics' ) . ': ' . PHP_EOL . Termageddon_Usercentrics::get_maxmind_db_next_update();
+			// MaxMind database diagnostics are only meaningful when the on-device path is in use.
+			if ( ! Termageddon_Usercentrics_Geo_Api::is_enabled() ) {
+				$message_list[] = esc_html__( 'Geolocation Database Path', 'termageddon-usercentrics' ) . ':' . PHP_EOL . Termageddon_Usercentrics::get_maxmind_db_path();
+				$message_list[] = esc_html__( 'Geolocation Database Exists', 'termageddon-usercentrics' ) . ':' . PHP_EOL . ( file_exists( Termageddon_Usercentrics::get_maxmind_db_path() ) ? 'true' : 'false' );
+				$message_list[] = esc_html__( 'Geolocation Database Readable', 'termageddon-usercentrics' ) . ':' . PHP_EOL . ( is_readable( Termageddon_Usercentrics::get_maxmind_db_path() ) ? 'true' : 'false' );
+				$message_list[] = esc_html__( 'Geolocation Database Directory Writable', 'termageddon-usercentrics' ) . ':' . PHP_EOL . ( is_writable( dirname( Termageddon_Usercentrics::get_maxmind_db_path() ) ) ? 'true' : 'false' );
+				$message_list[] = esc_html__( 'Geolocation Database Last Updated', 'termageddon-usercentrics' ) . ': ' . PHP_EOL . Termageddon_Usercentrics::get_maxmind_db_last_updated();
+				$message_list[] = esc_html__( 'Geolocation Database Next Update', 'termageddon-usercentrics' ) . ': ' . PHP_EOL . Termageddon_Usercentrics::get_maxmind_db_next_update();
+			} else {
+				$message_list[] = esc_html__( 'Geolocation Service', 'termageddon-usercentrics' ) . ':' . PHP_EOL . esc_html__( 'Hosted (geo.termageddon.com)', 'termageddon-usercentrics' );
+			}
 			$message_list[] = esc_html__( 'Allowed HTML Tags', 'termageddon-usercentrics' ) . ': ' . PHP_EOL . Termageddon_Usercentrics::get_allowed_html_kses();
 			echo '<textarea readonly rows="17" style="width: 100%;">' . esc_textarea( implode( PHP_EOL . PHP_EOL, $message_list ) ) . '</textarea>';
 
-			if ( Termageddon_Usercentrics::count_download_errors() > 0 ) {
+			if ( ! Termageddon_Usercentrics_Geo_Api::is_enabled() && Termageddon_Usercentrics::count_download_errors() > 0 ) {
 				echo '<h3>' . esc_html__( 'Error Information', 'termageddon-usercentrics' ) . '</h3>';
 				$message_list   = array();
 				$message_list[] = 'Geolocation Error Count: ' . PHP_EOL . Termageddon_Usercentrics::count_download_errors();
@@ -344,6 +359,13 @@ class Termageddon_Usercentrics_Admin {
 	 *  @return string  */
 	public static function mark_as_beta() {
 		return ' <span class="tu-label-warning">BETA</span>';
+	}
+
+	/** Generates and appends the "NEW" label for a field.
+	 *
+	 *  @return string  */
+	public static function mark_as_new() {
+		return ' <span class="tu-label-info">NEW</span>';
 	}
 
 
@@ -884,6 +906,25 @@ class Termageddon_Usercentrics_Admin {
 			)
 		);
 
+		// New hosted geolocation service (replaces MaxMind on-device DB).
+		add_settings_field(
+			'termageddon_use_geo_api',
+			__( 'New Geolocation service', 'termageddon-usercentrics' ) . self::mark_as_new(),
+			array( &$this, 'use_geo_api_html' ), // function which prints the field.
+			'termageddon-usercentrics', // page slug.
+			'termageddon_usercentrics_section_geolocation', // section ID.
+			array(
+				'label_for'   => 'termageddon_use_geo_api',
+				'description' => __( 'Optimized for performance. No longer requires your server to store a local copy of the entire MaxMind database, and is universally compatible with all browsers and hosts.', 'termageddon-usercentrics' ),
+			)
+		);
+
+		register_setting(
+			'termageddon_usercentrics_settings', // settings group name.
+			'termageddon_use_geo_api', // option name.
+			array( 'sanitize_callback' => array( __CLASS__, 'sanitize_boolean' ) )
+		);
+
 		// Enable Geolocation Debug Mode.
 		add_settings_field(
 			'termageddon_usercentrics_location_debug',
@@ -904,18 +945,21 @@ class Termageddon_Usercentrics_Admin {
 			'' // sanitization function.
 		);
 
-		// Enable Geolocation AJAX Mode.
-		add_settings_field(
-			'termageddon_usercentrics_location_ajax',
-			__( 'Check visitor location after the page loads (recommended)', 'termageddon-usercentrics' ),
-			array( &$this, 'location_ajax_html' ), // function which prints the field.
-			'termageddon-usercentrics', // page slug.
-			'termageddon_usercentrics_section_geolocation', // section ID.
-			array(
-				'label_for'   => 'termageddon_usercentrics_location_ajax',
-				'description' => __( 'Runs the location check in the visitor\'s browser after the page loads, instead of while the server generates the page. Full-page HTML can stay cacheable (hosting, CDN, browser). Recommended for accuracy and compatibility with full-page caching—disable only if support asks you to for troubleshooting.', 'termageddon-usercentrics' ),
-			)
-		);
+		// Enable Geolocation AJAX Mode (hidden when the new geolocation service is enabled —
+		// that service always runs client-side, so AJAX mode is implicit).
+		if ( ! Termageddon_Usercentrics_Geo_Api::is_enabled() ) {
+			add_settings_field(
+				'termageddon_usercentrics_location_ajax',
+				__( 'Check visitor location after the page loads (recommended)', 'termageddon-usercentrics' ),
+				array( &$this, 'location_ajax_html' ), // function which prints the field.
+				'termageddon-usercentrics', // page slug.
+				'termageddon_usercentrics_section_geolocation', // section ID.
+				array(
+					'label_for'   => 'termageddon_usercentrics_location_ajax',
+					'description' => __( 'Runs the location check in the visitor\'s browser after the page loads, instead of while the server generates the page. Full-page HTML can stay cacheable (hosting, CDN, browser). Recommended for accuracy and compatibility with full-page caching—disable only if support asks you to for troubleshooting.', 'termageddon-usercentrics' ),
+				)
+			);
+		}
 
 		register_setting(
 			'termageddon_usercentrics_settings', // settings group name.
@@ -1395,6 +1439,26 @@ class Termageddon_Usercentrics_Admin {
 	public function location_ajax_html( array $args ) {
 		$args['default'] = true;
 		self::generate_checkbox( 'ajax', 'location', $args );
+	}
+
+	/**
+	 * The HTML field for the new geolocation service checkbox.
+	 *
+	 * Rendered inline (rather than via `generate_checkbox`) because this option uses the
+	 *
+	 * @param array $args The arguments provided by the add_settings_field() method.
+	 * @return void
+	 */
+	public function use_geo_api_html( array $args ) {
+		$option_name = 'termageddon_use_geo_api';
+		$description = isset( $args['description'] ) ? $args['description'] : null;
+		$is_checked  = get_option( $option_name, false ) ? true : false;
+
+		echo '<input type="checkbox" class="termageddon-checkbox wppd-ui-toggle" id="' . esc_attr( $option_name ) . '" name="' . esc_attr( $option_name ) . '" value="1" ' . checked( 1, $is_checked, false ) . ' />';
+
+		if ( $description ) {
+			echo '<p>' . wp_kses_post( $description ) . '</p>';
+		}
 	}
 
 	/**

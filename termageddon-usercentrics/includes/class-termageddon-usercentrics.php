@@ -246,6 +246,11 @@ class Termageddon_Usercentrics {
 		 */
 		require_once TERMAGEDDON_COOKIE_PATH . 'public/class-termageddon-usercentrics-public.php';
 
+		/**
+		 * The class encapsulating the hosted geolocation API (replacement for MaxMind).
+		 */
+		require_once TERMAGEDDON_COOKIE_PATH . 'includes/class-termageddon-usercentrics-geo-api.php';
+
 		$this->loader = new Termageddon_Usercentrics_Loader();
 
 	}
@@ -285,9 +290,99 @@ class Termageddon_Usercentrics {
 		// Register action to verify the database to allow the cron jobs to work.
 		$this->loader->add_action( 'termageddon_usercentrics_maxmind_download', $this, 'verify_maxmind_database' );
 
+		// React to opt-in/opt-out of the new geolocation service so MaxMind state is cleaned up
+		// (or restored) immediately rather than waiting for the next cron tick.
+		$this->loader->add_action( 'update_option_termageddon_use_geo_api', $this, 'handle_geo_api_option_change', 10, 2 );
+		$this->loader->add_action( 'add_option_termageddon_use_geo_api', $this, 'handle_geo_api_option_added', 10, 2 );
+
 		// Add PSL shortcode.
 		add_shortcode( 'uc-privacysettings', array( $this, 'privacy_settings_shortcode' ) );
 
+	}
+
+	/**
+	 * Respond to the `termageddon_use_geo_api` option being updated.
+	 *
+	 * On a transition into the new service, wipe MaxMind state. On a transition back out,
+	 * re-schedule the cron and re-download the database so the legacy path is usable
+	 * immediately.
+	 *
+	 * @param mixed $old_value The previous option value.
+	 * @param mixed $new_value The new option value.
+	 * @return void
+	 */
+	public function handle_geo_api_option_change( $old_value, $new_value ) {
+		$was_on = (bool) $old_value;
+		$is_on  = (bool) $new_value;
+
+		if ( $was_on === $is_on ) {
+			return; // No transition.
+		}
+
+		if ( $is_on ) {
+			self::cleanup_maxmind_database();
+		} else {
+			self::restore_maxmind_database();
+		}
+	}
+
+	/**
+	 * Respond to the `termageddon_use_geo_api` option being added for the first time.
+	 *
+	 * `add_option` fires the first time the option is set; `update_option` doesn't. Cover both.
+	 *
+	 * @param string $option    The option name.
+	 * @param mixed  $new_value The new option value.
+	 * @return void
+	 */
+	public function handle_geo_api_option_added( $option, $new_value ) {
+		if ( (bool) $new_value ) {
+			self::cleanup_maxmind_database();
+		}
+	}
+
+	/**
+	 * Remove the MaxMind database, unschedule its cron, and clear download-error state.
+	 *
+	 * Called when the user opts into the new geolocation service.
+	 *
+	 * @return void
+	 */
+	public static function cleanup_maxmind_database() {
+		$db_path = self::get_maxmind_db_path();
+		if ( file_exists( $db_path ) ) {
+			@unlink( $db_path ); // phpcs:ignore WordPress.PHP.NoSilencedErrors -- best-effort cleanup.
+		}
+
+		$db_dir = dirname( $db_path );
+		if ( is_dir( $db_dir ) ) {
+			@rmdir( $db_dir ); // phpcs:ignore WordPress.PHP.NoSilencedErrors -- only succeeds if empty; fine.
+		}
+
+		$timestamp = wp_next_scheduled( 'termageddon_usercentrics_maxmind_download' );
+		if ( $timestamp ) {
+			wp_unschedule_event( $timestamp, 'termageddon_usercentrics_maxmind_download' );
+		}
+		wp_unschedule_hook( 'termageddon_usercentrics_maxmind_download' );
+
+		delete_option( 'termageddon_usercentrics_download_error_count' );
+		delete_option( 'termageddon_usercentrics_download_error_log' );
+	}
+
+	/**
+	 * Re-schedule the MaxMind cron and synchronously re-download the database.
+	 *
+	 * Called when the user opts back out of the new geolocation service. Without this,
+	 * the next page load would hit a missing-database error and the cron wouldn't fire
+	 * for up to 30 days.
+	 *
+	 * @return void
+	 */
+	public static function restore_maxmind_database() {
+		if ( ! wp_next_scheduled( 'termageddon_usercentrics_maxmind_download' ) ) {
+			wp_schedule_event( time(), 'termageddon_usercentrics_every_month', 'termageddon_usercentrics_maxmind_download' );
+		}
+		self::verify_maxmind_database();
 	}
 
 	/**
@@ -555,6 +650,12 @@ class Termageddon_Usercentrics {
 	 * @return bool Returns true if database is downloaded. false if not.
 	 */
 	public static function verify_maxmind_database() {
+		// New hosted geolocation service replaces the on-device MaxMind database.
+		// When enabled, no local download is needed.
+		if ( Termageddon_Usercentrics_Geo_Api::is_enabled() ) {
+			return false;
+		}
+
 		// Check for fatal errors.
 		if ( self::check_for_download_errors() ) {
 			return false;
@@ -1503,6 +1604,12 @@ class Termageddon_Usercentrics {
 	public static function is_ajax_mode_enabled(): bool {
 		if ( ! self::is_geoip_enabled() ) {
 			return false;
+		}
+
+		// The new hosted geolocation service always runs client-side, so AJAX mode is
+		// required (there is no server-side lookup to fall back to).
+		if ( Termageddon_Usercentrics_Geo_Api::is_enabled() ) {
+			return true;
 		}
 
 		return get_option( 'termageddon_usercentrics_location_ajax', true ) ? true : false;
