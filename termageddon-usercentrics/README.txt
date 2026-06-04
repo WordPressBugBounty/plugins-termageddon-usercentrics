@@ -4,7 +4,7 @@ Tags: cookie consent, privacy, GDPR, CCPA, CPRA, CIPA, usercentrics, geolocation
 Requires at least: 5.0
 Tested up to: 6.9.4
 Requires PHP: 7.2
-Stable tag: 1.10.0
+Stable tag: 1.10.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -187,6 +187,11 @@ For comprehensive support and assistance:
 * **Developer Resources**: Access our developer documentation for advanced customizations
 
 == Changelog ==
+
+= 1.10.1 =
+
+**🐛 Bug Fixes:**
+* Fixed a fatal error (`Class "Termageddon_Usercentrics_Geo_Api" not found`) that could take down the site or admin — including `admin-ajax.php` requests — when the geolocation class was referenced before it had been loaded. The plugin now registers a class autoloader so its classes always resolve on demand, preventing this and similar "class not found" failures.
 
 = 1.10.0 =
 
