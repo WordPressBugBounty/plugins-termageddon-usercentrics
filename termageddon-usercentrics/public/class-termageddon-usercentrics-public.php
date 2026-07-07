@@ -420,6 +420,61 @@ class Termageddon_Usercentrics_Public {
 			// state), but we should be explicit about it.
 			$tag = ( null !== $result ) ? $result : '';
 		}
+		if ( $this->should_gate_hubspot_script( $handle ) ) {
+			$tag = $this->gate_hubspot_script_tag( $tag );
+		}
+		return $tag;
+	}
+
+	/**
+	 * Determine whether the current script should be gated for HubSpot consent.
+	 *
+	 * @param string $handle The script handle/ID.
+	 * @return bool
+	 */
+	private function should_gate_hubspot_script( string $handle ): bool {
+		if ( is_admin() || ! Termageddon_Usercentrics::is_integration_enabled( 'hubspot_plugin' ) ) {
+			return false;
+		}
+
+		$hubspot_handles = array(
+			'leadin-script-loader-js',
+			'leadin-forms-v2',
+			'leadin-forms-v4',
+			'leadin-meeting',
+		);
+
+		return in_array( $handle, $hubspot_handles, true );
+	}
+
+	/**
+	 * Convert a HubSpot script tag to a Usercentrics-controlled script.
+	 *
+	 * @param string $tag The script tag HTML.
+	 * @return string
+	 */
+	private function gate_hubspot_script_tag( string $tag ): string {
+		$usercentrics_service = 'HubSpot';
+
+		if ( class_exists( 'WP_HTML_Tag_Processor' ) ) {
+			$processor = new WP_HTML_Tag_Processor( $tag );
+
+			if ( $processor->next_tag( 'script' ) ) {
+				$processor->set_attribute( 'type', 'text/plain' );
+				$processor->set_attribute( 'data-usercentrics', $usercentrics_service );
+
+				return $processor->get_updated_html();
+			}
+		}
+
+		$tag = preg_replace( '/\s+type=(["\']).*?\1/i', '', $tag );
+		$tag = preg_replace(
+			'/^<script\b/i',
+			'<script type="text/plain" data-usercentrics="' . esc_attr( $usercentrics_service ) . '"',
+			$tag,
+			1
+		);
+
 		return $tag;
 	}
 

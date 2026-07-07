@@ -87,6 +87,13 @@ textarea.termageddon-embed-code {
 	border-radius: 5px;
 	font-size: 60%;
 }
+.tu-label-detected {
+	background-color: #646970;
+	color: white;
+	padding: 3px 5px;
+	border-radius: 5px;
+	font-size: 60%;
+}
 .tu-label-warning {
 	background-color: orange;
 	color: white;

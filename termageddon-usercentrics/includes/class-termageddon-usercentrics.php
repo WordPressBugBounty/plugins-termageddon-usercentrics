@@ -1425,41 +1425,61 @@ class Termageddon_Usercentrics {
 	public static function get_integrations(): array {
 		return array(
 			'divi_video'      => array(
-				'name'        => __( 'Divi Video', 'termageddon-usercentrics' ),
-				'description' => __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the Divi video embed.', 'termageddon-usercentrics' ),
-				'beta'        => false,
-				'default'     => false,
+				'name'             => __( 'Divi Video', 'termageddon-usercentrics' ),
+				'description'      => __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the Divi video embed.', 'termageddon-usercentrics' ),
+				'beta'             => false,
+				'default'          => false,
+				'installed_themes' => array( 'Divi' ),
 			),
 			'elementor_video' => array(
-				'name'        => __( 'Elementor Video', 'termageddon-usercentrics' ),
-				'description' => __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the Elementor video embed.', 'termageddon-usercentrics' ),
-				'beta'        => false,
-				'default'     => false,
+				'name'              => __( 'Elementor Video', 'termageddon-usercentrics' ),
+				'description'       => __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the Elementor video embed.', 'termageddon-usercentrics' ),
+				'beta'              => false,
+				'default'           => false,
+				'installed_plugins' => array( 'elementor/elementor.php' ),
 			),
 			'powerpack_video' => array(
-				'name'        => __( 'PowerPack Video', 'termageddon-usercentrics' ),
-				'description' => __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the PowerPack for BeaverBuilder video embed. This requires window events to be enabled in your Usercentrics settings. Please reach out to support if needed.', 'termageddon-usercentrics' ),
+				'name'              => __( 'PowerPack Video', 'termageddon-usercentrics' ),
+				'description'       => __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the PowerPack for BeaverBuilder video embed. This requires window events to be enabled in your Usercentrics settings. Please reach out to support if needed.', 'termageddon-usercentrics' ),
+				'beta'              => false,
+				'default'           => false,
+				'installed_plugins' => array( 'bbpowerpack/bb-powerpack.php' ),
+			),
+			'presto_player'   => array(
+				'name'              => __( 'Presto Player', 'termageddon-usercentrics' ),
+				'description'       => __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the Presto Player video embed.', 'termageddon-usercentrics' ),
+				'beta'              => false,
+				'default'           => false,
+				'installed_plugins' => array( 'presto-player/presto-player.php' ),
+			),
+			'meta_for_woocommerce' => array(
+				'name'              => __( 'Meta for WooCommerce plugin compatibility', 'termageddon-usercentrics' ),
+				'description'       => __( 'Enable this feature if you are utilizing the Meta for WooCommerce plugin.  This helps set up manual control of the Facebook Pixel script, ensuring data is not sent to Facebook until after consent is obtained. Note: the facebook pixel cookie (_fbp) will still load (due to how this plugin was written), however data will not be sent to Facebook until after consent is obtained. This can be tested via the Networks tab.', 'termageddon-usercentrics' ),
+				'beta'              => false,
+				'default'           => false,
+				'enqueue_script'    => false,
+				'installed_plugins' => array( 'facebook-for-woocommerce/facebook-for-woocommerce.php' ),
+			),
+			'hubspot_plugin' => array(
+				'name'            => __( 'HubSpot WordPress Plugin', 'termageddon-usercentrics' ),
+				'description'     => __( 'Enabling this feature helps block the main HubSpot tracking script loaded by the HubSpot WordPress plugin. When enabled, this feature helps prevent the __hssrc, __hssc, __hstc, and hubspotutk cookies from being placed until the user clicks Accept. Test changes in a fresh incognito window.', 'termageddon-usercentrics' ),
+				'beta'            => true,
+				'default'         => false,
+				'enqueue_script'  => false,
+				'installed_plugins' => array( 'leadin/leadin.php' ),
+			),
+			'hubspot_forms' => array(
+				'name'        => __( 'HubSpot Forms Compatibility', 'termageddon-usercentrics' ),
+				'description' => __( 'When the HubSpot Forms service is marked as Marketing or Functional, forms will not load for users who click Deny. Enable this feature to add a blocker message that allows users to click Accept within the embedded form area. Test changes in a fresh incognito window.', 'termageddon-usercentrics' ),
 				'beta'        => true,
 				'default'     => false,
 			),
-			'presto_player'   => array(
-				'name'        => __( 'Presto Player', 'termageddon-usercentrics' ),
-				'description' => __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the Presto Player video embed.', 'termageddon-usercentrics' ),
-				'beta'        => false,
-				'default'     => false,
-			),
-			'meta_for_woocommerce' => array(
-				'name'          => __( 'Meta for WooCommerce plugin compatibility', 'termageddon-usercentrics' ),
-				'description'   => __( 'Enable this feature if you are utilizing the Meta for WooCommerce plugin.  This helps set up manual control of the Facebook Pixel script, ensuring data is not sent to Facebook until after consent is obtained. Note: the facebook pixel cookie (_fbp) will still load (due to how this plugin was written), however data will not be sent to Facebook until after consent is obtained. This can be tested via the Networks tab.', 'termageddon-usercentrics' ),
-				'beta'          => false,
-				'default'       => false,
-				'enqueue_script' => false,
-			),
 			'uabb_video'      => array(
-				'name'        => __( 'Ultimate Addons for Beaver Builder Video', 'termageddon-usercentrics' ),
-				'description' => __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the Ultimate Addons for Beaver Builder video embed.', 'termageddon-usercentrics' ),
-				'beta'        => false,
-				'default'     => false,
+				'name'              => __( 'Ultimate Addons for Beaver Builder Video', 'termageddon-usercentrics' ),
+				'description'       => __( 'This resolves and improves the cookie-consent implementation when using an image placeholder overlay for the Ultimate Addons for Beaver Builder video embed.', 'termageddon-usercentrics' ),
+				'beta'              => false,
+				'default'           => false,
+				'installed_plugins' => array( 'bb-ultimate-addon/bb-ultimate-addon.php' ),
 			),
 		);
 	}
@@ -1473,6 +1493,80 @@ class Termageddon_Usercentrics {
 	 */
 	public static function is_integration_enabled( string $integration, bool $default = false ): bool {
 		return get_option( 'termageddon_usercentrics_integration_' . $integration, $default ) ? true : false;
+	}
+
+	/**
+	 * Check whether the plugin/theme related to an integration is installed.
+	 *
+	 * @param string $integration The slug of the integration to check.
+	 * @return bool
+	 */
+	public static function is_integration_source_detected( string $integration ): bool {
+		$integrations = self::get_integrations();
+		if ( empty( $integrations[ $integration ] ) ) {
+			return false;
+		}
+
+		$config = $integrations[ $integration ];
+
+		foreach ( $config['installed_plugins'] ?? array() as $plugin_basename ) {
+			if ( self::is_plugin_installed( $plugin_basename ) ) {
+				return true;
+			}
+		}
+
+		foreach ( $config['installed_themes'] ?? array() as $theme_stylesheet ) {
+			if ( self::is_theme_installed( $theme_stylesheet ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check whether a plugin is installed.
+	 *
+	 * @param string $plugin_basename The plugin basename, e.g. leadin/leadin.php.
+	 * @return bool
+	 */
+	public static function is_plugin_installed( string $plugin_basename ): bool {
+		if ( ! function_exists( 'get_plugins' ) && defined( 'ABSPATH' ) ) {
+			$plugin_functions = ABSPATH . 'wp-admin/includes/plugin.php';
+			if ( file_exists( $plugin_functions ) ) {
+				require_once $plugin_functions;
+			}
+		}
+
+		if ( function_exists( 'get_plugins' ) ) {
+			$plugins = get_plugins();
+			return isset( $plugins[ $plugin_basename ] );
+		}
+
+		if ( defined( 'WP_PLUGIN_DIR' ) ) {
+			return file_exists( trailingslashit( WP_PLUGIN_DIR ) . $plugin_basename );
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check whether a theme is installed.
+	 *
+	 * @param string $theme_stylesheet The theme stylesheet/slug.
+	 * @return bool
+	 */
+	public static function is_theme_installed( string $theme_stylesheet ): bool {
+		if ( function_exists( 'wp_get_theme' ) ) {
+			$theme = wp_get_theme( $theme_stylesheet );
+			return $theme && $theme->exists();
+		}
+
+		if ( defined( 'WP_CONTENT_DIR' ) ) {
+			return is_dir( trailingslashit( WP_CONTENT_DIR ) . 'themes/' . $theme_stylesheet );
+		}
+
+		return false;
 	}
 
 	/**

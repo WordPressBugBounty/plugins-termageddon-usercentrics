@@ -2,9 +2,9 @@
 Contributors: termageddon, dintriglia
 Tags: cookie consent, privacy, GDPR, CCPA, CPRA, CIPA, usercentrics, geolocation, compliance
 Requires at least: 5.0
-Tested up to: 6.9.4
+Tested up to: 7.0
 Requires PHP: 7.2
-Stable tag: 1.10.1
+Stable tag: 1.11.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -187,6 +187,16 @@ For comprehensive support and assistance:
 * **Developer Resources**: Access our developer documentation for advanced customizations
 
 == Changelog ==
+
+= 1.11.0 =
+
+**✨ New Features:**
+* Added HubSpot WordPress Plugin compatibility to gate HubSpot tracking scripts until a visitor accepts the HubSpot service in Usercentrics.
+* Added HubSpot Forms compatibility to show the Usercentrics blocker message inside embedded HubSpot form areas.
+* Added Detected badges to integration settings when a related plugin or theme is found, including Divi theme detection.
+
+**🔧 Improvements:**
+* Updated WordPress compatibility metadata for WordPress 7.0.
 
 = 1.10.1 =
 

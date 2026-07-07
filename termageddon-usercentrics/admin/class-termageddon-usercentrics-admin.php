@@ -361,6 +361,13 @@ class Termageddon_Usercentrics_Admin {
 		return ' <span class="tu-label-warning">BETA</span>';
 	}
 
+	/** Generates and appends the detected label for a field.
+	 *
+	 *  @return string  */
+	public static function mark_as_detected() {
+		return ' <span class="tu-label-detected">DETECTED</span>';
+	}
+
 	/** Generates and appends the "NEW" label for a field.
 	 *
 	 *  @return string  */
@@ -995,10 +1002,11 @@ class Termageddon_Usercentrics_Admin {
 		// Add settings fields for all integrations.
 		foreach ( Termageddon_Usercentrics::get_integrations() as $integration => $integration_config ) {
 			list( 'name' => $display_name, 'description' => $description, 'beta' => $beta, 'default' => $default ) = $integration_config;
+			$badges = ( $beta ? $this->mark_as_beta() : '' ) . ( Termageddon_Usercentrics::is_integration_source_detected( $integration ) ? $this->mark_as_detected() : '' );
 
 			add_settings_field(
 				'termageddon_usercentrics_integration_' . $integration,
-				$display_name . ' ' . __( 'Integration', 'termageddon-usercentrics' ) . ( $beta ? $this->mark_as_beta() : '' ) . ( $description ? '<br>
+				$display_name . ' ' . __( 'Integration', 'termageddon-usercentrics' ) . $badges . ( $description ? '<br>
 				<em>' . $description . '</em>' : '' ),
 				array( &$this, 'integration_support' ), // function which prints the field.
 				'termageddon-usercentrics', // page slug.
