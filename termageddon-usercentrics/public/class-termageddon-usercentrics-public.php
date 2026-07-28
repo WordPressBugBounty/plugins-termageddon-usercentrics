@@ -423,6 +423,9 @@ class Termageddon_Usercentrics_Public {
 		if ( $this->should_gate_hubspot_script( $handle ) ) {
 			$tag = $this->gate_hubspot_script_tag( $tag );
 		}
+		if ( $this->should_gate_meta_for_woocommerce_script( $handle ) ) {
+			$tag = $this->gate_meta_for_woocommerce_script_tag( $tag );
+		}
 		return $tag;
 	}
 
@@ -497,6 +500,86 @@ class Termageddon_Usercentrics_Public {
 		$attrs['data-usercentrics'] = 'Facebook Pixel';
 
 		return $attrs;
+	}
+
+	/**
+	 * Prevent Meta for WooCommerce from setting _fbp and _fbc before consent.
+	 *
+	 * @param mixed $held Whether Meta signals are currently held.
+	 * @return bool
+	 */
+	public function hold_meta_for_woocommerce_signals( $held ): bool {
+		if ( Termageddon_Usercentrics::is_integration_enabled( 'meta_for_woocommerce' ) ) {
+			return true;
+		}
+
+		return (bool) $held;
+	}
+
+	/**
+	 * Release Meta for WooCommerce signals when the Facebook Pixel service is consented to.
+	 *
+	 * @return void
+	 */
+	public function release_meta_for_woocommerce_signals() {
+		if ( ! Termageddon_Usercentrics::is_integration_enabled( 'meta_for_woocommerce' ) ) {
+			return;
+		}
+		?>
+		<script>
+		window.addEventListener('ucEvent', function (e) {
+			if (!e.detail || e.detail.type !== 'consent_status') return;
+			var services = e.detail.services || {};
+			var granted = Object.keys(services).some(function (id) {
+				var service = services[id];
+				return service && service.name === 'Facebook Pixel' && service.status === true;
+			});
+			if (window.wcFacebookSignals && typeof window.wcFacebookSignals.setState === 'function') {
+				window.wcFacebookSignals.setState(granted ? 'active' : 'held');
+			}
+		});
+		</script>
+		<?php
+	}
+
+	/**
+	 * Determine whether a Meta for WooCommerce script should be gated for consent.
+	 *
+	 * @param string $handle The script handle/ID.
+	 * @return bool
+	 */
+	private function should_gate_meta_for_woocommerce_script( string $handle ): bool {
+		if ( is_admin() || ! Termageddon_Usercentrics::is_integration_enabled( 'meta_for_woocommerce' ) ) {
+			return false;
+		}
+
+		return in_array(
+			$handle,
+			array(
+				'wc-facebook-pixel-events',
+				'facebook-for-woocommerce-inline',
+				'facebook-capi-param-builder',
+				'wc-facebook-signals',
+			),
+			true
+		);
+	}
+
+	/**
+	 * Convert a Meta for WooCommerce script tag to a Usercentrics-controlled script.
+	 *
+	 * @param string $tag The script tag HTML.
+	 * @return string
+	 */
+	private function gate_meta_for_woocommerce_script_tag( string $tag ): string {
+		$tag = preg_replace( '/\s+type=(["\'])[^"\']*\1/i', '', $tag, 1 );
+
+		return preg_replace(
+			'/^<script\b/i',
+			'<script type="text/plain" data-usercentrics="Facebook Pixel"',
+			$tag,
+			1
+		);
 	}
 
 }

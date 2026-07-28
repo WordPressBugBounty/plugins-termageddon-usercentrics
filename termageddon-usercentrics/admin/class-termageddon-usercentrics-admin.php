@@ -520,7 +520,6 @@ class Termageddon_Usercentrics_Admin {
 			'termageddon_usercentrics_section_embed',
 			array(
 				'name'        => __( 'Manual Script Controller', 'termageddon-usercentrics' ),
-				'tags' => $this->mark_as_beta(),
 				'description' => '<a href="https://termageddon.freshdesk.com/support/solutions/articles/66000533992-manual-script-controller-feature-wordpress-plugin-" target="_blank">'.__( 'See video documentation here', 'termageddon-usercentrics' ). '</a> ' .
 				__( 'on how to use this feature. ', 'termageddon-usercentrics' ) . 
 				__( 'This feature helps add the', 'termageddon-usercentrics' )
@@ -873,6 +872,10 @@ class Termageddon_Usercentrics_Admin {
 
 		$register_geolocation = function( $loc_key, $loc ) {
 			list ( 'title' => $loc_name, 'popular' => $loc_popular ) = $loc;
+			if ( 'florida' === $loc_key ) {
+				$loc_name .= ' (<a href="' . esc_url( 'https://termageddon.freshdesk.com/support/solutions/articles/66000536079-why-do-we-recommend-displaying-the-consent-tool-to-website-visitors-from-florida-' ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'why', 'termageddon-usercentrics' ) . '</a>)?';
+			}
+
 			add_settings_field(
 				'termageddon_usercentrics_show_in_' . $loc_key,
 				$loc_name . ( $loc_popular ? self::mark_as_popular() : '' ),

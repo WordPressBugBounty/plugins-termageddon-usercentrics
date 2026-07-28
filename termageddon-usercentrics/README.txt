@@ -2,9 +2,9 @@
 Contributors: termageddon, dintriglia
 Tags: cookie consent, privacy, GDPR, CCPA, CPRA, CIPA, usercentrics, geolocation, compliance
 Requires at least: 5.0
-Tested up to: 7.0
+Tested up to: 7.0.2
 Requires PHP: 7.2
-Stable tag: 1.11.0
+Stable tag: 1.12.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,6 +35,7 @@ Termageddon’s Auto-updating website policies and consent solution supports maj
   * California - CPRA, CalOPPA & CIPA
   * Colorado - CPA
   * Connecticut - CTDPA
+  * Florida
   * Oregon - OCPA
   * Texas - TDPSA
   * Utah - UCPA
@@ -187,6 +188,17 @@ For comprehensive support and assistance:
 * **Developer Resources**: Access our developer documentation for advanced customizations
 
 == Changelog ==
+
+= 1.12.0 =
+
+**✨ New Features:**
+* Added Florida as a geolocation region option, with guidance explaining when to display the consent tool to Florida visitors.
+* Added a beta Gravity Forms reCAPTCHA integration that displays the Usercentrics blocker until visitors consent to reCAPTCHA.
+
+**🔧 Improvements:**
+* Improved the Meta for WooCommerce integration to hold Facebook Pixel signals and cookies until a visitor consents, then release them when consent is granted.
+* Updated Meta for WooCommerce compatibility settings and guidance to make consent-based blocking easier to configure and test.
+* Graduated the Manual Script Controller from beta.
 
 = 1.11.0 =
 

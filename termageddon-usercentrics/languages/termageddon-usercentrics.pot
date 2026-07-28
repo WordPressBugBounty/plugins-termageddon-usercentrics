@@ -116,6 +116,10 @@ msgstr ""
 msgid "Connecticut (CTDPA)"
 msgstr ""
 
+#: includes/class-termageddon-usercentrics.php:153
+msgid "Florida"
+msgstr ""
+
 #. section ID.
 #: admin/class-termageddon-usercentrics-admin.php:1154
 msgid "Control Panel"
@@ -195,17 +199,15 @@ msgstr ""
 msgid "Enable location logging"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:1457
-msgid ""
-"Enable this feature if you are utilizing the Meta for WooCommerce plugin.  "
-"This helps set up manual control of the Facebook Pixel script, ensuring data "
-"is not sent to Facebook until after consent is obtained. Note: the facebook "
-"pixel cookie (_fbp) will still load (due to how this plugin was written), "
-"however data will not be sent to Facebook until after consent is obtained. "
-"This can be tested via the Networks tab."
+#: includes/class-termageddon-usercentrics.php:1477
+msgid "Enabling this feature helps Usercentrics block the Facebook Pixel script loading via the \"Meta for WooCommerce\" plugin. The script will fire after a user consents. After enabling, be sure to test in a fresh incognito window."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:1465
+#: includes/class-termageddon-usercentrics.php:1461
+msgid "Enabling this feature will provide the Usercentrics blocker message, requiring users to consent first prior to loading in any Gravity Forms forms that have the embedded reCaptcha feature. After enabling, be sure to test in a fresh incognito window."
+msgstr ""
+
+#: includes/class-termageddon-usercentrics.php:1485
 msgid ""
 "Enabling this feature helps block the main HubSpot tracking script loaded by "
 "the HubSpot WordPress plugin. When enabled, this feature helps prevent the "
@@ -394,8 +396,12 @@ msgstr ""
 msgid "Manual Script Controller"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:1456
-msgid "Meta for WooCommerce plugin compatibility"
+#: includes/class-termageddon-usercentrics.php:1459
+msgid "Gravity Forms - reCaptcha Extension"
+msgstr ""
+
+#: includes/class-termageddon-usercentrics.php:1475
+msgid "Meta for WooCommerce"
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:954
@@ -799,6 +805,10 @@ msgid ""
 "will not load for users who click Deny. Enable this feature to add a blocker "
 "message that allows users to click Accept within the embedded form area. "
 "Test changes in a fresh incognito window."
+msgstr ""
+
+#: admin/class-termageddon-usercentrics-admin.php:878
+msgid "why"
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:212

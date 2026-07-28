@@ -49,6 +49,7 @@ class Termageddon_Usercentrics_Geo_Api {
 		'colorado'    => 'CO',
 		'connecticut' => 'CT',
 		'delaware'    => 'DE',
+		'florida'     => 'FL',
 		'indiana'     => 'IN',
 		'oregon'      => 'OR',
 		'texas'       => 'TX',

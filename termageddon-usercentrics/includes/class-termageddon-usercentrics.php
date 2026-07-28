@@ -149,6 +149,10 @@ class Termageddon_Usercentrics {
 				'title'   => __( 'Delaware (DPDPA)', 'termageddon-usercentrics' ),
 				'popular' => false,
 			),
+			'florida'     => array(
+				'title'   => __( 'Florida', 'termageddon-usercentrics' ),
+				'popular' => false,
+			),
 			'indiana'     => array(
 				'title'   => __( 'Indiana (ICDPA)', 'termageddon-usercentrics' ),
 				'popular' => false,
@@ -197,6 +201,7 @@ class Termageddon_Usercentrics {
 		'utah'        => 'Utah',
 		'virginia'    => 'Virginia',
 		'delaware'    => 'Delaware',
+		'florida'     => 'Florida',
 		'indiana'     => 'Indiana',
 	);
 
@@ -505,6 +510,19 @@ class Termageddon_Usercentrics {
 			'wc_facebook_pixel_script_attributes',
 			$plugin_public,
 			'filter_meta_for_woocommerce_pixel_script_attributes'
+		);
+
+		$this->loader->add_filter(
+			'facebook_signals_held',
+			$plugin_public,
+			'hold_meta_for_woocommerce_signals'
+		);
+
+		$this->loader->add_action(
+			'wp_footer',
+			$plugin_public,
+			'release_meta_for_woocommerce_signals',
+			99
 		);
 
 	}
@@ -1452,10 +1470,17 @@ class Termageddon_Usercentrics {
 				'default'           => false,
 				'installed_plugins' => array( 'presto-player/presto-player.php' ),
 			),
+			'gravityforms_recaptcha' => array(
+				'name'              => __( 'Gravity Forms - reCaptcha Extension', 'termageddon-usercentrics' ),
+				'description'       => __( 'Enabling this feature will provide the Usercentrics blocker message, requiring users to consent first prior to loading in any Gravity Forms forms that have the embedded reCaptcha feature. After enabling, be sure to test in a fresh incognito window.', 'termageddon-usercentrics' ),
+				'beta'              => true,
+				'default'           => false,
+				'installed_plugins' => array( 'gravityforms/gravityforms.php' ),
+			),
 			'meta_for_woocommerce' => array(
-				'name'              => __( 'Meta for WooCommerce plugin compatibility', 'termageddon-usercentrics' ),
-				'description'       => __( 'Enable this feature if you are utilizing the Meta for WooCommerce plugin.  This helps set up manual control of the Facebook Pixel script, ensuring data is not sent to Facebook until after consent is obtained. Note: the facebook pixel cookie (_fbp) will still load (due to how this plugin was written), however data will not be sent to Facebook until after consent is obtained. This can be tested via the Networks tab.', 'termageddon-usercentrics' ),
-				'beta'              => false,
+				'name'              => __( 'Meta for WooCommerce', 'termageddon-usercentrics' ),
+				'description'       => __( 'Enabling this feature helps Usercentrics block the Facebook Pixel script loading via the "Meta for WooCommerce" plugin. The script will fire after a user consents. After enabling, be sure to test in a fresh incognito window.', 'termageddon-usercentrics' ),
+				'beta'              => true,
 				'default'           => false,
 				'enqueue_script'    => false,
 				'installed_plugins' => array( 'facebook-for-woocommerce/facebook-for-woocommerce.php' ),
