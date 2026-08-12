@@ -24,6 +24,20 @@
 class Termageddon_Usercentrics_Geo_Api {
 
 	/**
+	 * The final UTC timestamp at which the legacy MaxMind fallback is disabled.
+	 *
+	 * @var string
+	 */
+	public const MAXMIND_CUTOFF = '2026-08-20 00:00:00 UTC';
+
+	/**
+	 * Option used for the temporary, explicit legacy MaxMind opt-out.
+	 *
+	 * @var string
+	 */
+	public const LEGACY_MAXMIND_OPTION = 'termageddon_use_legacy_maxmind';
+
+	/**
 	 * The hosted geolocation API URL.
 	 *
 	 * @var string
@@ -126,12 +140,61 @@ class Termageddon_Usercentrics_Geo_Api {
 	);
 
 	/**
-	 * Is the new geolocation service opted into?
+	 * Return the configured MaxMind cutoff timestamp.
+	 *
+	 * The filter exists so automated tests and emergency operational changes can
+	 * adjust the cutoff without duplicating date logic throughout the plugin.
+	 *
+	 * @return int
+	 */
+	public static function get_maxmind_cutoff_timestamp(): int {
+		$timestamp = strtotime( self::MAXMIND_CUTOFF );
+		return (int) apply_filters( 'termageddon_maxmind_cutoff_timestamp', $timestamp );
+	}
+
+	/**
+	 * Return the current UTC timestamp used by geolocation policy.
+	 *
+	 * @return int
+	 */
+	public static function get_current_timestamp(): int {
+		return (int) apply_filters( 'termageddon_geolocation_current_timestamp', time() );
+	}
+
+	/**
+	 * Has the final MaxMind cutoff been reached?
+	 *
+	 * @return bool
+	 */
+	public static function has_maxmind_cutoff_passed(): bool {
+		return self::get_current_timestamp() >= self::get_maxmind_cutoff_timestamp();
+	}
+
+	/**
+	 * Has an administrator explicitly requested the temporary MaxMind fallback?
+	 *
+	 * @return bool
+	 */
+	public static function is_legacy_maxmind_requested(): bool {
+		return '1' === (string) get_option( self::LEGACY_MAXMIND_OPTION, '' );
+	}
+
+	/**
+	 * Is the temporary MaxMind fallback both requested and still available?
+	 *
+	 * @return bool
+	 */
+	public static function is_legacy_maxmind_available(): bool {
+		return ! self::has_maxmind_cutoff_passed() && self::is_legacy_maxmind_requested();
+	}
+
+	/**
+	 * Is the hosted geolocation service the effective implementation?
 	 *
 	 * @return bool
 	 */
 	public static function is_enabled(): bool {
-		return (bool) get_option( 'termageddon_use_geo_api', false );
+		return ! self::is_legacy_maxmind_available();
 	}
 
 	/**

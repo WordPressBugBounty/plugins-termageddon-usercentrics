@@ -4,7 +4,7 @@ Tags: cookie consent, privacy, GDPR, CCPA, CPRA, CIPA, usercentrics, geolocation
 Requires at least: 5.0
 Tested up to: 7.0.2
 Requires PHP: 7.2
-Stable tag: 1.12.0
+Stable tag: 1.13.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -45,8 +45,8 @@ Termageddon’s Auto-updating website policies and consent solution supports maj
 ### 🚀 Key Features
 
 #### Smart Geolocation Targeting
-* **MaxMind GeoLite2 Integration**: Accurate IP-based location detection
-* **AJAX Mode**: Maintain site caching while ensuring accurate geolocation
+* **Termageddon Hosted Geolocation**: Browser-side location detection through `geo.termageddon.com` without storing a large database on your WordPress server
+* **Cache Compatible**: Maintain full-page caching while accurately applying your configured region rules
 * **Cookie Optimization**: Reduce server load with intelligent cookie-based location caching
 * **Debug Mode**: Test and troubleshoot geolocation with built-in debugging tools
 
@@ -94,14 +94,15 @@ Place privacy settings links anywhere on your site with the powerful shortcode:
 #### Performance Optimization
 * **CDN Configuration**: Optional CDN bypass for translations
 * **Priority Control**: Adjust script loading priority for optimal performance
+* **Preconnect Control**: Optionally remove the Usercentrics preconnect and preload links while keeping the consent scripts active
 * **Cache Compatibility**: Full support for popular caching plugins
 * **Troubleshooting Mode**: Disable for all users except when using `?enable-usercentrics`
 
 ### 🛡️ Privacy & Data Protection
 
-**Important Privacy Notice**: When GeoIP is enabled, IP addresses are collected solely for determining appropriate consent requirements based on visitor location. A session cookie is created to improve performance on subsequent page loads. 
+**Important Privacy Notice**: When GeoIP is enabled, a visitor’s browser requests location information from `geo.termageddon.com` so the plugin can determine the appropriate consent experience. The hosted service returns country, region, and city information. The plugin stores that location result in a first-party browser cookie for up to 365 days and stores its show-or-hide decision in a session cookie.
 
-**Data Minimization**: All location data is processed temporarily and not stored permanently. Users can opt out by keeping all GeoIP checkboxes unchecked (default setting).
+**Data Minimization**: Location data is used only to apply the region selections configured in this plugin. If hosted geolocation cannot be reached, the consent widget is shown by default.
 
 **Compliance First**: Ensure you are in compliance with all applicable privacy laws before installing this plugin or any tracking technologies.
 
@@ -139,7 +140,11 @@ Yes, this plugin requires a Termageddon license which includes the consent solut
 
 = How does geolocation work? =
 
-The plugin uses MaxMind's GeoLite2 database to detect visitor locations based on IP addresses. Consent banners are shown only to visitors in jurisdictions that require them, improving user experience for others.
+The plugin uses Termageddon Hosted Geolocation at `geo.termageddon.com`. The lookup runs in the visitor’s browser, and the plugin applies your existing country and state selections without requiring a local geolocation database. If the hosted service cannot be reached, the consent banner is shown by default.
+
+Until August 20, 2026 at 00:00 UTC, administrators may temporarily switch back to the legacy MaxMind implementation from Geolocation Settings. That fallback downloads and maintains a MaxMind database on the WordPress server and will stop working automatically at the cutoff.
+
+For more information, see the [Termageddon Plugin Geolocation Migration FAQ](https://termageddon.freshdesk.com/support/solutions/articles/66000536222-termageddon-plugin-geolocation-migration-from-maxmind-to-termageddon-hosted-geolocation).
 
 = Can I customize the appearance of the consent banner? =
 
@@ -188,6 +193,21 @@ For comprehensive support and assistance:
 * **Developer Resources**: Access our developer documentation for advanced customizations
 
 == Changelog ==
+
+= 1.13.0 =
+
+**✨ New Features:**
+* Added a "Remove preconnect links" setting that omits the Usercentrics preconnect and preload `<link>` elements without disabling the consent scripts.
+
+**🐛 Bug Fixes:**
+* Added AddToAny compatibility to prevent its sharing scripts from running before visitors consent to the AddToAny service in Usercentrics.
+* Added Jetpack compatibility to prevent its tracking scripts from running before visitors consent to the Jetpack service in Usercentrics.
+* Fixed Ultimate Addons for Beaver Builder YouTube videos opened in a modal so visitors who deny consent see the Usercentrics blocker instead of the video.
+
+**🔧 Improvements:**
+* Migrated existing installations to Termageddon Hosted Geolocation while preserving all existing geolocation and region selections.
+* Added a temporary legacy MaxMind fallback in Geolocation Settings. The fallback is validated before activation and ends automatically on August 20, 2026 at 00:00 UTC.
+* Added automatic MaxMind database and cron cleanup, cutoff enforcement, and administrator migration guidance.
 
 = 1.12.0 =
 

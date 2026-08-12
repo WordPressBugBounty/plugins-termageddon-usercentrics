@@ -74,6 +74,8 @@ class Termageddon_Usercentrics {
 		$this->plugin_name = 'termageddon-usercentrics';
 
 		$this->load_dependencies();
+		self::maybe_upgrade_geolocation();
+		self::enforce_geolocation_policy();
 		$this->setup_translations();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
@@ -294,11 +296,12 @@ class Termageddon_Usercentrics {
 
 		// Register action to verify the database to allow the cron jobs to work.
 		$this->loader->add_action( 'termageddon_usercentrics_maxmind_download', $this, 'verify_maxmind_database' );
+		$this->loader->add_action( 'termageddon_usercentrics_maxmind_sunset', $this, 'enforce_geolocation_policy' );
 
-		// React to opt-in/opt-out of the new geolocation service so MaxMind state is cleaned up
-		// (or restored) immediately rather than waiting for the next cron tick.
-		$this->loader->add_action( 'update_option_termageddon_use_geo_api', $this, 'handle_geo_api_option_change', 10, 2 );
-		$this->loader->add_action( 'add_option_termageddon_use_geo_api', $this, 'handle_geo_api_option_added', 10, 2 );
+		// React to the temporary MaxMind opt-out so legacy state is restored or
+		// cleaned immediately rather than waiting for the next cron tick.
+		$this->loader->add_action( 'update_option_termageddon_use_legacy_maxmind', $this, 'handle_legacy_maxmind_option_change', 10, 2 );
+		$this->loader->add_action( 'add_option_termageddon_use_legacy_maxmind', $this, 'handle_legacy_maxmind_option_added', 10, 2 );
 
 		// Add PSL shortcode.
 		add_shortcode( 'uc-privacysettings', array( $this, 'privacy_settings_shortcode' ) );
@@ -306,42 +309,98 @@ class Termageddon_Usercentrics {
 	}
 
 	/**
-	 * Respond to the `termageddon_use_geo_api` option being updated.
+	 * Run the one-time migration that makes hosted geolocation the default for
+	 * every existing installation.
 	 *
-	 * On a transition into the new service, wipe MaxMind state. On a transition back out,
-	 * re-schedule the cron and re-download the database so the legacy path is usable
-	 * immediately.
+	 * This runs during normal initialization because WordPress does not reliably
+	 * execute activation hooks during an in-place plugin update.
+	 *
+	 * @return void
+	 */
+	public static function maybe_upgrade_geolocation() {
+		$migration_version = (int) get_option( 'termageddon_geolocation_migration_version', 0 );
+		if ( $migration_version >= 1 ) {
+			return;
+		}
+
+		update_option( Termageddon_Usercentrics_Geo_Api::LEGACY_MAXMIND_OPTION, '' );
+		update_option( 'termageddon_use_geo_api', '1' );
+		self::cleanup_maxmind_database();
+		update_option( 'termageddon_geolocation_migration_version', 1 );
+		update_option( 'termageddon_geolocation_migration_notice', '1' );
+	}
+
+	/**
+	 * Enforce the effective geolocation policy and schedule the sunset backstop.
+	 *
+	 * The request-time guard is authoritative because WP-Cron can be disabled or
+	 * delayed. At and after the cutoff, stale options and scheduled events cannot
+	 * reactivate MaxMind.
+	 *
+	 * @return void
+	 */
+	public static function enforce_geolocation_policy() {
+		if ( Termageddon_Usercentrics_Geo_Api::has_maxmind_cutoff_passed() ) {
+			if ( '1' === (string) get_option( Termageddon_Usercentrics_Geo_Api::LEGACY_MAXMIND_OPTION, '' ) ) {
+				update_option( Termageddon_Usercentrics_Geo_Api::LEGACY_MAXMIND_OPTION, '' );
+			}
+			update_option( 'termageddon_use_geo_api', '1' );
+
+			if ( '1' !== (string) get_option( 'termageddon_maxmind_cleanup_complete', '' ) ) {
+				self::cleanup_maxmind_database();
+			}
+			wp_unschedule_hook( 'termageddon_usercentrics_maxmind_sunset' );
+			return;
+		}
+
+		if (
+			Termageddon_Usercentrics_Geo_Api::is_enabled()
+			&& '1' !== (string) get_option( 'termageddon_maxmind_cleanup_complete', '' )
+		) {
+			self::cleanup_maxmind_database();
+		}
+
+		if ( ! wp_next_scheduled( 'termageddon_usercentrics_maxmind_sunset' ) ) {
+			wp_schedule_single_event(
+				Termageddon_Usercentrics_Geo_Api::get_maxmind_cutoff_timestamp(),
+				'termageddon_usercentrics_maxmind_sunset'
+			);
+		}
+	}
+
+	/**
+	 * Respond to the temporary legacy MaxMind option being updated.
 	 *
 	 * @param mixed $old_value The previous option value.
 	 * @param mixed $new_value The new option value.
 	 * @return void
 	 */
-	public function handle_geo_api_option_change( $old_value, $new_value ) {
-		$was_on = (bool) $old_value;
-		$is_on  = (bool) $new_value;
+	public function handle_legacy_maxmind_option_change( $old_value, $new_value ) {
+		$was_on = '1' === (string) $old_value;
+		$is_on  = '1' === (string) $new_value;
 
 		if ( $was_on === $is_on ) {
-			return; // No transition.
+			return;
 		}
 
-		if ( $is_on ) {
-			self::cleanup_maxmind_database();
-		} else {
+		if ( $is_on && ! Termageddon_Usercentrics_Geo_Api::has_maxmind_cutoff_passed() ) {
 			self::restore_maxmind_database();
+		} else {
+			self::cleanup_maxmind_database();
 		}
 	}
 
 	/**
-	 * Respond to the `termageddon_use_geo_api` option being added for the first time.
-	 *
-	 * `add_option` fires the first time the option is set; `update_option` doesn't. Cover both.
+	 * Respond to the temporary legacy MaxMind option being added.
 	 *
 	 * @param string $option    The option name.
 	 * @param mixed  $new_value The new option value.
 	 * @return void
 	 */
-	public function handle_geo_api_option_added( $option, $new_value ) {
-		if ( (bool) $new_value ) {
+	public function handle_legacy_maxmind_option_added( $option, $new_value ) {
+		if ( '1' === (string) $new_value && ! Termageddon_Usercentrics_Geo_Api::has_maxmind_cutoff_passed() ) {
+			self::restore_maxmind_database();
+		} else {
 			self::cleanup_maxmind_database();
 		}
 	}
@@ -349,9 +408,7 @@ class Termageddon_Usercentrics {
 	/**
 	 * Remove the MaxMind database, unschedule its cron, and clear download-error state.
 	 *
-	 * Called when the user opts into the new geolocation service.
-	 *
-	 * @return void
+	 * @return bool True when the database is absent and cron is fully cleared.
 	 */
 	public static function cleanup_maxmind_database() {
 		$db_path = self::get_maxmind_db_path();
@@ -372,22 +429,59 @@ class Termageddon_Usercentrics {
 
 		delete_option( 'termageddon_usercentrics_download_error_count' );
 		delete_option( 'termageddon_usercentrics_download_error_log' );
+
+		$cleanup_complete = ! file_exists( $db_path ) && ! wp_next_scheduled( 'termageddon_usercentrics_maxmind_download' );
+		if ( $cleanup_complete ) {
+			update_option( 'termageddon_maxmind_cleanup_complete', '1' );
+		} else {
+			delete_option( 'termageddon_maxmind_cleanup_complete' );
+		}
+
+		return $cleanup_complete;
 	}
 
 	/**
-	 * Re-schedule the MaxMind cron and synchronously re-download the database.
+	 * Prepare and validate the MaxMind database before legacy mode is committed.
 	 *
-	 * Called when the user opts back out of the new geolocation service. Without this,
-	 * the next page load would hit a missing-database error and the cron wouldn't fire
-	 * for up to 30 days.
-	 *
-	 * @return void
+	 * @return bool
 	 */
-	public static function restore_maxmind_database() {
+	public static function prepare_maxmind_database(): bool {
+		if ( Termageddon_Usercentrics_Geo_Api::has_maxmind_cutoff_passed() ) {
+			return false;
+		}
+
+		$db_path = self::get_maxmind_db_path();
+		if ( file_exists( $db_path ) && is_readable( $db_path ) && self::is_valid_maxmind_database( $db_path ) ) {
+			return true;
+		}
+
+		if ( ! is_dir( dirname( $db_path ) ) && ! wp_mkdir_p( dirname( $db_path ) ) ) {
+			self::log_download_error( 'Download directory could not be created.' );
+			return false;
+		}
+
+		delete_option( 'termageddon_usercentrics_download_error_count' );
+		delete_option( 'termageddon_usercentrics_download_error_log' );
+
+		return self::download_maxmind_db() && self::is_valid_maxmind_database( $db_path );
+	}
+
+	/**
+	 * Re-schedule the MaxMind cron after its database has been prepared.
+	 *
+	 * @return bool
+	 */
+	public static function restore_maxmind_database(): bool {
+		if ( ! self::prepare_maxmind_database() ) {
+			return false;
+		}
+
+		delete_option( 'termageddon_maxmind_cleanup_complete' );
 		if ( ! wp_next_scheduled( 'termageddon_usercentrics_maxmind_download' ) ) {
 			wp_schedule_event( time(), 'termageddon_usercentrics_every_month', 'termageddon_usercentrics_maxmind_download' );
 		}
-		self::verify_maxmind_database();
+
+		return true;
 	}
 
 	/**
@@ -668,9 +762,9 @@ class Termageddon_Usercentrics {
 	 * @return bool Returns true if database is downloaded. false if not.
 	 */
 	public static function verify_maxmind_database() {
-		// New hosted geolocation service replaces the on-device MaxMind database.
-		// When enabled, no local download is needed.
-		if ( Termageddon_Usercentrics_Geo_Api::is_enabled() ) {
+		// Hosted geolocation is authoritative unless the temporary legacy fallback
+		// is explicitly requested and the final cutoff has not passed.
+		if ( ! Termageddon_Usercentrics_Geo_Api::is_legacy_maxmind_available() ) {
 			return false;
 		}
 
@@ -686,17 +780,17 @@ class Termageddon_Usercentrics {
 
 		$path = self::get_maxmind_db_path();
 
-		if ( ! file_exists( $path ) || wp_doing_cron() ) {
+		if ( ! file_exists( $path ) || ! self::is_valid_maxmind_database( $path ) || wp_doing_cron() ) {
 
 			if ( ! is_dir( dirname( $path ) ) ) {
 				@wp_mkdir_p( dirname( $path ) );
 			}
 
-			self::download_maxmind_db( $path );
+			self::download_maxmind_db();
 
 		}
 
-		return file_exists( $path );
+		return self::is_valid_maxmind_database( $path );
 	}
 
 
@@ -771,12 +865,19 @@ class Termageddon_Usercentrics {
 		$loader_url           = ( 'v2' === $embed_version ) ? '//app.usercentrics.eu/browser-ui/latest/loader.js' : '//web.cmp.usercentrics.eu/ui/loader.js';
 		$translations_url     = self::get_translations_url();
 		$use_manual_control   = self::is_auto_blocker_disabled();
+		$remove_preconnect    = self::are_preconnect_links_disabled();
 
-		$new_embed_code  = '<link rel="preconnect" href="//privacy-proxy.usercentrics.eu">' . PHP_EOL;
+		$new_embed_code = '';
+
+		if ( ! $remove_preconnect ) {
+			$new_embed_code .= '<link rel="preconnect" href="//privacy-proxy.usercentrics.eu">' . PHP_EOL;
+		}
 		
-		// Only include the auto-blocking script if manual control is disabled
+		// Only include the auto-blocking script if manual control is disabled.
 		if ( ! $use_manual_control ) {
-			$new_embed_code .= '<link rel="preload" href="//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js" as="script">' . PHP_EOL;
+			if ( ! $remove_preconnect ) {
+				$new_embed_code .= '<link rel="preload" href="//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js" as="script">' . PHP_EOL;
+			}
 			$new_embed_code .= '<script type="application/javascript" src="//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js" data-no-optimize="1" data-no-defer="1"></script>' . PHP_EOL;
 			$new_embed_code .= '<script data-no-optimize="1" data-no-defer="1">uc.setCustomTranslations(\'' . $translations_url . '\');</script>' . PHP_EOL;
 		}
@@ -804,6 +905,15 @@ class Termageddon_Usercentrics {
 	 */
 	public static function get_embed_script_version(): string {
 		return get_option( 'termageddon_usercentrics_embed_version', 'v2' );
+	}
+
+	/**
+	 * Check whether the Usercentrics preconnect and preload links are disabled.
+	 *
+	 * @return bool True when the links should be omitted.
+	 */
+	public static function are_preconnect_links_disabled(): bool {
+		return (bool) get_option( 'termageddon_usercentrics_disable_preconnect_links', false );
 	}
 
 	/**
@@ -890,6 +1000,10 @@ class Termageddon_Usercentrics {
 	 * @return bool
 	 */
 	private static function download_maxmind_db() {
+		if ( Termageddon_Usercentrics_Geo_Api::has_maxmind_cutoff_passed() ) {
+			return false;
+		}
+
 		// If critical error, do not try to re-download this session.
 		if ( defined( 'TERMAGEDDON_ERROR_HAS_BEEN_LOGGED' ) ) {
 			return false;
@@ -925,13 +1039,14 @@ class Termageddon_Usercentrics {
 
 		if ( ! is_wp_error( $tmp_database_path ) ) {
 			try {
-				// Remove old database to ensure it is up to date.
-				if ( file_exists( $dest_path ) ) {
-					unlink( $dest_path );
+				if ( ! self::is_valid_maxmind_database( $tmp_database_path ) ) {
+					throw new Exception( 'Downloaded MaxMind database failed validation.' );
 				}
 
-				// Copy new database and delete tmp directories.
-				rename( $tmp_database_path, $dest_path );
+				// Replace the old file only after validating the new download.
+				if ( ! @rename( $tmp_database_path, $dest_path ) ) {
+					throw new Exception( 'Unable to move the downloaded MaxMind database into place.' );
+				}
 
 				// Ensure permissions are correct for downloaded file.
 				chmod( $dest_path, 0644 );
@@ -942,13 +1057,43 @@ class Termageddon_Usercentrics {
 				}
 
 				return file_exists( $dest_path ) && is_readable( $dest_path );
-			} catch ( Exception $e ) {
+			} catch ( \Throwable $e ) {
+				if ( file_exists( $tmp_database_path ) ) {
+					@unlink( $tmp_database_path );
+				}
 				self::log_download_error( 'Save Error: ' . $e->getMessage() );
 			}
 		} else {
 			self::log_download_error( 'Download Error: ' . $tmp_database_path->get_error_message() );
 		}
 		return false;
+	}
+
+	/**
+	 * Confirm that a MaxMind database exists, is readable, and can be opened.
+	 *
+	 * @param string $path Database path.
+	 * @return bool
+	 */
+	private static function is_valid_maxmind_database( string $path ): bool {
+		$validation_override = apply_filters( 'termageddon_validate_maxmind_database', null, $path );
+		if ( is_bool( $validation_override ) ) {
+			return $validation_override;
+		}
+
+		if ( ! file_exists( $path ) || ! is_readable( $path ) ) {
+			return false;
+		}
+
+		try {
+			$reader = new Reader( $path );
+			if ( method_exists( $reader, 'close' ) ) {
+				$reader->close();
+			}
+			return true;
+		} catch ( \Throwable $th ) {
+			return false;
+		}
 	}
 
 
@@ -1245,7 +1390,7 @@ class Termageddon_Usercentrics {
 		$cookie_title = self::get_cookie_title();
 
 		// If Geo IP is enabled, download.
-		if ( self::is_geoip_enabled() ) {
+		if ( self::is_geoip_enabled() && Termageddon_Usercentrics_Geo_Api::is_legacy_maxmind_available() ) {
 			// Validate Database && download database if needed.
 			self::verify_maxmind_database();
 
@@ -1484,6 +1629,22 @@ class Termageddon_Usercentrics {
 				'default'           => false,
 				'enqueue_script'    => false,
 				'installed_plugins' => array( 'facebook-for-woocommerce/facebook-for-woocommerce.php' ),
+			),
+			'addtoany' => array(
+				'name'              => __( 'AddToAny Share Buttons', 'termageddon-usercentrics' ),
+				'description'       => __( 'Enabling this feature prevents AddToAny scripts from running until the visitor consents to the AddToAny service. AddToAny must also be present in your Usercentrics service settings. Test changes in a fresh incognito window.', 'termageddon-usercentrics' ),
+				'beta'              => true,
+				'default'           => false,
+				'enqueue_script'    => false,
+				'installed_plugins' => array( 'add-to-any/add-to-any.php' ),
+			),
+			'jetpack_stats' => array(
+				'name'              => __( 'Jetpack', 'termageddon-usercentrics' ),
+				'description'       => __( 'Enabling this feature prevents Jetpack tracking scripts from running until the visitor consents to the Jetpack service. Jetpack must also be present in your Usercentrics service settings. Test changes in a fresh incognito window.', 'termageddon-usercentrics' ),
+				'beta'              => true,
+				'default'           => false,
+				'enqueue_script'    => false,
+				'installed_plugins' => array( 'jetpack/jetpack.php' ),
 			),
 			'hubspot_plugin' => array(
 				'name'            => __( 'HubSpot WordPress Plugin', 'termageddon-usercentrics' ),

@@ -1,8 +1,10 @@
 const tuCookieHideName = "tu-geoip-hide";
 const tuCookieLocationName = "tu-geoip-location";
+const tuCookieModeName = "tu-geoip-mode";
 const tuDebug = termageddon_usercentrics_obj.debug === "true";
 const tuPSLHide = termageddon_usercentrics_obj["psl_hide"] === "true";
 const tuUseGeoApi = termageddon_usercentrics_obj.use_geo_api === "true";
+const tuGeoMode = termageddon_usercentrics_obj.geo_mode || (tuUseGeoApi ? "hosted" : "maxmind");
 const tuToggle = "div#usercentrics-root,aside#usercentrics-cmp-ui";
 
 if (tuDebug) console.log("UC: AJAX script initialized");
@@ -82,7 +84,8 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 
 	//Check for local cookie to use instead of calling.
 	const cookie_hide = getCookie(tuCookieHideName);
-	if (cookie_hide != null && !tuDebug) {
+	const cookie_mode = getCookie(tuCookieModeName);
+	if (cookie_hide != null && cookie_mode === tuGeoMode && !tuDebug) {
 		if (tuDebug)
 			console.log(
 				"UC: Cookie found.",
@@ -126,6 +129,7 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 			}
 
 			setCookie(tuCookieHideName, decision.hide ? "true" : "false");
+			setCookie(tuCookieModeName, tuGeoMode);
 			updateCookieConsent(decision.hide);
 		};
 
@@ -138,7 +142,7 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 
 		// 2. Cached location cookie? Use it (unless debug mode forces a refresh).
 		const locationCookie = getCookie(tuCookieLocationName);
-		if (locationCookie && !tuDebug) {
+		if (locationCookie && cookie_mode === tuGeoMode && !tuDebug) {
 			try {
 				const cached = JSON.parse(decodeURIComponent(locationCookie));
 				if (cached && typeof cached === "object" && cached.country) {
@@ -185,6 +189,10 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 	// =========================================================================
 	// Legacy MaxMind path: POST to admin-ajax, server decides hide/show.
 	// =========================================================================
+	if (getCookie(tuCookieLocationName)) {
+		setCookie(tuCookieLocationName, "", -1);
+	}
+
 	if (tuDebug) console.log("UC: Making AJAX Call");
 
 	// Build form data for POST request.
@@ -252,6 +260,7 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 
 			//If you are not supposed to be hiding, show the CMP.
 			setCookie(tuCookieHideName, data.hide ? "true" : "false");
+			setCookie(tuCookieModeName, tuGeoMode);
 
 			updateCookieConsent(data.hide);
 		})

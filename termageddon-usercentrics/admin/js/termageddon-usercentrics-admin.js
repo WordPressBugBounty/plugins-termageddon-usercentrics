@@ -41,7 +41,9 @@ jQuery(function ($) {
 		"input#termageddon_usercentrics_toggle_geolocation"
 	);
 
-	let policyToggles = $(".tu-tab-geolocation .tu-toggle-section input");
+	let policyToggles = $(
+		'.tu-tab-geolocation input[id^="termageddon_usercentrics_show_in_"]'
+	);
 
 	if (geolocationToggle.length === 1) {
 		geolocationToggle
@@ -77,6 +79,17 @@ jQuery(function ($) {
 			})
 			.trigger("change");
 	}
+
+	$("#termageddon_use_legacy_maxmind").on("click.tu", function (event) {
+		if (
+			$(this).is(":checked") &&
+			!window.confirm(
+				termageddon_usercentrics_admin_obj.maxmind_confirmation
+			)
+		) {
+			event.preventDefault();
+		}
+	});
 
 	animationSpeed = 300;
 	initialLoad = true;

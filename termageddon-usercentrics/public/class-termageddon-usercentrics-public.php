@@ -74,6 +74,7 @@ class Termageddon_Usercentrics_Public {
 				'nonce_title' => $this->plugin_name . '_ajax_nonce',
 				'debug'       => Termageddon_Usercentrics::is_debug_mode_enabled() ? 'true' : 'false',
 				'psl_hide'    => Termageddon_Usercentrics::should_hide_psl() ? 'true' : 'false',
+				'geo_mode'    => Termageddon_Usercentrics_Geo_Api::is_enabled() ? 'hosted' : 'maxmind',
 			);
 			if ( ! empty( $location ) ) {
 				$data['location'] = $location;
@@ -423,10 +424,76 @@ class Termageddon_Usercentrics_Public {
 		if ( $this->should_gate_hubspot_script( $handle ) ) {
 			$tag = $this->gate_hubspot_script_tag( $tag );
 		}
+		if ( $this->should_gate_addtoany_script( $handle ) ) {
+			$tag = $this->gate_scripts_for_usercentrics( $tag, 'AddToAny' );
+		}
+		if ( $this->should_gate_jetpack_script( $handle ) ) {
+			$tag = $this->gate_scripts_for_usercentrics( $tag, 'JetPack (WordPress Plugin)' );
+		}
 		if ( $this->should_gate_meta_for_woocommerce_script( $handle ) ) {
 			$tag = $this->gate_meta_for_woocommerce_script_tag( $tag );
 		}
 		return $tag;
+	}
+
+	/**
+	 * Determine whether an AddToAny script should be gated for consent.
+	 *
+	 * AddToAny's remote loader is not consistently recognized by the
+	 * Usercentrics Smart Data Protector, so explicitly hand both of the
+	 * plugin's frontend script handles to Usercentrics.
+	 *
+	 * @param string $handle The script handle/ID.
+	 * @return bool
+	 */
+	private function should_gate_addtoany_script( string $handle ): bool {
+		if ( is_admin() || ! Termageddon_Usercentrics::is_integration_enabled( 'addtoany' ) ) {
+			return false;
+		}
+
+		return in_array( $handle, array( 'addtoany-core', 'addtoany-jquery' ), true );
+	}
+
+	/**
+	 * Determine whether the Jetpack tracking script should be gated for consent.
+	 *
+	 * Jetpack's Tracks client loads stats.wp.com/w.js using the jp-tracks
+	 * handle. Usercentrics does not consistently recognize this loader, so
+	 * hand it to the JetPack (WordPress Plugin) service explicitly.
+	 *
+	 * @param string $handle The script handle/ID.
+	 * @return bool
+	 */
+	private function should_gate_jetpack_script( string $handle ): bool {
+		if ( is_admin() || ! Termageddon_Usercentrics::is_integration_enabled( 'jetpack_stats' ) ) {
+			return false;
+		}
+
+		return in_array( $handle, array( 'jp-tracks' ), true );
+	}
+
+	/**
+	 * Convert every script tag in a WordPress handle to Usercentrics control.
+	 *
+	 * WordPress can combine inline before/after scripts and a remote loader in
+	 * one filtered HTML string, so every script tag must be gated. Existing
+	 * attributes remain unchanged apart from replacing the script type.
+	 *
+	 * @param string $tag                  Script tag HTML.
+	 * @param string $usercentrics_service Exact Usercentrics service name.
+	 * @return string
+	 */
+	private function gate_scripts_for_usercentrics( string $tag, string $usercentrics_service ): string {
+		$tag = preg_replace( '/\s+type=(["\'])[^"\']*\1/i', '', $tag );
+		$usercentrics_service = esc_attr( $usercentrics_service );
+
+		return preg_replace_callback(
+			'/<script\b/i',
+			static function () use ( $usercentrics_service ) {
+				return '<script type="text/plain" data-usercentrics="' . $usercentrics_service . '"';
+			},
+			$tag
+		);
 	}
 
 	/**

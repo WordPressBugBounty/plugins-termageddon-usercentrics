@@ -42,6 +42,9 @@ class Termageddon_Usercentrics_Deactivator {
 		if ( wp_next_scheduled( 'termageddon_usercentrics_maxmind_download' ) ) {
 			wp_unschedule_hook( 'termageddon_usercentrics_maxmind_download' );
 		}
+		if ( wp_next_scheduled( 'termageddon_usercentrics_maxmind_sunset' ) ) {
+			wp_unschedule_hook( 'termageddon_usercentrics_maxmind_sunset' );
+		}
 	}
 
 }

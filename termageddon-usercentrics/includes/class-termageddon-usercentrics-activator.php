@@ -36,7 +36,7 @@ class Termageddon_Usercentrics_Activator {
 			require_once TERMAGEDDON_COOKIE_PATH . 'includes/class-termageddon-usercentrics-geo-api.php';
 		}
 
-		self::maybe_set_geo_api_default_for_fresh_install();
+		self::set_hosted_geolocation_default();
 		self::maybe_register_cron();
 		Termageddon_Usercentrics::verify_maxmind_database();
 
@@ -44,19 +44,34 @@ class Termageddon_Usercentrics_Activator {
 	}
 
 	/**
-	 * Fresh installs (no existing geoip or geo-API option) get opted into the new
-	 * hosted geolocation service by default. Existing installs are unaffected — their
-	 * absent option resolves to "off" and they keep the MaxMind path until they opt in.
+	 * Hosted geolocation is the default. The temporary MaxMind fallback is an
+	 * explicit opt-out managed from the Geolocation settings screen.
 	 *
 	 * @return void
 	 */
-	protected static function maybe_set_geo_api_default_for_fresh_install() {
-		$existing_geoip = get_option( 'termageddon_usercentrics_geoip_enabled', null );
-		$existing_flag  = get_option( 'termageddon_use_geo_api', null );
+	protected static function set_hosted_geolocation_default() {
+		$existing_geoip    = get_option( 'termageddon_usercentrics_geoip_enabled', null );
+		$migration_version = get_option( 'termageddon_geolocation_migration_version', null );
 
-		if ( null === $existing_geoip && null === $existing_flag ) {
-			update_option( 'termageddon_use_geo_api', '1' );
+		// Activation can also mean a routine deactivate/reactivate cycle. Once the
+		// migration has run, preserve the administrator's temporary fallback choice.
+		if ( null !== $migration_version && (int) $migration_version >= 1 ) {
+			return;
 		}
+
+		$maxmind_db_exists = file_exists( Termageddon_Usercentrics::get_maxmind_db_path() );
+		$maxmind_scheduled = (bool) wp_next_scheduled( 'termageddon_usercentrics_maxmind_download' );
+
+		update_option( 'termageddon_use_geo_api', '1' );
+		update_option( Termageddon_Usercentrics_Geo_Api::LEGACY_MAXMIND_OPTION, '' );
+
+		if ( null === $existing_geoip && null === $migration_version && ! $maxmind_db_exists && ! $maxmind_scheduled ) {
+			update_option( 'termageddon_geolocation_migration_version', 1 );
+			update_option( 'termageddon_maxmind_cleanup_complete', '1' );
+			return;
+		}
+
+		Termageddon_Usercentrics::maybe_upgrade_geolocation();
 	}
 
 
