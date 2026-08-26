@@ -123,13 +123,6 @@ class Termageddon_Usercentrics_Admin {
 
 		// Load JS styles for admin use only.
 		wp_enqueue_script( $this->plugin_name, TERMAGEDDON_COOKIE_URL . 'admin/js/termageddon-usercentrics-admin.min.js', array( 'jquery-ui-core', 'jquery-ui-tabs' ), $this->version, false );
-		wp_localize_script(
-			$this->plugin_name,
-			'termageddon_usercentrics_admin_obj',
-			array(
-				'maxmind_confirmation' => __( 'Legacy MaxMind downloads and stores a geolocation database on this WordPress site and updates it monthly. This temporary fallback ends automatically on August 20, 2026 at 00:00 UTC. Continue?', 'termageddon-usercentrics' ),
-			)
-		);
 
 		// Add select2 for multi-select fields
 		wp_enqueue_style( 'select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css', array(), '4.1.0' );
@@ -189,27 +182,6 @@ class Termageddon_Usercentrics_Admin {
 			return;
 		}
 
-		$this->display_geolocation_migration_notice();
-
-		if (
-			Termageddon_Usercentrics_Geo_Api::is_enabled()
-			&& '1' !== (string) get_option( 'termageddon_maxmind_cleanup_complete', '' )
-			&& file_exists( Termageddon_Usercentrics::get_maxmind_db_path() )
-		) {
-			echo '<div class="notice notice-error">
-				<p><strong>' . esc_html__( 'Termageddon Hosted Geolocation is active, but the legacy MaxMind database could not be deleted automatically.', 'termageddon-usercentrics' ) . '</strong></p>
-				<p>' . esc_html__( 'Please confirm that WordPress can delete the following file or contact support:', 'termageddon-usercentrics' ) . ' <code>' . esc_html( Termageddon_Usercentrics::get_maxmind_db_path() ) . '</code></p>
-			</div>';
-		}
-
-		// Display Error if geolocation failed. Only relevant for the legacy on-device MaxMind path —
-		// the hosted geolocation service has no local database to download.
-		if ( Termageddon_Usercentrics::is_geoip_enabled() && ! Termageddon_Usercentrics_Geo_Api::is_enabled() && Termageddon_Usercentrics::check_for_download_errors() ) {
-			echo '<div class="notice notice-error">
-				<p><strong>' . esc_html__( 'We were unable to download the database necessary for geolocation to your website. If you would like to use geolocation, please contact support for assistance and troubleshooting.', 'termageddon-usercentrics' ) . '</strong></p>
-			</div>';
-		}
-
 		// Check for geolocation enabled, but no locations enabled.
 		if ( Termageddon_Usercentrics::is_geoip_enabled() && ! Termageddon_Usercentrics::is_geoip_location_enabled() ) {
 			echo '<div class="notice notice-warning" id="no-geolocation-locations-selected-top">
@@ -220,18 +192,9 @@ class Termageddon_Usercentrics_Admin {
 
 		// Display Estimated Location.
 		if ( Termageddon_Usercentrics::is_geoip_enabled() && Termageddon_Usercentrics::is_debug_mode_enabled() ) {
-			if ( Termageddon_Usercentrics_Geo_Api::is_enabled() ) {
-				// Hosted geolocation runs entirely in the visitor's browser, so location data is
-				// not available on the server. Direct the user to the public-facing site's console
-				// and remind them to disable logging once done — it logs location for every visitor.
-				echo '<div class="notice notice-info">
-					<p><strong>' . esc_html__( 'Location logging is enabled.', 'termageddon-usercentrics' ) . '</strong><br><br>' . esc_html__( 'To view the detected location, open your browser\'s developer console on the public-facing site (not in this admin panel) — geolocation runs in the visitor\'s browser and is not available server-side. Remember to disable this once you\'ve finished testing, as it logs location data in every visitor\'s browser console while enabled.', 'termageddon-usercentrics' ) . '</p>
-				</div>';
-			} else {
-				echo '<div class="notice notice-info">
-					<p><strong>' . esc_html__( 'Location logging is enabled.', 'termageddon-usercentrics' ) . '</strong><br><br><strong>' . esc_html__( 'Your location', 'termageddon-usercentrics' ) . ':</strong><br> <em>' . esc_html( Termageddon_Usercentrics::get_location_displayname() ) . '</em> ' . esc_html__( 'with the IP Address of', 'termageddon-usercentrics' ) . ' <em>' . esc_html( Termageddon_Usercentrics::get_processed_ip_address() ) . '</em></p>
-				</div>';
-			}
+			echo '<div class="notice notice-info">
+				<p><strong>' . esc_html__( 'Location logging is enabled.', 'termageddon-usercentrics' ) . '</strong><br><br>' . esc_html__( 'To view the detected location, open your browser\'s developer console on the public-facing site (not in this admin panel) — geolocation runs in the visitor\'s browser and is not available server-side. Remember to disable this once you\'ve finished testing, as it logs location data in every visitor\'s browser console while enabled.', 'termageddon-usercentrics' ) . '</p>
+			</div>';
 		}
 
 		echo '<div class="wrap">
@@ -265,28 +228,9 @@ class Termageddon_Usercentrics_Admin {
 
 			echo '<h3>' . esc_html__( 'Debug Information', 'termageddon-usercentrics' ) . '</h3>';
 			$message_list   = array();
-			// MaxMind database diagnostics are only meaningful when the on-device path is in use.
-			if ( ! Termageddon_Usercentrics_Geo_Api::is_enabled() ) {
-				$message_list[] = esc_html__( 'Geolocation Database Path', 'termageddon-usercentrics' ) . ':' . PHP_EOL . Termageddon_Usercentrics::get_maxmind_db_path();
-				$message_list[] = esc_html__( 'Geolocation Database Exists', 'termageddon-usercentrics' ) . ':' . PHP_EOL . ( file_exists( Termageddon_Usercentrics::get_maxmind_db_path() ) ? 'true' : 'false' );
-				$message_list[] = esc_html__( 'Geolocation Database Readable', 'termageddon-usercentrics' ) . ':' . PHP_EOL . ( is_readable( Termageddon_Usercentrics::get_maxmind_db_path() ) ? 'true' : 'false' );
-				$message_list[] = esc_html__( 'Geolocation Database Directory Writable', 'termageddon-usercentrics' ) . ':' . PHP_EOL . ( is_writable( dirname( Termageddon_Usercentrics::get_maxmind_db_path() ) ) ? 'true' : 'false' );
-				$message_list[] = esc_html__( 'Geolocation Database Last Updated', 'termageddon-usercentrics' ) . ': ' . PHP_EOL . Termageddon_Usercentrics::get_maxmind_db_last_updated();
-				$message_list[] = esc_html__( 'Geolocation Database Next Update', 'termageddon-usercentrics' ) . ': ' . PHP_EOL . Termageddon_Usercentrics::get_maxmind_db_next_update();
-			} else {
-				$message_list[] = esc_html__( 'Geolocation Service', 'termageddon-usercentrics' ) . ':' . PHP_EOL . esc_html__( 'Hosted (geo.termageddon.com)', 'termageddon-usercentrics' );
-			}
+			$message_list[] = esc_html__( 'Geolocation Service', 'termageddon-usercentrics' ) . ':' . PHP_EOL . esc_html__( 'Hosted (geo.termageddon.com)', 'termageddon-usercentrics' );
 			$message_list[] = esc_html__( 'Allowed HTML Tags', 'termageddon-usercentrics' ) . ': ' . PHP_EOL . Termageddon_Usercentrics::get_allowed_html_kses();
 			echo '<textarea readonly rows="17" style="width: 100%;">' . esc_textarea( implode( PHP_EOL . PHP_EOL, $message_list ) ) . '</textarea>';
-
-			if ( ! Termageddon_Usercentrics_Geo_Api::is_enabled() && Termageddon_Usercentrics::count_download_errors() > 0 ) {
-				echo '<h3>' . esc_html__( 'Error Information', 'termageddon-usercentrics' ) . '</h3>';
-				$message_list   = array();
-				$message_list[] = 'Geolocation Error Count: ' . PHP_EOL . Termageddon_Usercentrics::count_download_errors();
-				$message_list[] = 'Geolocation Error Logs: ' . PHP_EOL . implode( PHP_EOL, Termageddon_Usercentrics::get_download_error_logs() );
-
-				echo '<textarea readonly rows="15" style="width: 100%;">' . esc_textarea( implode( PHP_EOL . PHP_EOL, $message_list ) ) . '</textarea>';
-			}
 		}
 		echo '<form method="post" action="options.php">';
 			settings_fields( 'termageddon_usercentrics_settings' ); // Settings group name.
@@ -299,69 +243,6 @@ class Termageddon_Usercentrics_Admin {
 		echo '</div>';
 
 	}
-
-	/**
-	 * Persist dismissal of the hosted-geolocation migration notice per user.
-	 *
-	 * @return void
-	 */
-	private function maybe_dismiss_geolocation_migration_notice() {
-		if ( ! isset( $_GET['termageddon_dismiss_geo_migration'], $_GET['_wpnonce'] ) ) {
-			return;
-		}
-		if ( ! current_user_can( 'manage_options' ) ) {
-			return;
-		}
-		if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'termageddon_dismiss_geo_migration' ) ) {
-			return;
-		}
-
-		update_user_meta( get_current_user_id(), 'termageddon_geo_migration_notice_dismissed', '1' );
-	}
-
-	/**
-	 * Explain the automatic hosted-geolocation migration to administrators.
-	 *
-	 * @return void
-	 */
-	private function display_geolocation_migration_notice() {
-		if ( '1' !== (string) get_option( 'termageddon_geolocation_migration_notice', '' ) ) {
-			return;
-		}
-		if ( '1' === (string) get_user_meta( get_current_user_id(), 'termageddon_geo_migration_notice_dismissed', true ) ) {
-			return;
-		}
-
-		$settings_url = add_query_arg(
-			array(
-				'page' => 'termageddon-usercentrics',
-				'tab'  => 'geolocation',
-			),
-			admin_url( 'tools.php' )
-		);
-		$dismiss_url = wp_nonce_url(
-			add_query_arg(
-				array(
-					'page'                              => 'termageddon-usercentrics',
-					'tab'                               => $this->current_tab,
-					'termageddon_dismiss_geo_migration' => '1',
-				),
-				admin_url( 'tools.php' )
-			),
-			'termageddon_dismiss_geo_migration'
-		);
-
-		$notice_description = Termageddon_Usercentrics_Geo_Api::has_maxmind_cutoff_passed()
-			? __( 'Your existing region selections are unchanged, and the local MaxMind database is no longer required. The temporary legacy MaxMind fallback ended on August 20, 2026.', 'termageddon-usercentrics' )
-			: __( 'Your existing region selections are unchanged, and the local MaxMind database is no longer required. You can temporarily use legacy MaxMind from Geolocation Settings until August 20, 2026.', 'termageddon-usercentrics' );
-
-		echo '<div class="notice notice-info">
-			<p><strong>' . esc_html__( 'Geolocation has been upgraded to Termageddon Hosted Geolocation.', 'termageddon-usercentrics' ) . '</strong></p>
-			<p>' . esc_html( $notice_description ) . '</p>
-			<p><a class="button button-primary" href="' . esc_url( $settings_url ) . '">' . esc_html__( 'Review geolocation settings', 'termageddon-usercentrics' ) . '</a> <a class="button" href="https://termageddon.freshdesk.com/support/solutions/articles/66000536222-termageddon-plugin-geolocation-migration-from-maxmind-to-termageddon-hosted-geolocation" target="_blank" rel="noopener noreferrer">' . esc_html__( 'Read migration FAQ', 'termageddon-usercentrics' ) . '</a> <a class="button" href="' . esc_url( $dismiss_url ) . '">' . esc_html__( 'Dismiss notice', 'termageddon-usercentrics' ) . '</a></p>
-		</div>';
-	}
-
 
 	/** Build the default arguments for the current section
 	 *
@@ -481,8 +362,6 @@ class Termageddon_Usercentrics_Admin {
 	 *
 	 * @return void  */
 	public function register_all_settings() {
-		$this->maybe_dismiss_geolocation_migration_notice();
-
 		// Based on the tab, call the appropriate register_settings function.
 		foreach ( $this->tabs as $tab_key => $tab ) {
 			call_user_func( array( $this, "register_settings_{$tab_key}" ) );
@@ -518,40 +397,6 @@ class Termageddon_Usercentrics_Admin {
 	 */
 	public static function sanitize_boolean( $value ) {
 		return $value ? true : false;
-	}
-
-	/**
-	 * Validate the temporary legacy MaxMind opt-out before WordPress commits it.
-	 *
-	 * @param mixed $value Submitted checkbox value.
-	 * @return string
-	 */
-	public static function sanitize_legacy_maxmind_opt_out( $value ) {
-		if ( empty( $value ) ) {
-			return '';
-		}
-
-		if ( Termageddon_Usercentrics_Geo_Api::has_maxmind_cutoff_passed() ) {
-			add_settings_error(
-				'termageddon_use_legacy_maxmind',
-				'termageddon_maxmind_ended',
-				__( 'Legacy MaxMind geolocation ended on August 20, 2026. Termageddon Hosted Geolocation remains active.', 'termageddon-usercentrics' ),
-				'error'
-			);
-			return '';
-		}
-
-		if ( ! Termageddon_Usercentrics::prepare_maxmind_database() ) {
-			add_settings_error(
-				'termageddon_use_legacy_maxmind',
-				'termageddon_maxmind_restore_failed',
-				__( 'MaxMind could not be prepared on this server, so Termageddon Hosted Geolocation remains active. Please review the error details or contact support.', 'termageddon-usercentrics' ),
-				'error'
-			);
-			return '';
-		}
-
-		return '1';
 	}
 
 	// ============================================= //
@@ -1057,7 +902,7 @@ class Termageddon_Usercentrics_Admin {
 			)
 		);
 
-		// Hosted geolocation is now the default implementation for every site.
+		// Hosted geolocation is the implementation for every site.
 		add_settings_field(
 			'termageddon_geolocation_service',
 			__( 'Geolocation service', 'termageddon-usercentrics' ),
@@ -1065,26 +910,6 @@ class Termageddon_Usercentrics_Admin {
 			'termageddon-usercentrics', // page slug.
 			'termageddon_usercentrics_section_geolocation', // section ID.
 			array()
-		);
-
-		if ( ! Termageddon_Usercentrics_Geo_Api::has_maxmind_cutoff_passed() ) {
-			add_settings_field(
-				'termageddon_use_legacy_maxmind',
-				__( 'Temporarily use legacy MaxMind geolocation', 'termageddon-usercentrics' ),
-				array( &$this, 'legacy_maxmind_html' ),
-				'termageddon-usercentrics',
-				'termageddon_usercentrics_section_geolocation',
-				array(
-					'label_for'   => 'termageddon_use_legacy_maxmind',
-					'description' => __( 'Downloads and stores the MaxMind database on this WordPress site. This fallback will stop working automatically on August 20, 2026 at 00:00 UTC.', 'termageddon-usercentrics' ),
-				)
-			);
-		}
-
-		register_setting(
-			'termageddon_usercentrics_settings',
-			'termageddon_use_legacy_maxmind',
-			array( 'sanitize_callback' => array( __CLASS__, 'sanitize_legacy_maxmind_opt_out' ) )
 		);
 
 		// Enable Geolocation Debug Mode.
@@ -1104,28 +929,6 @@ class Termageddon_Usercentrics_Admin {
 		register_setting(
 			'termageddon_usercentrics_settings', // settings group name.
 			'termageddon_usercentrics_location_debug', // option name.
-			'' // sanitization function.
-		);
-
-		// Enable Geolocation AJAX Mode (hidden when the new geolocation service is enabled —
-		// that service always runs client-side, so AJAX mode is implicit).
-		if ( ! Termageddon_Usercentrics_Geo_Api::is_enabled() ) {
-			add_settings_field(
-				'termageddon_usercentrics_location_ajax',
-				__( 'Check visitor location after the page loads (recommended)', 'termageddon-usercentrics' ),
-				array( &$this, 'location_ajax_html' ), // function which prints the field.
-				'termageddon-usercentrics', // page slug.
-				'termageddon_usercentrics_section_geolocation', // section ID.
-				array(
-					'label_for'   => 'termageddon_usercentrics_location_ajax',
-					'description' => __( 'Runs the location check in the visitor\'s browser after the page loads, instead of while the server generates the page. Full-page HTML can stay cacheable (hosting, CDN, browser). Recommended for accuracy and compatibility with full-page caching—disable only if support asks you to for troubleshooting.', 'termageddon-usercentrics' ),
-				)
-			);
-		}
-
-		register_setting(
-			'termageddon_usercentrics_settings', // settings group name.
-			'termageddon_usercentrics_location_ajax', // option name.
 			'' // sanitization function.
 		);
 
@@ -1272,46 +1075,6 @@ class Termageddon_Usercentrics_Admin {
 			array( &$this, 'settings_admin_html' ), // callback function (if needed).
 			'termageddon-usercentrics', // page slug.
 			$this->build_section_args( 'admin' ) // before and after sections.
-		);
-
-		// ============================================ //
-		// ======== Location specific settings ======== //
-		// ============================================ //
-
-		// Error Count Field.
-		add_settings_field(
-			'termageddon_usercentrics_download_error_count',
-			__( 'Error Count', 'termageddon-usercentrics' ),
-			array( &$this, 'error_count_html' ), // function which prints the field.
-			'termageddon-usercentrics', // page slug.
-			'termageddon_usercentrics_section_admin', // section ID.
-			array(
-				'label_for' => 'termageddon_usercentrics_download_error_count',
-			)
-		);
-
-		register_setting(
-			'termageddon_usercentrics_settings', // settings group name.
-			'termageddon_usercentrics_download_error_count', // option name.
-			'' // sanitization function.
-		);
-
-		// Error List Field.
-		add_settings_field(
-			'termageddon_usercentrics_download_error_log',
-			__( 'Error List', 'termageddon-usercentrics' ),
-			array( &$this, 'error_list_html' ), // function which prints the field.
-			'termageddon-usercentrics', // page slug.
-			'termageddon_usercentrics_section_admin', // section ID.
-			array(
-				'label_for' => 'termageddon_usercentrics_download_error_log',
-			)
-		);
-
-		register_setting(
-			'termageddon_usercentrics_settings', // settings group name.
-			'termageddon_usercentrics_download_error_log', // option name.
-			'' // sanitization function.
 		);
 
 	}
@@ -1604,53 +1367,14 @@ class Termageddon_Usercentrics_Admin {
 		self::generate_checkbox( 'troubleshooting', 'disable', $args );
 	}
 	/**
-	 * The HTML field for the ajax mode checkbox.
-	 *
-	 * @param array $args The arguments provided by the add_settings_field() method.
-	 * @return void
-	 */
-	public function location_ajax_html( array $args ) {
-		$args['default'] = true;
-		self::generate_checkbox( 'ajax', 'location', $args );
-	}
-
-	/**
-	 * Explain the effective geolocation implementation and cutoff state.
+	 * Explain the geolocation implementation.
 	 *
 	 * @param array $args The arguments provided by the add_settings_field() method.
 	 * @return void
 	 */
 	public function geolocation_service_html( array $args ) {
-		if ( Termageddon_Usercentrics_Geo_Api::has_maxmind_cutoff_passed() ) {
-			echo '<p><strong>' . esc_html__( 'Termageddon Hosted Geolocation', 'termageddon-usercentrics' ) . '</strong></p>';
-			echo '<p class="description">' . esc_html__( 'Legacy MaxMind geolocation ended on August 20, 2026. This site now uses Termageddon Hosted Geolocation. Your region selections have not changed.', 'termageddon-usercentrics' ) . '</p>';
-			return;
-		}
-
-		if ( Termageddon_Usercentrics_Geo_Api::is_legacy_maxmind_available() ) {
-			echo '<p><strong>' . esc_html__( 'Legacy MaxMind (temporary fallback)', 'termageddon-usercentrics' ) . '</strong></p>';
-			echo '<p class="description">' . esc_html__( 'This fallback ends automatically on August 20, 2026 at 00:00 UTC, when Termageddon Hosted Geolocation will become mandatory.', 'termageddon-usercentrics' ) . '</p>';
-			return;
-		}
-
-		echo '<p><strong>' . esc_html__( 'Termageddon Hosted Geolocation (recommended)', 'termageddon-usercentrics' ) . '</strong></p>';
+		echo '<p><strong>' . esc_html__( 'Termageddon Hosted Geolocation', 'termageddon-usercentrics' ) . '</strong></p>';
 		echo '<p class="description">' . esc_html__( 'Location is resolved through geo.termageddon.com in the visitor’s browser. Your existing region rules still apply. If the service cannot be reached, the consent widget is shown.', 'termageddon-usercentrics' ) . '</p>';
-	}
-
-	/**
-	 * Render the temporary legacy MaxMind opt-out.
-	 *
-	 * @param array $args The field arguments.
-	 * @return void
-	 */
-	public function legacy_maxmind_html( array $args ) {
-		$option_name = Termageddon_Usercentrics_Geo_Api::LEGACY_MAXMIND_OPTION;
-		$description = isset( $args['description'] ) ? $args['description'] : '';
-		$is_checked  = Termageddon_Usercentrics_Geo_Api::is_legacy_maxmind_requested();
-
-		echo '<input type="checkbox" class="termageddon-checkbox wppd-ui-toggle" id="' . esc_attr( $option_name ) . '" name="' . esc_attr( $option_name ) . '" value="1" ' . checked( 1, $is_checked, false ) . ' />';
-		echo '<p class="description"><strong>' . esc_html__( 'Advanced fallback:', 'termageddon-usercentrics' ) . '</strong> ' . esc_html( $description ) . '</p>';
-		echo '<p class="description">' . esc_html__( 'Saving this option downloads and validates the database before MaxMind is enabled. If preparation fails, hosted geolocation remains active.', 'termageddon-usercentrics' ) . '</p>';
 	}
 
 	/**
@@ -1694,34 +1418,6 @@ class Termageddon_Usercentrics_Admin {
 	 */
 	public function embed_version_html( array $args ) {
 		self::generate_select( 'embed_version', $args );
-	}
-
-	/**
-	 * The error count html for the error code field
-	 *
-	 * @return void
-	 */
-	public function error_count_html() {
-
-		$text = get_option( 'termageddon_usercentrics_download_error_count', 0 );
-		printf(
-			'<input type="text" id="termageddon_usercentrics_download_error_count" name="termageddon_usercentrics_download_error_count" value="%s" />',
-			esc_attr( $text )
-		);
-
-	}
-
-	/**
-	 * The error list html for the error code field
-	 *
-	 * @return void
-	 */
-	public function error_list_html() {
-
-		$text = get_option( 'termageddon_usercentrics_download_error_log', '' );
-		echo '<input type="hidden" id="termageddon_usercentrics_download_error_log" name="termageddon_usercentrics_download_error_log[]" value="" />
-		<p>' . esc_html__( 'Upon saving, all previous errors in the log will be deleted.', 'termageddon-usercentrics' ) . '</p>';
-
 	}
 
 	/**

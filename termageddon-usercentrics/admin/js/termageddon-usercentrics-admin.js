@@ -80,17 +80,6 @@ jQuery(function ($) {
 			.trigger("change");
 	}
 
-	$("#termageddon_use_legacy_maxmind").on("click.tu", function (event) {
-		if (
-			$(this).is(":checked") &&
-			!window.confirm(
-				termageddon_usercentrics_admin_obj.maxmind_confirmation
-			)
-		) {
-			event.preventDefault();
-		}
-	});
-
 	animationSpeed = 300;
 	initialLoad = true;
 

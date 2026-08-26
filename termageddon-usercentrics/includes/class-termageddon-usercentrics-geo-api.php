@@ -2,8 +2,8 @@
 /**
  * Geolocation API integration for Termageddon Usercentrics.
  *
- * Encapsulates the hosted-API path that replaces the on-device MaxMind database.
- * When enabled, the visitor's browser fetches `https://geo.termageddon.com` and
+ * Encapsulates the hosted geolocation API. The visitor's browser fetches
+ * `https://geo.termageddon.com` and
  * caches the result client-side; the show/hide decision is made entirely in JS.
  *
  * @link       https://termageddon.com
@@ -22,20 +22,6 @@
  * @author     Termageddon <support@termageddon.com>
  */
 class Termageddon_Usercentrics_Geo_Api {
-
-	/**
-	 * The final UTC timestamp at which the legacy MaxMind fallback is disabled.
-	 *
-	 * @var string
-	 */
-	public const MAXMIND_CUTOFF = '2026-08-20 00:00:00 UTC';
-
-	/**
-	 * Option used for the temporary, explicit legacy MaxMind opt-out.
-	 *
-	 * @var string
-	 */
-	public const LEGACY_MAXMIND_OPTION = 'termageddon_use_legacy_maxmind';
 
 	/**
 	 * The hosted geolocation API URL.
@@ -65,6 +51,8 @@ class Termageddon_Usercentrics_Geo_Api {
 		'delaware'    => 'DE',
 		'florida'     => 'FL',
 		'indiana'     => 'IN',
+		'montana'     => 'MT',
+		'new_jersey'  => 'NJ',
 		'oregon'      => 'OR',
 		'texas'       => 'TX',
 		'utah'        => 'UT',
@@ -86,8 +74,6 @@ class Termageddon_Usercentrics_Geo_Api {
 
 	/**
 	 * Debug-override key → mock geo payload, used when `?termageddon-usercentrics-debug=<key>` is set.
-	 *
-	 * Mirrors the IP-based test fixtures in the legacy MaxMind path.
 	 *
 	 * @var array<string,array{country:string,region_code:?string,city:?string}>
 	 */
@@ -137,65 +123,17 @@ class Termageddon_Usercentrics_Geo_Api {
 			'region_code' => 'ENG',
 			'city'        => 'London',
 		),
+		'montana'    => array(
+			'country'     => 'US',
+			'region_code' => 'MT',
+			'city'        => 'Helena',
+		),
+		'new_jersey' => array(
+			'country'     => 'US',
+			'region_code' => 'NJ',
+			'city'        => 'Trenton',
+		),
 	);
-
-	/**
-	 * Return the configured MaxMind cutoff timestamp.
-	 *
-	 * The filter exists so automated tests and emergency operational changes can
-	 * adjust the cutoff without duplicating date logic throughout the plugin.
-	 *
-	 * @return int
-	 */
-	public static function get_maxmind_cutoff_timestamp(): int {
-		$timestamp = strtotime( self::MAXMIND_CUTOFF );
-		return (int) apply_filters( 'termageddon_maxmind_cutoff_timestamp', $timestamp );
-	}
-
-	/**
-	 * Return the current UTC timestamp used by geolocation policy.
-	 *
-	 * @return int
-	 */
-	public static function get_current_timestamp(): int {
-		return (int) apply_filters( 'termageddon_geolocation_current_timestamp', time() );
-	}
-
-	/**
-	 * Has the final MaxMind cutoff been reached?
-	 *
-	 * @return bool
-	 */
-	public static function has_maxmind_cutoff_passed(): bool {
-		return self::get_current_timestamp() >= self::get_maxmind_cutoff_timestamp();
-	}
-
-	/**
-	 * Has an administrator explicitly requested the temporary MaxMind fallback?
-	 *
-	 * @return bool
-	 */
-	public static function is_legacy_maxmind_requested(): bool {
-		return '1' === (string) get_option( self::LEGACY_MAXMIND_OPTION, '' );
-	}
-
-	/**
-	 * Is the temporary MaxMind fallback both requested and still available?
-	 *
-	 * @return bool
-	 */
-	public static function is_legacy_maxmind_available(): bool {
-		return ! self::has_maxmind_cutoff_passed() && self::is_legacy_maxmind_requested();
-	}
-
-	/**
-	 * Is the hosted geolocation service the effective implementation?
-	 *
-	 * @return bool
-	 */
-	public static function is_enabled(): bool {
-		return ! self::is_legacy_maxmind_available();
-	}
 
 	/**
 	 * Resolve the API key, allowing override via filter.
@@ -231,7 +169,6 @@ class Termageddon_Usercentrics_Geo_Api {
 		}
 
 		$payload = array(
-			'use_geo_api'  => 'true',
 			'geo_api_url'  => self::API_URL,
 			'geo_api_key'  => self::get_api_key(),
 			'geo_locations' => $locations,

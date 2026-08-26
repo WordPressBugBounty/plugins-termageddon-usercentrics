@@ -3,11 +3,10 @@ const tuCookieLocationName = "tu-geoip-location";
 const tuCookieModeName = "tu-geoip-mode";
 const tuDebug = termageddon_usercentrics_obj.debug === "true";
 const tuPSLHide = termageddon_usercentrics_obj["psl_hide"] === "true";
-const tuUseGeoApi = termageddon_usercentrics_obj.use_geo_api === "true";
-const tuGeoMode = termageddon_usercentrics_obj.geo_mode || (tuUseGeoApi ? "hosted" : "maxmind");
+const tuGeoMode = "hosted";
 const tuToggle = "div#usercentrics-root,aside#usercentrics-cmp-ui";
 
-if (tuDebug) console.log("UC: AJAX script initialized");
+if (tuDebug) console.log("UC: Hosted geolocation script initialized");
 
 window.addEventListener("UC_UI_INITIALIZED", function () {
 	const getCookie = (name) => {
@@ -33,6 +32,10 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 		}
 		document.cookie = name + "=" + (value || "") + expires + "; path=/";
 	};
+
+	// Remove cookies created by the retired server-side implementation.
+	setCookie("tu-geoip", "", -1);
+	setCookie("tu-geoip-ajax", "", -1);
 
 	const showElements = (selector) => {
 		document.querySelectorAll(selector).forEach((el) => el.style.display = "");
@@ -95,11 +98,8 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 		return;
 	}
 
-	// =========================================================================
-	// New hosted geolocation service (browser-side fetch + client-side decision).
-	// Bypasses admin-ajax entirely.
-	// =========================================================================
-	if (tuUseGeoApi) {
+	// Hosted geolocation uses a browser-side fetch and client-side decision.
+	{
 		const finishWithGeoData = (geoData, persistLocationCookie) => {
 			if (persistLocationCookie) {
 				setCookie(tuCookieLocationName, JSON.stringify(geoData), 365);
@@ -186,92 +186,6 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 		return;
 	}
 
-	// =========================================================================
-	// Legacy MaxMind path: POST to admin-ajax, server decides hide/show.
-	// =========================================================================
-	if (getCookie(tuCookieLocationName)) {
-		setCookie(tuCookieLocationName, "", -1);
-	}
-
-	if (tuDebug) console.log("UC: Making AJAX Call");
-
-	// Build form data for POST request.
-	var formData = new FormData();
-	formData.append("action", "uc_geolocation_lookup");
-	formData.append("nonce", termageddon_usercentrics_obj.nonce);
-
-	if (typeof termageddon_usercentrics_obj.location !== "undefined")
-		formData.append("location", termageddon_usercentrics_obj.location);
-
-	fetch(termageddon_usercentrics_obj.ajax_url, {
-		method: "POST",
-		credentials: "same-origin",
-		body: formData,
-	})
-		.then(function (res) {
-			if (!res.ok) throw new Error("HTTP " + res.status);
-			return res.json();
-		})
-		.then(function (response) {
-			if (!response.success)
-				return console.error(
-					"Unable to lookup location.",
-					response.message || ""
-				);
-
-			if (!response.data)
-				return console.error(
-					"Location data was not provided.",
-					response.data
-				);
-
-			const data = response.data;
-
-			// Output debug message to console.
-			if (tuDebug) {
-				console.log(
-					"TERMAGEDDON USERCENTRICS (AJAX)" +
-						"\n" +
-						"IP Address: " +
-						data.ipAddress +
-						"\n" +
-						"City: " +
-						(data.city || "Unknown") +
-						"\n" +
-						"State: " +
-						(data.state || "Unknown") +
-						"\n" +
-						"Country: " +
-						(data.country || "Unknown") +
-						"\n" +
-						"Locations: ",
-					data.locations
-				);
-			}
-
-			if (query_hide) {
-				if (tuDebug)
-					console.log(
-						"UC: Enabling due to query parameter override.",
-						"Showing Usercentrics"
-					);
-				return updateCookieConsent(false);
-			}
-
-			//If you are not supposed to be hiding, show the CMP.
-			setCookie(tuCookieHideName, data.hide ? "true" : "false");
-			setCookie(tuCookieModeName, tuGeoMode);
-
-			updateCookieConsent(data.hide);
-		})
-		.catch(function (err) {
-			console.error(
-				"Usercentrics: Invalid response returned. Showing widget as a default.",
-				err
-			);
-
-			updateCookieConsent(false);
-		});
 });
 
 /**

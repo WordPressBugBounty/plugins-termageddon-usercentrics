@@ -12,8 +12,6 @@
  * @subpackage Termageddon_Usercentrics/includes
  */
 
-use GeoIp2\Database\Reader;
-
 /**
  * The core plugin class.
  *
@@ -74,8 +72,7 @@ class Termageddon_Usercentrics {
 		$this->plugin_name = 'termageddon-usercentrics';
 
 		$this->load_dependencies();
-		self::maybe_upgrade_geolocation();
-		self::enforce_geolocation_policy();
+		Termageddon_Usercentrics_Legacy_Geolocation_Cleanup::maybe_run();
 		$this->setup_translations();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
@@ -102,6 +99,7 @@ class Termageddon_Usercentrics {
 			'src'               => array(),
 			'data-settings-id'  => array(),
 			'data-usercentrics' => array(),
+			'data-uc-untouch'   => array(),
 			'data-version'      => array(),
 			'async'             => array(),
 		),
@@ -112,7 +110,7 @@ class Termageddon_Usercentrics {
 
 	/**
 	 *  Returns a key value pair of geolocations to iterate over.
-	 *  To add support for a new state, add a new key to the array and add the state to the $GEOLOCATION_KEY_TO_STATE array.
+	 *  To add support for a new state, add a new key here and a region-code rule in the hosted geolocation helper.
 	 *
 	 *  @param boolean $include_sections Whether or not to include the section keys. Defaults to false.
 	 *  @return array
@@ -159,6 +157,14 @@ class Termageddon_Usercentrics {
 				'title'   => __( 'Indiana (ICDPA)', 'termageddon-usercentrics' ),
 				'popular' => false,
 			),
+			'montana'     => array(
+				'title'   => __( 'Montana (MCDPA)', 'termageddon-usercentrics' ),
+				'popular' => false,
+			),
+			'new_jersey'  => array(
+				'title'   => __( 'New Jersey (NJDPA)', 'termageddon-usercentrics' ),
+				'popular' => false,
+			),
 			'oregon'      => array(
 				'title'   => __( 'Oregon (OCPA)', 'termageddon-usercentrics' ),
 				'popular' => false,
@@ -190,24 +196,6 @@ class Termageddon_Usercentrics {
 	}
 
 	/**
-	 *  Maps the geolocation key to the state returned by the geolocation lookup.
-	 *
-	 *  @return array of key value matchups
-	 */
-	public const GEOLOCATION_KEY_TO_STATE = array(
-		'california'  => 'California',
-		'colorado'    => 'Colorado',
-		'connecticut' => 'Connecticut',
-		'oregon'      => 'Oregon',
-		'texas'       => 'Texas',
-		'utah'        => 'Utah',
-		'virginia'    => 'Virginia',
-		'delaware'    => 'Delaware',
-		'florida'     => 'Florida',
-		'indiana'     => 'Indiana',
-	);
-
-	/**
 	 * Load the required dependencies for this plugin.
 	 *
 	 * Include the following files that make up the plugin:
@@ -226,8 +214,8 @@ class Termageddon_Usercentrics {
 	private function load_dependencies() {
 
 		/**
-		* The external-dependencies allowing additional functionality such as GEOIP
-		*/
+		 * Composer-managed dependencies.
+		 */
 		require_once TERMAGEDDON_COOKIE_PATH . 'vendor/autoload.php';
 
 		/**
@@ -254,9 +242,14 @@ class Termageddon_Usercentrics {
 		require_once TERMAGEDDON_COOKIE_PATH . 'public/class-termageddon-usercentrics-public.php';
 
 		/**
-		 * The class encapsulating the hosted geolocation API (replacement for MaxMind).
+		 * The class encapsulating the hosted geolocation API.
 		 */
 		require_once TERMAGEDDON_COOKIE_PATH . 'includes/class-termageddon-usercentrics-geo-api.php';
+
+		/**
+		 * One-time cleanup for files and state left by the removed legacy service.
+		 */
+		require_once TERMAGEDDON_COOKIE_PATH . 'includes/class-termageddon-usercentrics-legacy-geolocation-cleanup.php';
 
 		$this->loader = new Termageddon_Usercentrics_Loader();
 
@@ -285,218 +278,15 @@ class Termageddon_Usercentrics {
 	 * @access   private
 	 */
 	private function define_extra_hooks() {
-		// Register the custom schedule.
-		$this->loader->add_filter( 'cron_schedules', $this, 'register_schedules', 10, 1 );
-
 		// Register the possibility of query debug filter.
 		$this->loader->add_filter( 'query_vars', $this, 'add_query_debug_filter' );
 
 		// Add in plugin settings link to plugin list page.
 		$this->loader->add_filter( 'plugin_action_links_' . TERMAGEDDON_COOKIE_EXEC_RELATIVE_PATH, $this, 'register_plugin_settings_link' );
 
-		// Register action to verify the database to allow the cron jobs to work.
-		$this->loader->add_action( 'termageddon_usercentrics_maxmind_download', $this, 'verify_maxmind_database' );
-		$this->loader->add_action( 'termageddon_usercentrics_maxmind_sunset', $this, 'enforce_geolocation_policy' );
-
-		// React to the temporary MaxMind opt-out so legacy state is restored or
-		// cleaned immediately rather than waiting for the next cron tick.
-		$this->loader->add_action( 'update_option_termageddon_use_legacy_maxmind', $this, 'handle_legacy_maxmind_option_change', 10, 2 );
-		$this->loader->add_action( 'add_option_termageddon_use_legacy_maxmind', $this, 'handle_legacy_maxmind_option_added', 10, 2 );
-
 		// Add PSL shortcode.
 		add_shortcode( 'uc-privacysettings', array( $this, 'privacy_settings_shortcode' ) );
 
-	}
-
-	/**
-	 * Run the one-time migration that makes hosted geolocation the default for
-	 * every existing installation.
-	 *
-	 * This runs during normal initialization because WordPress does not reliably
-	 * execute activation hooks during an in-place plugin update.
-	 *
-	 * @return void
-	 */
-	public static function maybe_upgrade_geolocation() {
-		$migration_version = (int) get_option( 'termageddon_geolocation_migration_version', 0 );
-		if ( $migration_version >= 1 ) {
-			return;
-		}
-
-		update_option( Termageddon_Usercentrics_Geo_Api::LEGACY_MAXMIND_OPTION, '' );
-		update_option( 'termageddon_use_geo_api', '1' );
-		self::cleanup_maxmind_database();
-		update_option( 'termageddon_geolocation_migration_version', 1 );
-		update_option( 'termageddon_geolocation_migration_notice', '1' );
-	}
-
-	/**
-	 * Enforce the effective geolocation policy and schedule the sunset backstop.
-	 *
-	 * The request-time guard is authoritative because WP-Cron can be disabled or
-	 * delayed. At and after the cutoff, stale options and scheduled events cannot
-	 * reactivate MaxMind.
-	 *
-	 * @return void
-	 */
-	public static function enforce_geolocation_policy() {
-		if ( Termageddon_Usercentrics_Geo_Api::has_maxmind_cutoff_passed() ) {
-			if ( '1' === (string) get_option( Termageddon_Usercentrics_Geo_Api::LEGACY_MAXMIND_OPTION, '' ) ) {
-				update_option( Termageddon_Usercentrics_Geo_Api::LEGACY_MAXMIND_OPTION, '' );
-			}
-			update_option( 'termageddon_use_geo_api', '1' );
-
-			if ( '1' !== (string) get_option( 'termageddon_maxmind_cleanup_complete', '' ) ) {
-				self::cleanup_maxmind_database();
-			}
-			wp_unschedule_hook( 'termageddon_usercentrics_maxmind_sunset' );
-			return;
-		}
-
-		if (
-			Termageddon_Usercentrics_Geo_Api::is_enabled()
-			&& '1' !== (string) get_option( 'termageddon_maxmind_cleanup_complete', '' )
-		) {
-			self::cleanup_maxmind_database();
-		}
-
-		if ( ! wp_next_scheduled( 'termageddon_usercentrics_maxmind_sunset' ) ) {
-			wp_schedule_single_event(
-				Termageddon_Usercentrics_Geo_Api::get_maxmind_cutoff_timestamp(),
-				'termageddon_usercentrics_maxmind_sunset'
-			);
-		}
-	}
-
-	/**
-	 * Respond to the temporary legacy MaxMind option being updated.
-	 *
-	 * @param mixed $old_value The previous option value.
-	 * @param mixed $new_value The new option value.
-	 * @return void
-	 */
-	public function handle_legacy_maxmind_option_change( $old_value, $new_value ) {
-		$was_on = '1' === (string) $old_value;
-		$is_on  = '1' === (string) $new_value;
-
-		if ( $was_on === $is_on ) {
-			return;
-		}
-
-		if ( $is_on && ! Termageddon_Usercentrics_Geo_Api::has_maxmind_cutoff_passed() ) {
-			self::restore_maxmind_database();
-		} else {
-			self::cleanup_maxmind_database();
-		}
-	}
-
-	/**
-	 * Respond to the temporary legacy MaxMind option being added.
-	 *
-	 * @param string $option    The option name.
-	 * @param mixed  $new_value The new option value.
-	 * @return void
-	 */
-	public function handle_legacy_maxmind_option_added( $option, $new_value ) {
-		if ( '1' === (string) $new_value && ! Termageddon_Usercentrics_Geo_Api::has_maxmind_cutoff_passed() ) {
-			self::restore_maxmind_database();
-		} else {
-			self::cleanup_maxmind_database();
-		}
-	}
-
-	/**
-	 * Remove the MaxMind database, unschedule its cron, and clear download-error state.
-	 *
-	 * @return bool True when the database is absent and cron is fully cleared.
-	 */
-	public static function cleanup_maxmind_database() {
-		$db_path = self::get_maxmind_db_path();
-		if ( file_exists( $db_path ) ) {
-			@unlink( $db_path ); // phpcs:ignore WordPress.PHP.NoSilencedErrors -- best-effort cleanup.
-		}
-
-		$db_dir = dirname( $db_path );
-		if ( is_dir( $db_dir ) ) {
-			@rmdir( $db_dir ); // phpcs:ignore WordPress.PHP.NoSilencedErrors -- only succeeds if empty; fine.
-		}
-
-		$timestamp = wp_next_scheduled( 'termageddon_usercentrics_maxmind_download' );
-		if ( $timestamp ) {
-			wp_unschedule_event( $timestamp, 'termageddon_usercentrics_maxmind_download' );
-		}
-		wp_unschedule_hook( 'termageddon_usercentrics_maxmind_download' );
-
-		delete_option( 'termageddon_usercentrics_download_error_count' );
-		delete_option( 'termageddon_usercentrics_download_error_log' );
-
-		$cleanup_complete = ! file_exists( $db_path ) && ! wp_next_scheduled( 'termageddon_usercentrics_maxmind_download' );
-		if ( $cleanup_complete ) {
-			update_option( 'termageddon_maxmind_cleanup_complete', '1' );
-		} else {
-			delete_option( 'termageddon_maxmind_cleanup_complete' );
-		}
-
-		return $cleanup_complete;
-	}
-
-	/**
-	 * Prepare and validate the MaxMind database before legacy mode is committed.
-	 *
-	 * @return bool
-	 */
-	public static function prepare_maxmind_database(): bool {
-		if ( Termageddon_Usercentrics_Geo_Api::has_maxmind_cutoff_passed() ) {
-			return false;
-		}
-
-		$db_path = self::get_maxmind_db_path();
-		if ( file_exists( $db_path ) && is_readable( $db_path ) && self::is_valid_maxmind_database( $db_path ) ) {
-			return true;
-		}
-
-		if ( ! is_dir( dirname( $db_path ) ) && ! wp_mkdir_p( dirname( $db_path ) ) ) {
-			self::log_download_error( 'Download directory could not be created.' );
-			return false;
-		}
-
-		delete_option( 'termageddon_usercentrics_download_error_count' );
-		delete_option( 'termageddon_usercentrics_download_error_log' );
-
-		return self::download_maxmind_db() && self::is_valid_maxmind_database( $db_path );
-	}
-
-	/**
-	 * Re-schedule the MaxMind cron after its database has been prepared.
-	 *
-	 * @return bool
-	 */
-	public static function restore_maxmind_database(): bool {
-		if ( ! self::prepare_maxmind_database() ) {
-			return false;
-		}
-
-		delete_option( 'termageddon_maxmind_cleanup_complete' );
-		if ( ! wp_next_scheduled( 'termageddon_usercentrics_maxmind_download' ) ) {
-			wp_schedule_event( time(), 'termageddon_usercentrics_every_month', 'termageddon_usercentrics_maxmind_download' );
-		}
-
-		return true;
-	}
-
-	/**
-	 * Register the custom time schedule
-	 *
-	 * @param mixed $schedules the existing schedules to alter.
-	 * @return mixed
-	 */
-	public function register_schedules( $schedules ) {
-		$schedules['termageddon_usercentrics_every_month'] = array(
-			'interval' => MONTH_IN_SECONDS,
-			'display'  => __( 'Every Month', 'termageddon-usercentrics' ),
-		);
-
-		return $schedules;
 	}
 
 	/**
@@ -543,9 +333,6 @@ class Termageddon_Usercentrics {
 
 		$this->loader->add_action( 'admin_init', $plugin_admin, 'register_all_settings' );
 
-		// If AJAX Mode is enabled, load geolocation ajax actions.
-		$this->loader->add_action( 'wp_ajax_uc_geolocation_lookup', $this, 'geolocation_lookup_ajax' );
-		$this->loader->add_action( 'wp_ajax_nopriv_uc_geolocation_lookup', $this, 'geolocation_lookup_ajax' );
 	}
 
 	/**
@@ -561,27 +348,12 @@ class Termageddon_Usercentrics {
 
 		$this->loader->add_action( 'wp_enqueue_scripts', $plugin_public, 'enqueue_scripts' );
 
-		if ( self::is_geoip_enabled() && ! self::is_ajax_mode_enabled() && ! wp_doing_cron() ) {
-			$this->loader->add_action( 'init', $this, 'lookup_ip_address' );
-		}
-		// If AJAX Mode is enabled, load geolocation ajax actions.
-		$this->loader->add_action( 'wp_ajax_uc_geolocation_lookup', $this, 'geolocation_lookup_ajax' );
-		$this->loader->add_action( 'wp_ajax_nopriv_uc_geolocation_lookup', $this, 'geolocation_lookup_ajax' );
-
 		// WP Head Implementation.
 		$this->loader->add_action(
 			'wp_head',
 			$plugin_public,
 			'build_termageddon_script',
 			self::get_embed_priority()
-		);
-
-		// Put debug code in the footer
-		$this->loader->add_action(
-			'wp_footer',
-			$plugin_public,
-			'debug_display',
-			999
 		);
 
 		// Load the primary embed (or disabled) script in the head.
@@ -757,59 +529,6 @@ class Termageddon_Usercentrics {
 
 
 	/**
-	 * This will only execute if executed by a cron job, or the database does not exist.
-	 *
-	 * @return bool Returns true if database is downloaded. false if not.
-	 */
-	public static function verify_maxmind_database() {
-		// Hosted geolocation is authoritative unless the temporary legacy fallback
-		// is explicitly requested and the final cutoff has not passed.
-		if ( ! Termageddon_Usercentrics_Geo_Api::is_legacy_maxmind_available() ) {
-			return false;
-		}
-
-		// Check for fatal errors.
-		if ( self::check_for_download_errors() ) {
-			return false;
-		}
-
-		// If Geo IP is enabled, download.
-		if ( ! self::is_geoip_enabled() ) {
-			return false;
-		}
-
-		$path = self::get_maxmind_db_path();
-
-		if ( ! file_exists( $path ) || ! self::is_valid_maxmind_database( $path ) || wp_doing_cron() ) {
-
-			if ( ! is_dir( dirname( $path ) ) ) {
-				@wp_mkdir_p( dirname( $path ) );
-			}
-
-			self::download_maxmind_db();
-
-		}
-
-		return self::is_valid_maxmind_database( $path );
-	}
-
-
-	/** Identify if three failed downloads have occurred.
-	 *
-	 * @return bool  */
-	public static function check_for_download_errors(): bool {
-		return ( self::count_download_errors() > 5 );
-	}
-
-	/**
-	 * Return the integer count of database download errors.
-	 *
-	 * @return int  */
-	public static function count_download_errors(): int {
-		return (int) get_option( 'termageddon_usercentrics_download_error_count', 0 );
-	}
-
-	/**
 	 * Check if migration is needed by looking for a settings ID in the embed code.
 	 *
 	 * @return bool True if migration is needed, false otherwise.
@@ -819,14 +538,6 @@ class Termageddon_Usercentrics {
 		return (bool) ! empty( $embed_code ) && preg_match( '/data-settings-id="[^"]*"/', $embed_code );
 	}
 
-
-	/**
-	 * Return a list of error logs generated by the download.
-	 *
-	 * @return array  */
-	public static function get_download_error_logs(): array {
-		return (array) array_filter( get_option( 'termageddon_usercentrics_download_error_log', array() ) );
-	}
 
 	/**
 	 * Filter out the standard embed code when a settings ID is present.
@@ -952,320 +663,6 @@ class Termageddon_Usercentrics {
 	}
 
 	/**
-	 * Based on the error message getting passed in, log it, and iterate by one.
-	 *
-	 * @param string $error The string error message to save to the list.
-	 * @return void
-	 */
-	private static function log_download_error( string $error ) {
-		if ( defined( 'TERMAGEDDON_ERROR_HAS_BEEN_LOGGED' ) ) {
-			return;
-		}
-
-		// Ensure that this only runs once per run.
-		define( 'TERMAGEDDON_ERROR_HAS_BEEN_LOGGED', true );
-
-		$error_count_option = 'termageddon_usercentrics_download_error_count';
-		$error_log_option   = 'termageddon_usercentrics_download_error_log';
-
-		// Iterate Count by one.
-		$error_count = get_option( $error_count_option );
-		if ( false !== $error_count ) {
-			$error_count++;
-			update_option( $error_count_option, $error_count );
-		} else {
-			add_option( $error_count_option, 1 );
-		}
-
-		// Append log to error.
-		$error_logs = get_option( $error_log_option );
-		if ( false !== $error_logs ) {
-			$error_logs[] = gmdate( 'Y-m-d g:i:s T' ) . '	' . $error;
-			update_option( $error_log_option, $error_logs );
-		} else {
-			add_option( $error_log_option, array( $error ) );
-		}
-
-		self::debug( 'TEMAGEDDON_CRITICAL_ERROR', $error, $error_count, $error_logs );
-
-	}
-
-	/**
-	 * Download the latest version of the database to the folder.
-	 *
-	 * Source: Based on GeoTargeting Lite WordPress Plugin
-	 * Plugin URI: https://wordpress.org/plugins/geotargeting/
-	 * License: GNU 2
-	 *
-	 * @return bool
-	 */
-	private static function download_maxmind_db() {
-		if ( Termageddon_Usercentrics_Geo_Api::has_maxmind_cutoff_passed() ) {
-			return false;
-		}
-
-		// If critical error, do not try to re-download this session.
-		if ( defined( 'TERMAGEDDON_ERROR_HAS_BEEN_LOGGED' ) ) {
-			return false;
-		}
-
-		// No errors, continue.
-		if ( ! defined( 'PHPUNIT_RUNNING' ) && file_exists( ABSPATH . 'wp-admin/includes/file.php' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/file.php';
-		}
-		$path = self::get_maxmind_db_path();
-
-		// Get Signed URL.
-		try {
-			$signed_url = self::get_maxmind_download_url();
-		} catch ( \Throwable $th ) {
-			self::log_download_error( $th->getMessage() );
-			return false;
-		}
-
-		$database  = wp_basename( $path );
-		$dest_dir  = trailingslashit( dirname( $path ) );
-		$dest_path = $dest_dir . $database;
-
-		self::debug( 'Downloading', $signed_url, $database, $dest_dir, is_writable( $dest_dir ), $dest_path );
-
-		// Check writable nature of directory.
-		if ( ! is_writable( $dest_dir ) ) {
-			self::log_download_error( 'Download directory is not writable.' );
-			return false;
-		}
-
-		$tmp_database_path = download_url( $signed_url );
-
-		if ( ! is_wp_error( $tmp_database_path ) ) {
-			try {
-				if ( ! self::is_valid_maxmind_database( $tmp_database_path ) ) {
-					throw new Exception( 'Downloaded MaxMind database failed validation.' );
-				}
-
-				// Replace the old file only after validating the new download.
-				if ( ! @rename( $tmp_database_path, $dest_path ) ) {
-					throw new Exception( 'Unable to move the downloaded MaxMind database into place.' );
-				}
-
-				// Ensure permissions are correct for downloaded file.
-				chmod( $dest_path, 0644 );
-
-				// Remove temp downloaded file.
-				if ( file_exists( $tmp_database_path ) ) {
-					unlink( $tmp_database_path );
-				}
-
-				return file_exists( $dest_path ) && is_readable( $dest_path );
-			} catch ( \Throwable $e ) {
-				if ( file_exists( $tmp_database_path ) ) {
-					@unlink( $tmp_database_path );
-				}
-				self::log_download_error( 'Save Error: ' . $e->getMessage() );
-			}
-		} else {
-			self::log_download_error( 'Download Error: ' . $tmp_database_path->get_error_message() );
-		}
-		return false;
-	}
-
-	/**
-	 * Confirm that a MaxMind database exists, is readable, and can be opened.
-	 *
-	 * @param string $path Database path.
-	 * @return bool
-	 */
-	private static function is_valid_maxmind_database( string $path ): bool {
-		$validation_override = apply_filters( 'termageddon_validate_maxmind_database', null, $path );
-		if ( is_bool( $validation_override ) ) {
-			return $validation_override;
-		}
-
-		if ( ! file_exists( $path ) || ! is_readable( $path ) ) {
-			return false;
-		}
-
-		try {
-			$reader = new Reader( $path );
-			if ( method_exists( $reader, 'close' ) ) {
-				$reader->close();
-			}
-			return true;
-		} catch ( \Throwable $th ) {
-			return false;
-		}
-	}
-
-
-	/**
-	 * We get user IP but check with different services to see if they provided real user ip
-	 *
-	 * Source: Based on GeoTargeting Lite WordPress Plugin
-	 * Plugin URI: https://wordpress.org/plugins/geotargeting/
-	 * License: GNU 2
-	 *
-	 * @return mixed|void
-	 */
-	private static function get_ip_address() {
-		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '1.1.1.1';
-		// Cloudflare.
-		$ip = isset( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ) : $ip;
-		// Reblaze.
-		$ip = isset( $_SERVER['X-Real-IP'] ) ? sanitize_text_field( wp_unslash( $_SERVER['X-Real-IP'] ) ) : $ip;
-		// Sucuri.
-		$ip = isset( $_SERVER['HTTP_X_SUCURI_CLIENTIP'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_SUCURI_CLIENTIP'] ) ) : $ip;
-		// Ezoic.
-		$ip = isset( $_SERVER['X-FORWARDED-FOR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['X-FORWARDED-FOR'] ) ) : $ip;
-		// Akamai.
-		$ip = isset( $_SERVER['True-Client-IP'] ) ? sanitize_text_field( wp_unslash( $_SERVER['True-Client-IP'] ) ) : $ip;
-		// Clouways.
-		$ip = isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) : $ip;
-		// Varnish Trash ?
-		$ip = str_replace( array( '::ffff:', ', 127.0.0.1' ), '', $ip );
-		// Get varnish first ip.
-		$ip = strstr( $ip, ',' ) === false ? $ip : strstr( $ip, ',', 1 );
-
-		return apply_filters( 'process_user_ip', $ip );
-	}
-
-
-	/**
-	 * Process the ip address to look for testing overrides and move forward.
-	 *
-	 * @return string $ip_address
-	 */
-	public static function get_processed_ip_address() {
-		$ip_address = self::get_ip_address();
-
-		// Localhost Test IP Address.
-		// '::1' === $ip_address.
-		switch ( strtolower( get_query_var( 'termageddon-usercentrics-debug' ) ) ) {
-			case 'colorado':
-				$ip_address = '73.14.194.136'; // Colorado.
-				break;
-
-			case 'california':
-				$ip_address = '149.142.201.252'; // California.
-				break;
-
-			case 'canada':
-				$ip_address = '24.51.224.0'; // Canada.
-				break;
-
-			case 'denmark':
-				$ip_address = '2.111.255.255'; // Denmark.
-				break;
-
-			case 'england':
-				$ip_address = '217.61.20.213'; // England.
-				break;
-
-			case 'wales':
-				$ip_address = '89.241.3.226'; // Wales.
-				break;
-
-			case 'france':
-				$ip_address = '194.177.63.255'; // France.
-				break;
-			case '':
-			default:
-				break;
-		}
-
-		return $ip_address;
-	}
-
-	/** Retrieve signed URL from application for downloading maxmind database from Termageddon Server.
-	 *
-	 * @return string Signed URL for downloading maxmind.
-	 * @throws Exception If download error occurs, or disallowed, throws exception.
-	 */
-	public static function get_maxmind_download_url(): string {
-
-		$domain   = wp_parse_url( get_site_url(), PHP_URL_HOST );
-		$api_url  = "https://app.termageddon.com/requestGeoIpDownloadLink?source=wordpress_plugin&domain={$domain}";
-		$response = wp_remote_get( $api_url );
-
-		self::debug( $api_url, $response );
-
-		// Check for failure to call.
-		if ( is_wp_error( $response ) ) {
-			throw new Exception( 'URL Lookup Error #1: ' . $response->get_error_message() );
-		}
-
-		// Check for invalid response.
-		if ( 200 !== wp_remote_retrieve_response_code( $response ) ) {
-			throw new Exception( 'URL Lookup Error #2 (' . wp_remote_retrieve_response_code( $response ) . '): ' . wp_remote_retrieve_response_message( $response ) );
-		}
-
-		// Calculate Body and json array from body.
-		$body = wp_remote_retrieve_body( $response );
-		$data = json_decode( $body, true );
-
-		// Check to ensure data is an array.
-		if ( ! is_array( $data ) ) {
-			throw new Exception( 'URL Lookup Error #3: Unable to process body; ' . $data );
-		}
-
-		// Extract information from data.
-		list('success' => $success, 'error' => $error, 'url' => $url) = $data;
-
-		// Check for failure.
-		if ( ! $success ) {
-			throw new Exception( 'URL Lookup Error #4: ' . $error );
-		}
-
-		// Check for empty URL.
-		if ( empty( $url ) ) {
-			throw new Exception( 'URL Lookup Error #5: URL Empty' . $error );
-		}
-
-		return (string) $url;
-	}
-
-	/**
-	 * Returns the correct path to use for the maxmind database file.
-	 *
-	 * @return string  */
-	public static function get_maxmind_db_path() {
-		// Locate MMDB File.
-		$database_name = 'GeoLite2-City.mmdb';
-
-		// Default path (Inside Plugins Dir).
-
-		$path_upload = wp_upload_dir();
-		return $path_upload['basedir'] . '/termageddon-maxmind/' . $database_name;
-
-	}
-
-	/**
-	 * Returns the string last updated date.
-	 *
-	 * @return string  */
-	public static function get_maxmind_db_last_updated(): string {
-		if ( ! file_exists( self::get_maxmind_db_path() ) ) {
-			return '-';
-		}
-		return get_date_from_gmt( gmdate( 'Y-m-d H:i:s', filemtime( self::get_maxmind_db_path() ) ), 'F j, Y g:i:s A' );
-
-	}
-
-	/**
-	 * Returns the string last updated date.
-	 *
-	 * @return string  */
-	public static function get_maxmind_db_next_update(): string {
-		$date = wp_next_scheduled( 'termageddon_usercentrics_maxmind_download' );
-		if ( false === $date ) {
-			return '-';
-		}
-
-		return get_date_from_gmt( gmdate( 'Y-m-d H:i:s', $date ), 'F j, Y g:i:s A' );
-
-	}
-
-
-	/**
 	 * Returns whether debug mode is enabled via the query parameter
 	 *
 	 * @return bool
@@ -1369,116 +766,6 @@ class Termageddon_Usercentrics {
 			console.log(\'TERMAGEDDON USERCENTRICS\', `' . wp_json_encode( $msg, JSON_PRETTY_PRINT ) . '`);
 		</script>';
 	}
-
-	/**
-	 * Lookup IP Address and returns an object with various information included.
-	 *
-	 * @param string $ip_address  the string IP address to lookup.
-	 * @return array $returns 'city', 'state', 'country
-	 */
-	public static function lookup_ip_address( string $ip_address = '' ) {
-
-		// By default, look at the current visitor's IP address.
-		if ( empty( $ip_address ) ) {
-			$ip_address = self::get_processed_ip_address();
-		}
-
-		$city    = null;
-		$state   = null;
-		$country = null;
-
-		$cookie_title = self::get_cookie_title();
-
-		// If Geo IP is enabled, download.
-		if ( self::is_geoip_enabled() && Termageddon_Usercentrics_Geo_Api::is_legacy_maxmind_available() ) {
-			// Validate Database && download database if needed.
-			self::verify_maxmind_database();
-
-			// If Email is not in blacklist, try to calculate geo ip location.
-			if ( '::1' !== $ip_address ) {
-				// Check for cached location via cookie, or check the geo ip database if no cookie found.
-				if ( isset( $_COOKIE[ $cookie_title ] ) && ! self::is_debug_mode_enabled() ) {
-					@list('city' => $city, 'state' => $state, 'country' => $country) = json_decode( sanitize_text_field( wp_unslash( $_COOKIE[ $cookie_title ] ) ), true );
-				} else {
-					try {
-
-						$reader = new Reader( self::get_maxmind_db_path() );
-
-						$record = $reader->City( $ip_address );
-
-						if ( isset( $record->city->names ) && isset( $record->city->names['en'] ) ) {
-							$city = $record->city->names['en'];
-						}
-						if ( isset( $record->subdivisions[0] ) && isset( $record->subdivisions[0]->names ) && isset( $record->subdivisions[0]->names['en'] ) ) {
-							$state = $record->subdivisions[0]->names['en'];
-						}
-						if ( isset( $record->country->names ) && isset( $record->country->names['en'] ) ) {
-							$country = $record->country->names['en'];
-						}
-
-						// If able to, set cookie to allow future page loads to simply use the cookie for processing.
-						if ( ! headers_sent() && ! isset( $_COOKIE[ $cookie_title ] ) ) {
-							$cookie_value = wp_json_encode(
-								array(
-									'city'    => $city,
-									'state'   => $state,
-									'country' => $country,
-								)
-							);
-
-							setcookie(
-								$cookie_title,
-								$cookie_value,
-								0,
-								COOKIEPATH,
-								COOKIE_DOMAIN
-							);
-							$_COOKIE[ $cookie_title ] = $cookie_value;
-						}
-					} catch ( \Throwable $th ) {
-						// Error with GEO IP.
-						// Display it IF debug via GET is enabled and administrator.
-						if ( current_user_can( 'administrator' ) || self::is_debug_mode_enabled() ) {
-							self::debug( 'Error Calculating Location', $th->getMessage() );
-						}
-					}
-				}
-			}
-		}
-
-		// Return the final value of the city, state, and country.
-		return array(
-			'city'    => $city,
-			'state'   => $state,
-			'country' => $country,
-		);
-
-	}
-
-
-	/**
-	 * Returns the current cookie title for us with geoip services.
-	 *
-	 * @return string  */
-	public static function get_cookie_title() {
-		return 'tu-geoip' . ( wp_doing_ajax() ? '-ajax' : '' );
-	}
-
-
-	/**
-	 * Returns the human readable location of the current location
-	 *
-	 * @return string  */
-	public static function get_location_displayname(): string {
-		list('city' => $city, 'state' => $state, 'country' => $country) = self::lookup_ip_address();
-
-		if ( empty( $city ) && empty( $state ) && empty( $country ) ) {
-			return 'Unknown';
-		}
-
-		return trim( ( ! empty( $city ) ? $city . ', ' : '' ) . ( ! empty( $state ) ? $state . ' ' : '' ) . ( ! empty( $country ) ? $country . '' : '' ) );
-	}
-
 
 	/**
 	 * Returns a human readable version of the allowed html tags.
@@ -1756,225 +1043,6 @@ class Termageddon_Usercentrics {
 	}
 
 	/**
-	 * Helper method to identify if the user is located in Colorado.
-	 *
-	 * @param string $loc_key The location key to check.
-	 * @return bool
-	 * @throws Exception If unable to locate location key.
-	 */
-	public static function is_located_in( string $loc_key ): bool {
-		$function_name = 'is_located_in_' . $loc_key;
-		if ( is_callable( array( self::class, $function_name ) ) ) {
-			return call_user_func( array( self::class, $function_name ) );
-		}
-		// Default to state. Check if state mapping exists.
-		if ( ! array_key_exists( $loc_key, self::GEOLOCATION_KEY_TO_STATE ) ) {
-			throw new Exception( 'Unable to locate location key for ' . $loc_key );
-		}
-
-		$loc_key                  = self::GEOLOCATION_KEY_TO_STATE[ $loc_key ];
-		list( 'state' => $state ) = self::lookup_ip_address();
-		return ( null === $state || $loc_key === $state );
-
-	}
-
-	/**
-	 * Helper method to identify if the user is located in Canada.
-	 *
-	 * @return bool  */
-	public static function is_located_in_canada(): bool {
-		list( 'country' => $country ) = self::lookup_ip_address();
-		return ( null === $country || 'Canada' === $country );
-
-	}
-
-	/**
-	 * Helper method to identify if the user is located in EU.
-	 *
-	 * @return bool  */
-	public static function is_located_in_eu(): bool {
-		list( 'country' => $country ) = self::lookup_ip_address();
-
-		$country_list = array(
-			'Austria',
-			'Belgium',
-			'Bulgaria',
-			'Croatia',
-			'Cyprus',
-			'Czech Republic',
-			'Denmark',
-			'Estonia',
-			'Finland',
-			'France',
-			'Germany',
-			'Greece',
-			'Hungary',
-			'Ireland',
-			'Italy',
-			'Latvia',
-			'Lithuania',
-			'Luxembourg',
-			'Malta',
-			'Netherlands',
-			'Poland',
-			'Portugal',
-			'Romania',
-			'Slovakia',
-			'Slovenia',
-			'Spain',
-			'Sweden',
-			// 'United Kingdom',
-			'Norway',
-			'Iceland',
-			'Liechtenstein',
-		);
-		return ( null === $country || in_array( $country, $country_list, true ) );
-
-	}
-
-	/**
-	 * Helper method to identify if the user is located in UK.
-	 *
-	 * @return bool  */
-	public static function is_located_in_uk(): bool {
-		list( 'country' => $country ) = self::lookup_ip_address();
-		return ( null === $country || 'United Kingdom' === $country );
-
-	}
-
-
-	/**
-	 * Check the geolocation settings, and decide if the widget should be hidden.
-	 *
-	 * @return bool  */
-	public static function should_hide_due_to_location(): bool {
-
-		// Iterate through locations and identify if user is located in any of them, and site has it enabled. If so, hide consent.
-		$located_in_location_that_needs_consent = false;
-		foreach ( self::get_geolocation_locations() as $loc_key => $loc ) {
-			$is_located_in = self::is_located_in( $loc_key );
-			if ( $is_located_in ) {
-				$located_in_location_that_needs_consent = true;
-			}
-			if ( $is_located_in && ! self::is_geoip_location_enabled_in( $loc_key ) ) {
-				return true; // User is located in a location that needs it, but it is disabled, so hide.
-			}
-		}
-
-		// If not in any applicable zones, hide cookie consent.
-		if ( ! $located_in_location_that_needs_consent ) {
-			return true; // Not in a location that needs it, so continue.
-		}
-
-		return false;
-	}
-
-
-	// ================================= //
-	// ======== AJAX MODE LOGIC ======== //
-	// ================================= //
-
-
-	/**
-	 * Verifies if ajax mode is enabled to check user location via AJAX instead of on page load.
-	 *
-	 * Returns false if geoip is not enabled or ajax mode is not enabled.
-	 *
-	 * @return bool  */
-	public static function is_ajax_mode_enabled(): bool {
-		if ( ! self::is_geoip_enabled() ) {
-			return false;
-		}
-
-		// The new hosted geolocation service always runs client-side, so AJAX mode is
-		// required (there is no server-side lookup to fall back to).
-		if ( Termageddon_Usercentrics_Geo_Api::is_enabled() ) {
-			return true;
-		}
-
-		return get_option( 'termageddon_usercentrics_location_ajax', true ) ? true : false;
-
-	}
-
-	/**
-	 * Build ajax data response.
-	 *
-	 * @return array  */
-	public static function build_ajax_response() {
-		// Output debug message to console.
-		$result = array(
-			'hide' => self::should_hide_due_to_location(),
-		);
-
-		if ( self::is_debug_mode_enabled() ) {
-			$ip_address = self::get_processed_ip_address();
-
-			// Lookup IP Address or pull from Cookie.
-			list('city' => $city, 'state' => $state, 'country' => $country) = self::lookup_ip_address( $ip_address );
-
-			$result['ipAddress'] = $ip_address;
-			$result['city']      = ( $city ?? 'Unknown' );
-			$result['state']     = ( $state ?? 'Unknown' );
-			$result['country']   = ( $country ?? 'Unknown' );
-
-			// Iterate through locations.
-			$locations = array();
-			foreach ( self::get_geolocation_locations() as $loc_key => $loc ) {
-				$locations[ $loc_key ] = self::is_located_in( $loc_key );
-			}
-			$result['locations'] = $locations;
-		}
-
-		return $result;
-	}
-
-	/**
-	 * The admin-ajax hook to handle lookups via ajax via AJAX to bypass cache.
-	 * Expects `nonce` being passed in
-	 *
-	 * @return void  */
-	public function geolocation_lookup_ajax() {
-		if ( ! headers_sent() ) {
-			header( 'Content-Type: application/json; charset=utf-8' );
-		}
-
-		$result = function( bool $success, string $message = '', ?array $data = null ) {
-			$result_array = array(
-				'success' => $success,
-			);
-
-			if ( '' !== $message ) {
-				$result_array['message'] = $message;
-			}
-
-			if ( null !== $data ) {
-				$result_array['data'] = $data;
-			}
-
-			echo wp_json_encode( $result_array );
-			wp_die();
-		};
-
-		// If nonce is not provided, or is invalid.
-		if ( ! isset( $_REQUEST['nonce'] ) ) {
-			$result( false, 'Invalid Request' );
-		}
-		if ( isset( $_REQUEST['nonce'] ) && ! wp_verify_nonce( sanitize_key( $_REQUEST['nonce'] ), $this->plugin_name . '_ajax_nonce' ) ) {
-			$result( false, 'Unauthorized' );
-		}
-
-		// Check for Location Override.
-		if ( isset( $_REQUEST['location'] ) ) {
-			set_query_var( 'termageddon-usercentrics-debug', sanitize_text_field( wp_unslash( $_REQUEST['location'] ) ) );
-		}
-
-		$result( true, '', self::build_ajax_response() );
-
-		$result( false, 'Unknown error has occurred' );
-
-	}
-
-	/**
 	 * Get the providers that should have blocking disabled
 	 *
 	 * @return array Array of provider IDs that should have blocking disabled
@@ -2080,6 +1148,15 @@ class Termageddon_Usercentrics {
 				} else {
 					// Add data-usercentrics attribute
 					$attributes .= ' ' . $usercentrics_attr;
+				}
+
+				// Tell the Smart Data Protector to leave this tag alone. The SDP matches
+				// script src URLs against its own service list (e.g. googletagmanager.com/gtag/js
+				// => "Google Analytics 4") and ignores data-usercentrics, so without this the
+				// SDP re-blocks the tag under a service that may not exist in the configuration
+				// and it never unblocks after consent.
+				if ( ! preg_match( '/(^|\s)data-uc-untouch(\s|=|$)/i', $attributes ) ) {
+					$attributes .= ' data-uc-untouch';
 				}
 
 				return '<script' . ( $attributes ? ' ' . $attributes : '' ) . '>' . $content . '</script>';

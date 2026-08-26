@@ -4,7 +4,7 @@ Tags: cookie consent, privacy, GDPR, CCPA, CPRA, CIPA, usercentrics, geolocation
 Requires at least: 5.0
 Tested up to: 7.0.2
 Requires PHP: 7.2
-Stable tag: 1.13.0
+Stable tag: 1.14.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -36,6 +36,8 @@ Termageddon’s Auto-updating website policies and consent solution supports maj
   * Colorado - CPA
   * Connecticut - CTDPA
   * Florida
+  * Montana - MCDPA
+  * New Jersey - NJDPA
   * Oregon - OCPA
   * Texas - TDPSA
   * Utah - UCPA
@@ -140,11 +142,7 @@ Yes, this plugin requires a Termageddon license which includes the consent solut
 
 = How does geolocation work? =
 
-The plugin uses Termageddon Hosted Geolocation at `geo.termageddon.com`. The lookup runs in the visitor’s browser, and the plugin applies your existing country and state selections without requiring a local geolocation database. If the hosted service cannot be reached, the consent banner is shown by default.
-
-Until August 20, 2026 at 00:00 UTC, administrators may temporarily switch back to the legacy MaxMind implementation from Geolocation Settings. That fallback downloads and maintains a MaxMind database on the WordPress server and will stop working automatically at the cutoff.
-
-For more information, see the [Termageddon Plugin Geolocation Migration FAQ](https://termageddon.freshdesk.com/support/solutions/articles/66000536222-termageddon-plugin-geolocation-migration-from-maxmind-to-termageddon-hosted-geolocation).
+The plugin uses Termageddon Hosted Geolocation at `geo.termageddon.com`. The lookup runs in the visitor’s browser, and the plugin applies your existing country and state selections without requiring a local geolocation database. If the hosted service cannot be reached, the consent banner is shown by default. Upgrades automatically clean up files, scheduled events, and settings from the retired on-device implementation.
 
 = Can I customize the appearance of the consent banner? =
 
@@ -193,6 +191,19 @@ For comprehensive support and assistance:
 * **Developer Resources**: Access our developer documentation for advanced customizations
 
 == Changelog ==
+
+= 1.14.0 =
+
+**✨ New Features:**
+* Added New Jersey (NJDPA) and Montana (MCDPA) as hosted geolocation region options.
+
+**🐛 Bug Fixes:**
+* Fixed Manual Script Controller scripts, including Google Analytics 4, so Usercentrics' Smart Data Protector does not re-block them under a different service after consent.
+* Fixed the Usercentrics consent interface and manually controlled scripts not loading when manual script control was combined with the `wp_enqueue_scripts` injection method.
+
+**🔧 Improvements:**
+* Removed the retired MaxMind geolocation implementation and its Composer dependencies. Termageddon Hosted Geolocation is now the sole implementation.
+* Added automatic upgrade cleanup for the complete retired MaxMind directory, scheduled events, options, and migration metadata, including retry handling for skipped or incomplete upgrades.
 
 = 1.13.0 =
 

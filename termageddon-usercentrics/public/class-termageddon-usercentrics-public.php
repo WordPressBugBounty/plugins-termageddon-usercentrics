@@ -60,32 +60,15 @@ class Termageddon_Usercentrics_Public {
 	 */
 	public function enqueue_scripts() {
 
-		// Load AJAX Mode scripts.
-		if ( Termageddon_Usercentrics::is_ajax_mode_enabled() ) {
+		// Load hosted geolocation when location-based display is enabled.
+		if ( Termageddon_Usercentrics::is_geoip_enabled() ) {
 			wp_enqueue_script( $this->plugin_name . '_ajax', TERMAGEDDON_COOKIE_URL . 'public/js/termageddon-usercentrics-ajax.min.js', array(), $this->version, false );
 
-			// Load ajax params for nonce.
-			$nonce    = wp_create_nonce( $this->plugin_name . '_ajax_nonce' );
-			$location = get_query_var( 'termageddon-usercentrics-debug' );
-
 			$data = array(
-				'ajax_url'    => admin_url( 'admin-ajax.php' ),
-				'nonce'       => $nonce,
-				'nonce_title' => $this->plugin_name . '_ajax_nonce',
-				'debug'       => Termageddon_Usercentrics::is_debug_mode_enabled() ? 'true' : 'false',
-				'psl_hide'    => Termageddon_Usercentrics::should_hide_psl() ? 'true' : 'false',
-				'geo_mode'    => Termageddon_Usercentrics_Geo_Api::is_enabled() ? 'hosted' : 'maxmind',
+				'debug'    => Termageddon_Usercentrics::is_debug_mode_enabled() ? 'true' : 'false',
+				'psl_hide' => Termageddon_Usercentrics::should_hide_psl() ? 'true' : 'false',
 			);
-			if ( ! empty( $location ) ) {
-				$data['location'] = $location;
-			}
-
-			// New hosted geolocation service: localize the API URL/key, region-matching rules,
-			// and any debug override. JS uses these to fetch geo, decide hide/show, and cache —
-			// no admin-ajax round-trip needed.
-			if ( Termageddon_Usercentrics_Geo_Api::is_enabled() ) {
-				$data = array_merge( $data, Termageddon_Usercentrics_Geo_Api::build_localization_payload() );
-			}
+			$data = array_merge( $data, Termageddon_Usercentrics_Geo_Api::build_localization_payload() );
 
 			wp_localize_script(
 				$this->plugin_name . '_ajax',
@@ -161,42 +144,6 @@ class Termageddon_Usercentrics_Public {
 			wp_enqueue_style( $this->plugin_name . '_disable', TERMAGEDDON_COOKIE_URL . 'public/css/termageddon-usercentrics-disable.min.css', array(), $this->version );
 		}
 	}
-
-	/**
-	 * Display debug information to console if applicable
-	 *
-	 * @return void
-	 */
-	public function debug_display() {
-		if (
-			Termageddon_Usercentrics::is_geoip_enabled() &&
-			Termageddon_Usercentrics::is_debug_mode_enabled() &&
-			! Termageddon_Usercentrics::is_ajax_mode_enabled()
-		) {
-			list('city' => $city, 'state' => $state, 'country' => $country) = Termageddon_Usercentrics::lookup_ip_address();
-
-			// Iterate through locations.
-			$locations = array();
-			foreach ( Termageddon_Usercentrics::get_geolocation_locations() as $loc_key => $loc ) {
-				list ( 'title' => $loc_name ) = $loc;
-				$locations[]                  = 'Located in ' . $loc_name . ': ' . ( Termageddon_Usercentrics::is_located_in( $loc_key ) ? 'Yes' : 'No' );
-			}
-
-			// Output debug message to console.
-			Termageddon_Usercentrics::debug(
-				'IP Address: ' . Termageddon_Usercentrics::get_processed_ip_address(),
-				'City: ' . ( $city ?? 'Unknown' ),
-				'State: ' . ( $state ?? 'Unknown' ),
-				'Country: ' . ( $country ?? 'Unknown' ),
-				'--',
-				$locations,
-				'--',
-				'Geo-Location Mode?: ' . ( Termageddon_Usercentrics::is_geoip_enabled() ? 'Yes' : 'No' ),
-				'AJAX Mode?: ' . ( Termageddon_Usercentrics::is_ajax_mode_enabled() ? 'Yes' : 'No' )
-			);
-		}
-	}
-
 
 	/**
 	 * Action to allow replacing a broken psl with the fully functional psl.
@@ -312,15 +259,6 @@ class Termageddon_Usercentrics_Public {
 				return;
 			}
 
-			// Track whether the visitor is outside all configured geo-location regions
-			// (non-AJAX mode only). Instead of killing UC entirely (which causes a
-			// script blackout — the auto-blocker blocks 3rd-party scripts but without
-			// the CMP, nothing ever releases them), we let UC load and auto-accept
-			// all consents so scripts still fire and the banner stays hidden.
-			$geo_auto_accept = Termageddon_Usercentrics::is_geoip_enabled()
-				&& ! Termageddon_Usercentrics::is_ajax_mode_enabled()
-				&& Termageddon_Usercentrics::should_hide_due_to_location();
-
 			// don't double output in enqueue mode
 			$should_enqueue_scripts = Termageddon_Usercentrics::get_embed_injection_method() === 'wp_enqueue_scripts';
 			if ( $should_enqueue_scripts && ! $is_enqueue ) {
@@ -337,20 +275,10 @@ class Termageddon_Usercentrics_Public {
 			)
 		);
 
-		// Suppress the consent banner when geo-location determines the visitor doesn't need it.
-		// AJAX mode: suppress initially, then the AJAX script decides whether to show/accept.
-		// Non-AJAX auto-accept: suppress and auto-accept all consents inline so UC-managed
-		// scripts still fire without showing the banner (fixes script blackout for
-		// out-of-region visitors when AJAX mode is off).
-		if ( Termageddon_Usercentrics::is_geoip_enabled() && Termageddon_Usercentrics::is_ajax_mode_enabled() ) {
+		// Suppress initially while the hosted geolocation script decides whether
+		// consent is required for this visitor.
+		if ( Termageddon_Usercentrics::is_geoip_enabled() ) {
 			$script .= '<script type="application/javascript">var UC_UI_SUPPRESS_CMP_DISPLAY = true;</script>';
-		} elseif ( ! empty( $geo_auto_accept ) ) {
-			$script .= '<script type="application/javascript">var UC_UI_SUPPRESS_CMP_DISPLAY = true;</script>';
-			$script .= '<script type="application/javascript">window.addEventListener("UC_UI_INITIALIZED", function() {'
-				. 'if (typeof UC_UI !== "undefined" && !UC_UI.areAllConsentsAccepted()) {'
-				. 'UC_UI.acceptAllConsents().then(function() { UC_UI.closeCMP(); });'
-				. '} else if (typeof UC_UI !== "undefined") { UC_UI.closeCMP(); }'
-				. '});</script>';
 		}
 
 		// Append augmented script snippets
@@ -385,12 +313,14 @@ class Termageddon_Usercentrics_Public {
 		$should_enqueue_scripts = Termageddon_Usercentrics::get_embed_injection_method() === 'wp_enqueue_scripts';
 
 		if ( $settings_id && $should_enqueue_scripts ) {
-			// Only enqueue the auto-blocking script if manual control is disabled
-			if ( ! Termageddon_Usercentrics::is_auto_blocker_disabled() ) {
-				wp_enqueue_script( $this->plugin_name . '-scripts', '//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js', array(), $this->version, false );
-				// note: this URL is placed here to "play by the rules"... but it doesn't actually do anything.
-				// the whole thing will be overwritten by the script_loader_tag filter.
-			}
+			// The handle must always be registered in enqueue mode, otherwise the
+			// script_loader_tag filter never fires and no embed code is output at all.
+			// The URL is placed here to "play by the rules"... but it doesn't actually do anything:
+			// the whole tag is overwritten by the script_loader_tag filter.
+			$placeholder_src = Termageddon_Usercentrics::is_auto_blocker_disabled()
+				? '//app.usercentrics.eu/browser-ui/latest/loader.js'
+				: '//privacy-proxy.usercentrics.eu/latest/uc-block.bundle.js';
+			wp_enqueue_script( $this->plugin_name . '-scripts', $placeholder_src, array(), $this->version, false );
 		}
 
 		foreach ( Termageddon_Usercentrics::get_integrations() as $integration => $integration_config ) {
@@ -478,6 +408,8 @@ class Termageddon_Usercentrics_Public {
 	 * WordPress can combine inline before/after scripts and a remote loader in
 	 * one filtered HTML string, so every script tag must be gated. Existing
 	 * attributes remain unchanged apart from replacing the script type.
+	 * data-uc-untouch keeps the Smart Data Protector from re-blocking the tag
+	 * under its own src-based service detection.
 	 *
 	 * @param string $tag                  Script tag HTML.
 	 * @param string $usercentrics_service Exact Usercentrics service name.
@@ -490,7 +422,7 @@ class Termageddon_Usercentrics_Public {
 		return preg_replace_callback(
 			'/<script\b/i',
 			static function () use ( $usercentrics_service ) {
-				return '<script type="text/plain" data-usercentrics="' . $usercentrics_service . '"';
+				return '<script type="text/plain" data-usercentrics="' . $usercentrics_service . '" data-uc-untouch';
 			},
 			$tag
 		);
@@ -532,6 +464,7 @@ class Termageddon_Usercentrics_Public {
 			if ( $processor->next_tag( 'script' ) ) {
 				$processor->set_attribute( 'type', 'text/plain' );
 				$processor->set_attribute( 'data-usercentrics', $usercentrics_service );
+				$processor->set_attribute( 'data-uc-untouch', true );
 
 				return $processor->get_updated_html();
 			}
@@ -540,7 +473,7 @@ class Termageddon_Usercentrics_Public {
 		$tag = preg_replace( '/\s+type=(["\']).*?\1/i', '', $tag );
 		$tag = preg_replace(
 			'/^<script\b/i',
-			'<script type="text/plain" data-usercentrics="' . esc_attr( $usercentrics_service ) . '"',
+			'<script type="text/plain" data-usercentrics="' . esc_attr( $usercentrics_service ) . '" data-uc-untouch',
 			$tag,
 			1
 		);
