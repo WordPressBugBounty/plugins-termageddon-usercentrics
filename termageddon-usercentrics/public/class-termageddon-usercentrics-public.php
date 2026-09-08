@@ -399,7 +399,7 @@ class Termageddon_Usercentrics_Public {
 			return false;
 		}
 
-		return in_array( $handle, array( 'jp-tracks' ), true );
+		return in_array( $handle, array( 'jp-tracks', 'jetpack-stats' ), true );
 	}
 
 	/**

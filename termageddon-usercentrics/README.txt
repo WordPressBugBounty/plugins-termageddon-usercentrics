@@ -4,7 +4,7 @@ Tags: cookie consent, privacy, GDPR, CCPA, CPRA, CIPA, usercentrics, geolocation
 Requires at least: 5.0
 Tested up to: 7.0.2
 Requires PHP: 7.2
-Stable tag: 1.14.0
+Stable tag: 1.14.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -191,6 +191,11 @@ For comprehensive support and assistance:
 * **Developer Resources**: Access our developer documentation for advanced customizations
 
 == Changelog ==
+
+= 1.14.1 =
+
+**🐛 Bug Fixes:**
+* Fixed Jetpack Stats compatibility so its scripts remain blocked until visitors consent to the Jetpack service in Usercentrics.
 
 = 1.14.0 =
 
