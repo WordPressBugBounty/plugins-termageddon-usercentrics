@@ -4,7 +4,7 @@ Tags: cookie consent, privacy, GDPR, CCPA, CPRA, CIPA, usercentrics, geolocation
 Requires at least: 5.0
 Tested up to: 7.0.2
 Requires PHP: 7.2
-Stable tag: 1.14.1
+Stable tag: 1.14.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -191,6 +191,12 @@ For comprehensive support and assistance:
 * **Developer Resources**: Access our developer documentation for advanced customizations
 
 == Changelog ==
+
+= 1.14.2 =
+
+**🐛 Bug Fixes:**
+* Fixed HubSpot Forms so embedded forms load after visitors accept HubSpot Forms in the consent overlay, instead of remaining blocked behind the separate HubSpot service.
+* Fixed the `?termageddon-usercentrics-debug=` location override so it works on cached pages and no longer causes a static front page to show the blog index.
 
 = 1.14.1 =
 

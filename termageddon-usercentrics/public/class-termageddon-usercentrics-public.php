@@ -351,8 +351,9 @@ class Termageddon_Usercentrics_Public {
 			// state), but we should be explicit about it.
 			$tag = ( null !== $result ) ? $result : '';
 		}
-		if ( $this->should_gate_hubspot_script( $handle ) ) {
-			$tag = $this->gate_hubspot_script_tag( $tag );
+		$hubspot_service = $this->get_hubspot_service_for_script( $handle );
+		if ( null !== $hubspot_service ) {
+			$tag = $this->gate_hubspot_script_tag( $tag, $hubspot_service );
 		}
 		if ( $this->should_gate_addtoany_script( $handle ) ) {
 			$tag = $this->gate_scripts_for_usercentrics( $tag, 'AddToAny' );
@@ -429,35 +430,41 @@ class Termageddon_Usercentrics_Public {
 	}
 
 	/**
-	 * Determine whether the current script should be gated for HubSpot consent.
+	 * Get the Usercentrics service name that should gate a HubSpot script.
+	 *
+	 * The Smart Data Protector attributes embedded forms (and the consent
+	 * overlay it renders in their place) to the "HubSpot Forms" service, so
+	 * the form loader scripts must be gated by that same service. Gating them
+	 * under the main "HubSpot" service leaves the form unable to render when a
+	 * visitor accepts HubSpot Forms from the overlay, because the loader stays
+	 * blocked behind a second, separate consent.
 	 *
 	 * @param string $handle The script handle/ID.
-	 * @return bool
+	 * @return string|null The service name to gate with, or null to leave the script alone.
 	 */
-	private function should_gate_hubspot_script( string $handle ): bool {
+	private function get_hubspot_service_for_script( string $handle ): ?string {
 		if ( is_admin() || ! Termageddon_Usercentrics::is_integration_enabled( 'hubspot_plugin' ) ) {
-			return false;
+			return null;
 		}
 
-		$hubspot_handles = array(
-			'leadin-script-loader-js',
-			'leadin-forms-v2',
-			'leadin-forms-v4',
-			'leadin-meeting',
+		$hubspot_services_by_handle = array(
+			'leadin-script-loader-js' => 'HubSpot',
+			'leadin-forms-v2'         => 'HubSpot Forms',
+			'leadin-forms-v4'         => 'HubSpot Forms',
+			'leadin-meeting'          => 'HubSpot',
 		);
 
-		return in_array( $handle, $hubspot_handles, true );
+		return isset( $hubspot_services_by_handle[ $handle ] ) ? $hubspot_services_by_handle[ $handle ] : null;
 	}
 
 	/**
 	 * Convert a HubSpot script tag to a Usercentrics-controlled script.
 	 *
-	 * @param string $tag The script tag HTML.
+	 * @param string $tag                  The script tag HTML.
+	 * @param string $usercentrics_service Exact Usercentrics service name to gate with.
 	 * @return string
 	 */
-	private function gate_hubspot_script_tag( string $tag ): string {
-		$usercentrics_service = 'HubSpot';
-
+	private function gate_hubspot_script_tag( string $tag, string $usercentrics_service ): string {
 		if ( class_exists( 'WP_HTML_Tag_Processor' ) ) {
 			$processor = new WP_HTML_Tag_Processor( $tag );
 

@@ -278,8 +278,12 @@ class Termageddon_Usercentrics {
 	 * @access   private
 	 */
 	private function define_extra_hooks() {
-		// Register the possibility of query debug filter.
-		$this->loader->add_filter( 'query_vars', $this, 'add_query_debug_filter' );
+		// The termageddon-usercentrics-debug parameter is intentionally NOT
+		// registered as a public query var: registered query vars feed the
+		// main query, and any custom public query var present in the URL
+		// breaks static front pages (WordPress renders the blog index
+		// instead — core Trac #25143). The parameter is read client-side
+		// from the URL by the geolocation script instead.
 
 		// Add in plugin settings link to plugin list page.
 		$this->loader->add_filter( 'plugin_action_links_' . TERMAGEDDON_COOKIE_EXEC_RELATIVE_PATH, $this, 'register_plugin_settings_link' );
@@ -490,16 +494,6 @@ class Termageddon_Usercentrics {
 
 
 
-	/**
-	 * Setup the debug variable to support the debug variable.
-	 *
-	 * @param mixed $vars the filters that already exist.
-	 * @return mixed
-	 */
-	public function add_query_debug_filter( $vars ) {
-		$vars[] = $this->plugin_name . '-debug';
-		return $vars;
-	}
 
 
 	/**

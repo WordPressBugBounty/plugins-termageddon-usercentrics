@@ -172,12 +172,14 @@ class Termageddon_Usercentrics_Geo_Api {
 			'geo_api_url'  => self::API_URL,
 			'geo_api_key'  => self::get_api_key(),
 			'geo_locations' => $locations,
+			// The `?termageddon-usercentrics-debug=<key>` override is resolved
+			// client-side against this map. Resolving it server-side (via
+			// get_query_var) breaks under full-page caching: the localized
+			// object is baked into the cached HTML, so testers get a page
+			// rendered without their parameter — or worse, a page cached with
+			// an override serves simulated geolocation to every visitor.
+			'geo_debug_fixtures' => self::DEBUG_FIXTURES,
 		);
-
-		$debug_key = (string) get_query_var( 'termageddon-usercentrics-debug' );
-		if ( '' !== $debug_key && isset( self::DEBUG_FIXTURES[ $debug_key ] ) ) {
-			$payload['geo_debug_override'] = self::DEBUG_FIXTURES[ $debug_key ];
-		}
 
 		return $payload;
 	}

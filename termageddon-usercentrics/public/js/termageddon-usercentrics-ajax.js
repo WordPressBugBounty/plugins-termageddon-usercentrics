@@ -85,22 +85,42 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 	const query_hide =
 		getQueryParams("enable-usercentrics") === "" ? true : false;
 
+	// The ?termageddon-usercentrics-debug=<location> override is resolved
+	// here in the browser, against the fixture map in the localized object,
+	// so it keeps working when full-page caching serves HTML that was
+	// rendered without the parameter. It must also beat the cached decision
+	// cookie, otherwise the parameter silently does nothing for any visitor
+	// who already has one from a previous visit.
+	const debugKey = getQueryParams("termageddon-usercentrics-debug");
+	const debugFixtures = termageddon_usercentrics_obj.geo_debug_fixtures || {};
+	const debugOverride = debugKey ? debugFixtures[debugKey] : null;
+	const hasDebugOverride = !!(debugOverride && typeof debugOverride === "object");
+	if (debugKey && !hasDebugOverride)
+		console.warn(
+			"UC: Unknown debug location '" + debugKey + "'. Valid keys:",
+			Object.keys(debugFixtures)
+		);
+
 	//Check for local cookie to use instead of calling.
 	const cookie_hide = getCookie(tuCookieHideName);
 	const cookie_mode = getCookie(tuCookieModeName);
-	if (cookie_hide != null && cookie_mode === tuGeoMode && !tuDebug) {
-		if (tuDebug)
-			console.log(
-				"UC: Cookie found.",
-				(cookie_hide ? "Showing" : "Hiding") + " Usercentrics"
-			);
+	if (
+		cookie_hide != null &&
+		cookie_mode === tuGeoMode &&
+		!tuDebug &&
+		!hasDebugOverride
+	) {
 		updateCookieConsent(cookie_hide === "true");
 		return;
 	}
 
 	// Hosted geolocation uses a browser-side fetch and client-side decision.
 	{
-		const finishWithGeoData = (geoData, persistLocationCookie) => {
+		const finishWithGeoData = (
+			geoData,
+			persistLocationCookie,
+			persistDecisionCookie
+		) => {
 			if (persistLocationCookie) {
 				setCookie(tuCookieLocationName, JSON.stringify(geoData), 365);
 			}
@@ -128,16 +148,19 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 				});
 			}
 
-			setCookie(tuCookieHideName, decision.hide ? "true" : "false");
-			setCookie(tuCookieModeName, tuGeoMode);
+			if (persistDecisionCookie) {
+				setCookie(tuCookieHideName, decision.hide ? "true" : "false");
+				setCookie(tuCookieModeName, tuGeoMode);
+			}
 			updateCookieConsent(decision.hide);
 		};
 
-		// 1. Debug override always wins, and never persists.
-		const debugOverride = termageddon_usercentrics_obj.geo_debug_override;
-		if (debugOverride && typeof debugOverride === "object") {
-			if (tuDebug) console.log("UC: Using geo debug override", debugOverride);
-			return finishWithGeoData(debugOverride, false);
+		// 1. Debug override always wins, and never persists — neither the
+		// location cookie nor the decision cookie, so a debug visit cannot
+		// leak a simulated outcome into subsequent real visits.
+		if (hasDebugOverride) {
+			console.log("UC: Using geo debug override", debugOverride);
+			return finishWithGeoData(debugOverride, false, false);
 		}
 
 		// 2. Cached location cookie? Use it (unless debug mode forces a refresh).
@@ -147,7 +170,7 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 				const cached = JSON.parse(decodeURIComponent(locationCookie));
 				if (cached && typeof cached === "object" && cached.country) {
 					if (tuDebug) console.log("UC: Using cached geo cookie", cached);
-					return finishWithGeoData(cached, false);
+					return finishWithGeoData(cached, false, true);
 				}
 			} catch (e) {
 				if (tuDebug)
@@ -174,7 +197,7 @@ window.addEventListener("UC_UI_INITIALIZED", function () {
 					region_code: data.region_code || null,
 					city: data.city || null,
 				};
-				finishWithGeoData(geoData, true);
+				finishWithGeoData(geoData, true, true);
 			})
 			.catch((err) => {
 				console.error(
