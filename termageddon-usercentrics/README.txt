@@ -2,9 +2,9 @@
 Contributors: termageddon, dintriglia
 Tags: cookie consent, privacy, GDPR, CCPA, CPRA, CIPA, usercentrics, geolocation, compliance
 Requires at least: 5.0
-Tested up to: 7.0.2
+Tested up to: 7.1
 Requires PHP: 7.2
-Stable tag: 1.14.2
+Stable tag: 1.14.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -191,6 +191,15 @@ For comprehensive support and assistance:
 * **Developer Resources**: Access our developer documentation for advanced customizations
 
 == Changelog ==
+
+= 1.14.3 =
+
+**🐛 Bug Fixes:**
+* Fixed the Gravity Forms reCAPTCHA consent blocker to support Enterprise checkbox fields and score-based v3 forms.
+* Improved score-based v3 forms by displaying the consent message above the submit button while keeping form fields visible. The message stays in the form layout and does not duplicate when forms reload dynamically.
+
+**🔧 Improvements:**
+* Updated WordPress compatibility metadata for WordPress 7.1.
 
 = 1.14.2 =
 

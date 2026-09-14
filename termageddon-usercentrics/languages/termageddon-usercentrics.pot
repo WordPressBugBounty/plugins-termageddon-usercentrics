@@ -1,28 +1,19 @@
 # Copyright (C) 2026 Termageddon
 # This file is distributed under the GPL-2.0+.
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: Termageddon + Usercentrics 1.14.0\n"
+"Project-Id-Version: Termageddon 1.14.3\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/termageddon-"
 "usercentrics\n"
-"POT-Creation-Date: 2026-08-12 15:05-0600\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: GNU xgettext\n"
+"POT-Creation-Date: 2026-09-14T21:53:03+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: termageddon-usercentrics\n"
-
-#. Description of the plugin
-#: termageddon-usercentrics.php
-msgid ""
-"Each Termageddon license includes a consent solution. This plugin helps you "
-"install the consent solution with ease, while offering additional features."
-msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:1747
 msgid "+ Add Script Snippet"
@@ -32,7 +23,7 @@ msgstr ""
 msgid "Action Needed"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:912
+#: includes/class-termageddon-usercentrics.php:915
 msgid "AddToAny Share Buttons"
 msgstr ""
 
@@ -77,6 +68,7 @@ msgid ""
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:769
+#, php-format
 msgid ""
 "By updating all external scripts to use the <a href=\"https://"
 "termageddon.freshdesk.com/support/solutions/articles/66000529802-embedding-"
@@ -91,11 +83,11 @@ msgid ""
 "expected."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:136
+#: includes/class-termageddon-usercentrics.php:137
 msgid "California (CPRA, CIPA)"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:128
+#: includes/class-termageddon-usercentrics.php:129
 msgid "Canada (PIPEDA, Quebec 25)"
 msgstr ""
 
@@ -105,7 +97,7 @@ msgid ""
 "Usercentrics. To support these, we offer the following customization options:"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:140
+#: includes/class-termageddon-usercentrics.php:141
 msgid "Colorado (CPA)"
 msgstr ""
 
@@ -113,7 +105,7 @@ msgstr ""
 msgid "Configuration"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:144
+#: includes/class-termageddon-usercentrics.php:145
 msgid "Connecticut (CTDPA)"
 msgstr ""
 
@@ -137,7 +129,7 @@ msgstr ""
 msgid "Debug Information"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:148
+#: includes/class-termageddon-usercentrics.php:149
 msgid "Delaware (DPDPA)"
 msgstr ""
 
@@ -157,15 +149,22 @@ msgstr ""
 msgid "Disable for Troubleshooting"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:869
+#: includes/class-termageddon-usercentrics.php:872
 msgid "Divi Video"
+msgstr ""
+
+#. Description of the plugin
+#: termageddon-usercentrics.php
+msgid ""
+"Each Termageddon license includes a consent solution. This plugin helps you "
+"install the consent solution with ease, while offering additional features."
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:567
 msgid "Editors"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:876
+#: includes/class-termageddon-usercentrics.php:879
 msgid "Elementor Video"
 msgstr ""
 
@@ -189,14 +188,14 @@ msgstr ""
 msgid "Enable location logging"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:905
+#: includes/class-termageddon-usercentrics.php:908
 msgid ""
 "Enabling this feature helps Usercentrics block the Facebook Pixel script "
-"loading via the \"Meta for WooCommerce\" plugin. The script will fire after "
-"a user consents. After enabling, be sure to test in a fresh incognito window."
+"loading via the \"Meta for WooCommerce\" plugin. The script will fire after a "
+"user consents. After enabling, be sure to test in a fresh incognito window."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:929
+#: includes/class-termageddon-usercentrics.php:932
 msgid ""
 "Enabling this feature helps block the main HubSpot tracking script loaded by "
 "the HubSpot WordPress plugin. When enabled, this feature helps prevent the "
@@ -204,21 +203,21 @@ msgid ""
 "user clicks Accept. Test changes in a fresh incognito window."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:913
+#: includes/class-termageddon-usercentrics.php:916
 msgid ""
 "Enabling this feature prevents AddToAny scripts from running until the "
 "visitor consents to the AddToAny service. AddToAny must also be present in "
 "your Usercentrics service settings. Test changes in a fresh incognito window."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:921
+#: includes/class-termageddon-usercentrics.php:924
 msgid ""
 "Enabling this feature prevents Jetpack tracking scripts from running until "
 "the visitor consents to the Jetpack service. Jetpack must also be present in "
 "your Usercentrics service settings. Test changes in a fresh incognito window."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:898
+#: includes/class-termageddon-usercentrics.php:901
 msgid ""
 "Enabling this feature will provide the Usercentrics blocker message, "
 "requiring users to consent first prior to loading in any Gravity Forms forms "
@@ -232,11 +231,11 @@ msgid ""
 "Code\" page of your Cookie Policy and Consent Tool questionnaire."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:120
+#: includes/class-termageddon-usercentrics.php:121
 msgid "European Union & European Economic Area (GDPR)"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:152
+#: includes/class-termageddon-usercentrics.php:153
 msgid "Florida"
 msgstr ""
 
@@ -282,7 +281,7 @@ msgstr ""
 msgid "Go to Configuration"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:897
+#: includes/class-termageddon-usercentrics.php:900
 msgid "Gravity Forms - reCaptcha Extension"
 msgstr ""
 
@@ -290,19 +289,15 @@ msgstr ""
 msgid "Hide Privacy Settings Link when cookie consent tool is disabled"
 msgstr ""
 
-#: admin/class-termageddon-usercentrics-admin.php:1458
-msgid "Hide widget for"
-msgstr ""
-
 #: admin/class-termageddon-usercentrics-admin.php:231
 msgid "Hosted (geo.termageddon.com)"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:936
+#: includes/class-termageddon-usercentrics.php:939
 msgid "HubSpot Forms Compatibility"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:928
+#: includes/class-termageddon-usercentrics.php:931
 msgid "HubSpot WordPress Plugin"
 msgstr ""
 
@@ -323,7 +318,7 @@ msgid ""
 "you can do so below."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:156
+#: includes/class-termageddon-usercentrics.php:157
 msgid "Indiana (ICDPA)"
 msgstr ""
 
@@ -347,15 +342,15 @@ msgid ""
 "the button bellow."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:920
+#: includes/class-termageddon-usercentrics.php:923
 msgid "Jetpack"
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:1377
 msgid ""
 "Location is resolved through geo.termageddon.com in the visitor’s browser. "
-"Your existing region rules still apply. If the service cannot be reached, "
-"the consent widget is shown."
+"Your existing region rules still apply. If the service cannot be reached, the "
+"consent widget is shown."
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:196
@@ -370,21 +365,21 @@ msgstr ""
 msgid "Manual Script Controller"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:904
+#: includes/class-termageddon-usercentrics.php:907
 msgid "Meta for WooCommerce"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:160
+#: includes/class-termageddon-usercentrics.php:161
 msgid "Montana (MCDPA)"
+msgstr ""
+
+#: includes/class-termageddon-usercentrics.php:165
+msgid "New Jersey (NJDPA)"
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:1690
 #: admin/class-termageddon-usercentrics-admin.php:1760
 msgid "New Script Snippet"
-msgstr ""
-
-#: includes/class-termageddon-usercentrics.php:164
-msgid "New Jersey (NJDPA)"
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:1480
@@ -401,17 +396,17 @@ msgid ""
 "compatibility with various plugins and page-builders."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:160
+#: includes/class-termageddon-usercentrics.php:169
 msgid "Oregon (OCPA)"
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:667
 msgid ""
-"Override the default priority of the embed code (Defaults to 1). By "
-"adjusting this value, you can change the priority of the embed code. The "
-"lower the number, the sooner the embed code will be rendered in the source "
-"code. Note that selecting the wp_enqueue_scripts injection method will limit "
-"where the code can be placed (after stylesheets), regardless of this number."
+"Override the default priority of the embed code (Defaults to 1). By adjusting "
+"this value, you can change the priority of the embed code. The lower the "
+"number, the sooner the embed code will be rendered in the source code. Note "
+"that selecting the wp_enqueue_scripts injection method will limit where the "
+"code can be placed (after stylesheets), regardless of this number."
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:189
@@ -424,11 +419,11 @@ msgstr ""
 msgid "Plugin & Theme Integrations"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:883
+#: includes/class-termageddon-usercentrics.php:886
 msgid "PowerPack Video"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:890
+#: includes/class-termageddon-usercentrics.php:893
 msgid "Presto Player"
 msgstr ""
 
@@ -502,7 +497,7 @@ msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:86
 #: admin/class-termageddon-usercentrics-admin.php:540
-#: includes/class-termageddon-usercentrics.php:512
+#: includes/class-termageddon-usercentrics.php:515
 msgid "Settings"
 msgstr ""
 
@@ -523,6 +518,12 @@ msgid ""
 "obtained by the user."
 msgstr ""
 
+#. Plugin Name of the plugin
+#. Author of the plugin
+#: termageddon-usercentrics.php
+msgid "Termageddon"
+msgstr ""
+
 #: admin/class-termageddon-usercentrics-admin.php:201
 msgid "Termageddon + Usercentrics"
 msgstr ""
@@ -531,7 +532,7 @@ msgstr ""
 msgid "Termageddon Hosted Geolocation"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:164
+#: includes/class-termageddon-usercentrics.php:173
 msgid "Texas (TDPSA)"
 msgstr ""
 
@@ -559,27 +560,27 @@ msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:1007
 msgid ""
-"This particular feature is not needed for most websites. This feature is "
-"only needed if you notice issues with the Usercentrics' auto-blocker (where "
-"user clicks 'accept' in an embedded feature such as google map, but the "
-"blocker message does not go away due to a third party plugin/theme "
-"interference). This feature will refresh the page after a user clicks accept "
-"for the respected Service(s) listed above."
+"This particular feature is not needed for most websites. This feature is only "
+"needed if you notice issues with the Usercentrics' auto-blocker (where user "
+"clicks 'accept' in an embedded feature such as google map, but the blocker "
+"message does not go away due to a third party plugin/theme interference). "
+"This feature will refresh the page after a user clicks accept for the "
+"respected Service(s) listed above."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:870
+#: includes/class-termageddon-usercentrics.php:873
 msgid ""
 "This resolves and improves the cookie-consent implementation when using an "
 "image placeholder overlay for the Divi video embed."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:877
+#: includes/class-termageddon-usercentrics.php:880
 msgid ""
 "This resolves and improves the cookie-consent implementation when using an "
 "image placeholder overlay for the Elementor video embed."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:884
+#: includes/class-termageddon-usercentrics.php:887
 msgid ""
 "This resolves and improves the cookie-consent implementation when using an "
 "image placeholder overlay for the PowerPack for BeaverBuilder video embed. "
@@ -587,13 +588,13 @@ msgid ""
 "Please reach out to support if needed."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:891
+#: includes/class-termageddon-usercentrics.php:894
 msgid ""
 "This resolves and improves the cookie-consent implementation when using an "
 "image placeholder overlay for the Presto Player video embed."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:943
+#: includes/class-termageddon-usercentrics.php:946
 msgid ""
 "This resolves and improves the cookie-consent implementation when using an "
 "image placeholder overlay for the Ultimate Addons for Beaver Builder video "
@@ -609,9 +610,9 @@ msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:471
 msgid ""
-"This section should no longer be used for the embed code from the "
-"Termageddon dashboard. We recommend migrating to the new Settings ID format "
-"using the button above."
+"This section should no longer be used for the embed code from the Termageddon "
+"dashboard. We recommend migrating to the new Settings ID format using the "
+"button above."
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:1278
@@ -640,15 +641,15 @@ msgid ""
 "browser console while enabled."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:942
+#: includes/class-termageddon-usercentrics.php:945
 msgid "Ultimate Addons for Beaver Builder Video"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:124
+#: includes/class-termageddon-usercentrics.php:125
 msgid "United Kingdom (UK DPA)"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:132
+#: includes/class-termageddon-usercentrics.php:133
 msgid "United States of America"
 msgstr ""
 
@@ -656,7 +657,7 @@ msgstr ""
 msgid "Upon generating your "
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:168
+#: includes/class-termageddon-usercentrics.php:177
 msgid "Utah (UCPA)"
 msgstr ""
 
@@ -664,7 +665,7 @@ msgstr ""
 msgid "Very important: be sure to"
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:172
+#: includes/class-termageddon-usercentrics.php:181
 msgid "Virginia (VCDPA)"
 msgstr ""
 
@@ -685,8 +686,8 @@ msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:1278
 msgid ""
-"We are moving to using a Settings ID instead of an embed code format to "
-"allow for more features."
+"We are moving to using a Settings ID instead of an embed code format to allow "
+"for more features."
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:620
@@ -718,10 +719,9 @@ msgstr ""
 #: admin/class-termageddon-usercentrics-admin.php:807
 msgid ""
 "When enabled, this feature allows you to turn off the consent tool for all "
-"site visitors, however by adding <code>?enable-usercentrics</code> to the "
-"end of a URL, the consent tool will load, allowing you to troubleshoot any "
-"issues (or to reach out to Termageddon support to help assist with "
-"troubleshooting)"
+"site visitors, however by adding <code>?enable-usercentrics</code> to the end "
+"of a URL, the consent tool will load, allowing you to troubleshoot any issues "
+"(or to reach out to Termageddon support to help assist with troubleshooting)"
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:1469
@@ -731,17 +731,17 @@ msgid ""
 "each website visitor (CPRA or CIPA cookie consent, GDPR cookie consent, UK "
 "DPA consent or none), based on their location. A cookie will then be placed "
 "on the user's browser to cache their location, which helps improve page load "
-"speed when the user visits other pages on the website. You should ensure "
-"that you are in compliance with all applicable privacy laws prior to using "
-"this feature (or any other technologies on your website)."
+"speed when the user visits other pages on the website. You should ensure that "
+"you are in compliance with all applicable privacy laws prior to using this "
+"feature (or any other technologies on your website)."
 msgstr ""
 
-#: includes/class-termageddon-usercentrics.php:937
+#: includes/class-termageddon-usercentrics.php:940
 msgid ""
 "When the HubSpot Forms service is marked as Marketing or Functional, forms "
 "will not load for users who click Deny. Enable this feature to add a blocker "
-"message that allows users to click Accept within the embedded form area. "
-"Test changes in a fresh incognito window."
+"message that allows users to click Accept within the embedded form area. Test "
+"changes in a fresh incognito window."
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:1473
@@ -752,11 +752,16 @@ msgstr ""
 msgid "based on which privacy laws apply to you"
 msgstr ""
 
+#. Author URI of the plugin
+#: termageddon-usercentrics.php
+msgid "https://termageddon.com"
+msgstr ""
+
 #: admin/class-termageddon-usercentrics-admin.php:490
 msgid ""
-"into third party scripts (Google Analytics, Facebook Pixel, LinkedIn "
-"Insights Tag, etc.), which can help ensure that consent is obtained first "
-"prior to the script loading."
+"into third party scripts (Google Analytics, Facebook Pixel, LinkedIn Insights "
+"Tag, etc.), which can help ensure that consent is obtained first prior to the "
+"script loading."
 msgstr ""
 
 #: admin/class-termageddon-usercentrics-admin.php:496
