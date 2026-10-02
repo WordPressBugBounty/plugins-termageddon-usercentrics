@@ -1477,7 +1477,6 @@ class Termageddon_Usercentrics_Admin {
 			<div class="tu-section-settings">
 				<div class="tu-toggle-section">
 					<div class="tu-section-title">' . esc_html__( 'Show widget if visitor is located in', 'termageddon-usercentrics' ) . ':</div>
-					<div class="tu-section-title-helper">' . esc_html__( 'Not sure what to select?', 'termageddon-usercentrics' ) . ' <a href="https://termageddon.freshdesk.com/support/solutions/articles/66000526304-using-the-geolocation-feature-of-the-termageddon-usercentrics-plugin" target="_blank">' . esc_html__( 'This article outlines which regions to select', 'termageddon-usercentrics' ) . '</a> ' . esc_html__( 'based on which privacy laws apply to you', 'termageddon-usercentrics' ) . '.</div>
 					<div class="notice-inline notice-alt notice-warning" id="no-geolocation-locations-selected" style="display:none">
 						<p><strong>' . esc_html__( 'Geo-Location is enabled, but no locations have been toggled on. This means that the cookie-consent will be hidden to all users.', 'termageddon-usercentrics' ) . '</strong></p>
 					</div></a>';
