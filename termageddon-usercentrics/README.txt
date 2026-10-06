@@ -4,7 +4,7 @@ Tags: cookie consent, privacy, GDPR, CCPA, CPRA, CIPA, usercentrics, geolocation
 Requires at least: 5.0
 Tested up to: 7.1
 Requires PHP: 7.2
-Stable tag: 1.14.4
+Stable tag: 1.14.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -170,7 +170,7 @@ Yes, comprehensive support is available through our dedicated support portal at 
 
 = Where do I report security bugs found in this plugin? =
 
-Please report security bugs found in the source code of the Termageddon: Cookie Consent & Privacy Compliance plugin through the [Patchstack Vulnerability Disclosure  Program](https://patchstack.com/database/vdp/ca044124-3ff0-4caf-940d-678b3896e0b4). The Patchstack team will assist you with verification, CVE assignment, and notify the developers of this plugin. You can also reach out to our support team for additional assistance and guidance.
+Please report security bugs found in the Termageddon: Cookie Consent & Privacy Compliance plugin or ask security-related questions by contacting Termageddon at [support@termageddon.com](mailto:support@termageddon.com).
 
 == Screenshots ==
 
@@ -191,6 +191,11 @@ For comprehensive support and assistance:
 * **Developer Resources**: Access our developer documentation for advanced customizations
 
 == Changelog ==
+
+= 1.14.5 =
+
+**🐛 Bug Fixes:**
+* Corrected the security FAQ to direct security bug reports and security-related questions to Termageddon at support@termageddon.com.
 
 = 1.14.4 =
 

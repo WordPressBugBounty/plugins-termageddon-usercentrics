@@ -2,7 +2,7 @@
 # This file is distributed under the GPL-2.0+.
 msgid ""
 msgstr ""
-"Project-Id-Version: Termageddon 1.14.4\n"
+"Project-Id-Version: Termageddon 1.14.5\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/termageddon-"
 "usercentrics\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
